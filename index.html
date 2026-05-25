@@ -56,6 +56,60 @@
       min-height: 100vh;
     }
 
+    .login-screen {
+      align-items: center;
+      background: linear-gradient(145deg, #f4fbf8 0%, #e7f5f0 52%, #f7faf9 100%);
+      display: grid;
+      min-height: 100vh;
+      padding: 24px;
+    }
+
+    .login-card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      margin: 0 auto;
+      max-width: 420px;
+      padding: 24px;
+      width: 100%;
+    }
+
+    .login-head {
+      align-items: center;
+      display: flex;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .login-title {
+      font-size: 22px;
+      font-weight: 780;
+      line-height: 1.2;
+      margin: 0;
+    }
+
+    .login-copy {
+      color: var(--muted);
+      margin: 0 0 20px;
+    }
+
+    .login-form {
+      display: grid;
+      gap: 12px;
+    }
+
+    .login-error {
+      color: var(--red);
+      font-size: 13px;
+      min-height: 20px;
+    }
+
+    .login-language {
+      margin-top: 18px;
+      width: max-content;
+    }
+
     .topbar {
       align-items: center;
       background: rgba(255, 255, 255, 0.94);
@@ -611,6 +665,100 @@
       font-size: 12px;
     }
 
+    .group-toolbar {
+      display: grid;
+      gap: 10px;
+      grid-template-columns: 150px 150px minmax(0, 1fr) auto auto;
+      margin-bottom: 14px;
+    }
+
+    .drive-actions {
+      align-items: center;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .file-input {
+      background: var(--surface-alt);
+      border: 1px dashed #a9c6bb;
+      border-radius: var(--radius);
+      min-height: 40px;
+      padding: 8px;
+      width: 100%;
+    }
+
+    .group-grid {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    }
+
+    .group-card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 14px;
+    }
+
+    .group-card.selected {
+      border-color: var(--primary);
+      box-shadow: var(--shadow);
+    }
+
+    .group-title {
+      font-size: 16px;
+      font-weight: 820;
+      margin-bottom: 3px;
+      overflow-wrap: anywhere;
+    }
+
+    .group-meta {
+      color: var(--muted);
+      display: grid;
+      font-size: 12px;
+      gap: 4px;
+      margin: 8px 0 10px;
+    }
+
+    .drive-link {
+      color: var(--cyan);
+      font-size: 12px;
+      font-weight: 740;
+      text-decoration: none;
+    }
+
+    .drive-file-list {
+      display: grid;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .drive-file-row {
+      align-items: center;
+      background: var(--surface-alt);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      display: flex;
+      gap: 8px;
+      justify-content: space-between;
+      padding: 8px 10px;
+    }
+
+    .drive-file-name {
+      font-size: 13px;
+      font-weight: 720;
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+
+    .drive-file-type {
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
     .empty-state {
       align-items: center;
       background: var(--surface-alt);
@@ -782,6 +930,7 @@
       .stats-grid,
       .document-grid,
       .detail-grid,
+      .group-toolbar,
       .search-row {
         grid-template-columns: 1fr;
       }
@@ -798,7 +947,29 @@
   </style>
 </head>
 <body>
-  <div class="app-shell">
+  <div class="login-screen" id="login-screen">
+    <form class="login-card" onsubmit="handleLogin(event)">
+      <div class="login-head">
+        <div class="brand-mark">BT</div>
+        <div>
+          <h1 class="login-title" data-i18n="loginTitle">BT TOUR Visa Login</h1>
+          <p class="login-copy" data-i18n="loginSubtitle">Group visa operations workspace</p>
+        </div>
+      </div>
+      <div class="login-form">
+        <input class="search-input" id="login-password" type="password" autocomplete="current-password" data-i18n-placeholder="passwordPlaceholder" placeholder="Password">
+        <button class="button primary" type="submit" data-i18n="loginButton">Login</button>
+        <div class="login-error" id="login-error"></div>
+      </div>
+      <div class="language-switcher login-language" aria-label="Language">
+        <button class="language-button active" type="button" data-lang-button="vi" onclick="setLanguage('vi')">Tiếng Việt</button>
+        <button class="language-button" type="button" data-lang-button="en" onclick="setLanguage('en')">English</button>
+        <button class="language-button" type="button" data-lang-button="ko" onclick="setLanguage('ko')">한국어</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="app-shell" id="app-shell" hidden>
     <header class="topbar">
       <div class="brand">
         <div class="brand-mark">BT</div>
@@ -820,8 +991,14 @@
     <div class="layout">
       <aside class="sidebar" id="sidebar">
         <section class="sidebar-block">
-          <h2 class="sidebar-heading" data-i18n="menu">Menu</h2>
-          <button class="nav-button active" data-view-button="dashboard" onclick="switchView('dashboard')">
+          <h2 class="sidebar-heading" data-i18n="operations">Operations</h2>
+          <button class="nav-button active" data-view-button="drive" onclick="switchView('drive')">
+            <span class="nav-label"><span>🗂️</span><span data-i18n="groupDrive">Group Drive</span></span>
+          </button>
+          <button class="nav-button" data-view-button="schedule" onclick="switchView('schedule')">
+            <span class="nav-label"><span>🛬</span><span data-i18n="entrySchedule">Entry dates</span></span>
+          </button>
+          <button class="nav-button" data-view-button="dashboard" onclick="switchView('dashboard')">
             <span class="nav-label"><span>📊</span><span data-i18n="dashboard">Dashboard</span></span>
           </button>
           <button class="nav-button" data-view-button="applicants" onclick="switchView('applicants')">
@@ -830,6 +1007,11 @@
           <button class="nav-button" data-view-button="documents" onclick="switchView('documents')">
             <span class="nav-label"><span>📄</span><span data-i18n="documentTypes">Document Types</span></span>
           </button>
+        </section>
+
+        <section class="sidebar-block">
+          <h2 class="sidebar-heading" data-i18n="entryDate">Entry date</h2>
+          <div id="entry-date-buttons"></div>
         </section>
 
         <section class="sidebar-block">
@@ -881,9 +1063,11 @@
             <p class="hero-text" data-i18n="heroText">Monitor applicants, documents, progress, and generated visa packets from one workspace.</p>
           </div>
           <div class="hero-actions">
-            <button class="button primary" onclick="refreshAll()"><span>↻</span><span data-i18n="refresh">Refresh</span></button>
-            <button class="button secondary" onclick="batchPdf(this)"><span>📄</span><span data-i18n="batchPdf">Batch PDF</span></button>
-            <button class="button ghost" onclick="batchExcel(this)"><span>📊</span><span data-i18n="batchExcel">Batch Excel</span></button>
+            <button class="button primary" onclick="switchView('drive')"><span>🗂️</span><span data-i18n="groupDrive">Group Drive</span></button>
+            <button class="button primary" onclick="generateFinalPackage(this)"><span>🗃️</span><span data-i18n="finalPackage">Final package</span></button>
+            <button class="button secondary" onclick="batchPdf(this)"><span>📄</span><span data-i18n="groupPdf">Group PDF</span></button>
+            <button class="button ghost" onclick="batchExcel(this)"><span>📊</span><span data-i18n="groupExcel">Group Excel</span></button>
+            <button class="button ghost" onclick="refreshAll()"><span>↻</span><span data-i18n="refresh">Refresh</span></button>
           </div>
         </section>
 
@@ -912,7 +1096,7 @@
 
         <div class="workspace-grid">
           <section>
-            <div class="panel" id="dashboard-view">
+            <div class="panel" id="dashboard-view" hidden>
               <div class="panel-header">
                 <h2 class="panel-title" data-i18n="recentApplicants">Recent applicants</h2>
                 <div class="content-actions">
@@ -946,6 +1130,56 @@
               <div class="tabs" id="document-tabs"></div>
               <div class="document-grid" id="document-grid"></div>
             </div>
+
+            <div class="panel" id="schedule-view" hidden>
+              <div class="panel-header">
+                <h2 class="panel-title" data-i18n="entrySchedule">Entry date groups</h2>
+                <div class="content-actions">
+                  <button class="button primary" onclick="switchView('drive')"><span>🗂️</span><span data-i18n="groupDrive">Group Drive</span></button>
+                </div>
+              </div>
+              <div class="group-grid" id="entry-schedule-grid"></div>
+            </div>
+
+            <div class="panel" id="drive-view">
+              <div class="panel-header">
+                <h2 class="panel-title" data-i18n="groupDrive">Group Drive</h2>
+                <div class="content-actions">
+                  <button class="button ghost" onclick="syncAllDrive(this)"><span>↻</span><span data-i18n="syncAllDrive">Sync all</span></button>
+                </div>
+              </div>
+
+              <div class="group-toolbar">
+                <input class="search-input" id="drive-group-id" data-i18n-placeholder="groupIdPlaceholder" placeholder="Group ID">
+                <input class="search-input" id="drive-entry-date" type="date" aria-label="Entry date">
+                <input class="search-input" id="drive-group-name" data-i18n-placeholder="groupNamePlaceholder" placeholder="Group name">
+                <button class="button primary" onclick="createDriveGroup(this)"><span>＋</span><span data-i18n="createGroupFolder">Create folder</span></button>
+                <button class="button ghost" onclick="updateDriveGroup(this)"><span>✎</span><span data-i18n="updateGroupFolder">Update</span></button>
+              </div>
+
+              <div class="search-row">
+                <select class="select-input" id="drive-group-filter" onchange="selectDriveGroup(this.value)">
+                  <option value="" data-i18n="selectGroup">Select group</option>
+                </select>
+                <input class="search-input" id="drive-upload-folder" data-i18n-placeholder="uploadFolderPlaceholder" placeholder="Optional subfolder">
+              </div>
+
+              <input class="file-input" id="drive-files" type="file" multiple>
+              <div class="drive-actions">
+                <button class="button primary" onclick="uploadDriveFiles(this)"><span>⬆</span><span data-i18n="uploadGroupFiles">Upload files to group</span></button>
+                <button class="button secondary" onclick="syncSelectedDriveGroup(this)"><span>↻</span><span data-i18n="syncSelectedGroup">Sync selected group</span></button>
+                <button class="button primary" onclick="generateFinalPackage(this)"><span>🗃️</span><span data-i18n="finalPackage">Final package</span></button>
+                <button class="button ghost" onclick="uploadGeneratedDrive(this)"><span>📦</span><span data-i18n="uploadGenerated">Upload generated docs</span></button>
+              </div>
+
+              <div class="api-panel" id="drive-root-panel">
+                <div class="api-state" id="drive-root-state"><span class="spinner"></span><span data-i18n="checking">Checking</span></div>
+                <div class="api-url" id="drive-root-url">Google Drive</div>
+              </div>
+
+              <div class="drive-file-list" id="selected-drive-files"></div>
+              <div class="group-grid" id="drive-groups-grid"></div>
+            </div>
           </section>
 
           <aside>
@@ -974,7 +1208,6 @@
       <p class="hero-text" id="modal-subtitle"></p>
       <div class="detail-grid" id="modal-details"></div>
       <div class="modal-actions">
-        <button class="button primary" id="modal-pdf-button"><span>📄</span><span data-i18n="generatePdf">Generate PDF</span></button>
         <button class="button ghost" onclick="closeModal()" data-i18n="close">Close</button>
       </div>
     </div>
@@ -1009,6 +1242,11 @@
         processing: 'Đang xử lý',
         completed: 'Hoàn thành',
         language: 'Ngôn ngữ',
+        loginTitle: 'Đăng nhập BT TOUR Visa',
+        loginSubtitle: 'Không gian vận hành visa theo nhóm nhập cảnh',
+        passwordPlaceholder: 'Mật khẩu',
+        loginButton: 'Đăng nhập',
+        loginError: 'Mật khẩu không đúng.',
         apiStatus: 'Trạng thái API',
         checking: 'Đang kiểm tra',
         heroTitle: 'Bảng điều khiển vận hành visa',
@@ -1029,6 +1267,10 @@
         timeline: 'Dòng tiến độ',
         workflow: 'Quy trình',
         generatePdf: 'Tạo PDF',
+        groupPdf: 'PDF theo nhóm',
+        groupExcel: 'Excel theo nhóm',
+        finalPackage: 'Hồ sơ cuối cùng',
+        finalPackageDone: 'Gói hồ sơ cuối cùng đã tạo xong.',
         details: 'Chi tiết',
         close: 'Đóng',
         noApplicants: 'Chưa có ứng viên. Khi API không truy cập được, dữ liệu mẫu sẽ hiển thị để kiểm tra giao diện.',
@@ -1057,7 +1299,37 @@
         batchExcelDone: 'Excel hàng loạt đã tạo xong.',
         basicInfo: 'Thông tin cơ bản',
         documentCheck: 'Kiểm tra tài liệu',
-        readySubmit: 'Sẵn sàng nộp'
+        readySubmit: 'Sẵn sàng nộp',
+        operations: 'Vận hành',
+        entryDate: 'Ngày nhập cảnh',
+        entrySchedule: 'Nhóm theo ngày nhập cảnh',
+        groupDrive: 'Drive theo nhóm',
+        syncAllDrive: 'Đồng bộ tất cả',
+        groupIdPlaceholder: 'Mã nhóm',
+        groupNamePlaceholder: 'Tên nhóm',
+        createGroupFolder: 'Tạo thư mục',
+        updateGroupFolder: 'Sửa tên',
+        selectGroup: 'Chọn nhóm',
+        uploadFolderPlaceholder: 'Thư mục con tùy chọn',
+        uploadGroupFiles: 'Tải nhiều file lên nhóm',
+        syncSelectedGroup: 'Đồng bộ Drive nhóm',
+        uploadGenerated: 'Tải hồ sơ đã tạo',
+        groupProgress: 'Tiến độ nhóm',
+        driveFiles: 'File Drive',
+        mirroredFiles: 'File đã mirror',
+        noDriveFiles: 'Chưa có file Drive trong nhóm này.',
+        driveApplicants: 'Ứng viên trên Drive',
+        lastMirrored: 'Đồng bộ gần nhất',
+        openDrive: 'Mở Drive',
+        createDone: 'Thư mục nhóm đã sẵn sàng.',
+        updateDone: 'Tên thư mục đã cập nhật.',
+        syncDone: 'Đồng bộ nhóm đã xong.',
+        uploadDone: 'Tải file lên Drive đã xong.',
+        generatedUploadDone: 'Hồ sơ đã tạo đã được tải lên Drive.',
+        driveNoWrite: 'Drive đang chỉ đọc. Hãy chia sẻ thư mục cho service account với quyền Editor.',
+        noGroups: 'Chưa có nhóm. Hãy tạo thư mục nhóm hoặc đồng bộ Drive.',
+        noEntryGroups: 'Chưa có nhóm theo ngày nhập cảnh.',
+        unassignedEntry: 'Chưa có ngày nhập cảnh'
       },
       en: {
         brandTitle: 'BT TOUR Visa System',
@@ -1071,6 +1343,11 @@
         processing: 'Processing',
         completed: 'Completed',
         language: 'Language',
+        loginTitle: 'BT TOUR Visa Login',
+        loginSubtitle: 'Entry-date group visa operations workspace',
+        passwordPlaceholder: 'Password',
+        loginButton: 'Login',
+        loginError: 'Incorrect password.',
         apiStatus: 'API Status',
         checking: 'Checking',
         heroTitle: 'Visa operations dashboard',
@@ -1091,6 +1368,10 @@
         timeline: 'Progress timeline',
         workflow: 'Workflow',
         generatePdf: 'Generate PDF',
+        groupPdf: 'Group PDF',
+        groupExcel: 'Group Excel',
+        finalPackage: 'Final package',
+        finalPackageDone: 'Final visa package generated.',
         details: 'Details',
         close: 'Close',
         noApplicants: 'No applicants yet. Demo data appears when the API cannot be reached so the interface can still be checked.',
@@ -1119,7 +1400,37 @@
         batchExcelDone: 'Batch Excel completed.',
         basicInfo: 'Basic information',
         documentCheck: 'Document check',
-        readySubmit: 'Ready to submit'
+        readySubmit: 'Ready to submit',
+        operations: 'Operations',
+        entryDate: 'Entry date',
+        entrySchedule: 'Entry date groups',
+        groupDrive: 'Group Drive',
+        syncAllDrive: 'Sync all',
+        groupIdPlaceholder: 'Group ID',
+        groupNamePlaceholder: 'Group name',
+        createGroupFolder: 'Create folder',
+        updateGroupFolder: 'Update',
+        selectGroup: 'Select group',
+        uploadFolderPlaceholder: 'Optional subfolder',
+        uploadGroupFiles: 'Upload files to group',
+        syncSelectedGroup: 'Mirror group Drive',
+        uploadGenerated: 'Upload generated docs',
+        groupProgress: 'Group progress',
+        driveFiles: 'Drive files',
+        mirroredFiles: 'Mirrored files',
+        noDriveFiles: 'No Drive files mirrored for this group yet.',
+        driveApplicants: 'Drive applicants',
+        lastMirrored: 'Last mirrored',
+        openDrive: 'Open Drive',
+        createDone: 'Group folder is ready.',
+        updateDone: 'Folder name updated.',
+        syncDone: 'Group sync completed.',
+        uploadDone: 'Files uploaded to Drive.',
+        generatedUploadDone: 'Generated documents uploaded to Drive.',
+        driveNoWrite: 'Drive is read-only. Share the folder with the service account as Editor.',
+        noGroups: 'No groups yet. Create a group folder or sync Drive.',
+        noEntryGroups: 'No entry-date groups yet.',
+        unassignedEntry: 'No entry date'
       },
       ko: {
         brandTitle: 'BT TOUR 비자 시스템',
@@ -1133,6 +1444,11 @@
         processing: '진행중',
         completed: '완료',
         language: '언어',
+        loginTitle: 'BT TOUR Visa 로그인',
+        loginSubtitle: '입국일별 그룹 비자 운영 화면',
+        passwordPlaceholder: '비밀번호',
+        loginButton: '로그인',
+        loginError: '비밀번호가 맞지 않습니다.',
         apiStatus: 'API 상태',
         checking: '확인 중',
         heroTitle: '비자 운영 대시보드',
@@ -1153,6 +1469,10 @@
         timeline: '진행상황 타임라인',
         workflow: '업무 흐름',
         generatePdf: 'PDF 생성',
+        groupPdf: '그룹 PDF',
+        groupExcel: '그룹 Excel',
+        finalPackage: '최종 신청서류',
+        finalPackageDone: '최종 신청서류 패키지를 생성했습니다.',
         details: '상세',
         close: '닫기',
         noApplicants: '신청자가 아직 없습니다. API에 접근하지 못하는 환경에서는 화면 검증용 데모 데이터가 표시됩니다.',
@@ -1181,7 +1501,37 @@
         batchExcelDone: '일괄 Excel 생성이 완료되었습니다.',
         basicInfo: '기초정보',
         documentCheck: '서류수집',
-        readySubmit: '접수준비'
+        readySubmit: '접수준비',
+        operations: '운영',
+        entryDate: '입국일',
+        entrySchedule: '입국일별 그룹',
+        groupDrive: '그룹 Drive',
+        syncAllDrive: '전체 동기화',
+        groupIdPlaceholder: '그룹 ID',
+        groupNamePlaceholder: '그룹 이름',
+        createGroupFolder: '폴더 생성',
+        updateGroupFolder: '수정',
+        selectGroup: '그룹 선택',
+        uploadFolderPlaceholder: '선택 서브폴더',
+        uploadGroupFiles: '그룹에 파일 일괄 업로드',
+        syncSelectedGroup: 'Drive 미러링',
+        uploadGenerated: '생성 서류 업로드',
+        groupProgress: '그룹 진행률',
+        driveFiles: 'Drive 파일',
+        mirroredFiles: '미러링 파일',
+        noDriveFiles: '이 그룹에 미러링된 Drive 파일이 아직 없습니다.',
+        driveApplicants: 'Drive 신청자',
+        lastMirrored: '최근 동기화',
+        openDrive: 'Drive 열기',
+        createDone: '그룹 폴더가 준비되었습니다.',
+        updateDone: '폴더 이름을 수정했습니다.',
+        syncDone: '그룹 동기화가 완료되었습니다.',
+        uploadDone: '파일을 Drive에 업로드했습니다.',
+        generatedUploadDone: '생성 서류를 Drive에 업로드했습니다.',
+        driveNoWrite: 'Drive가 읽기 전용입니다. 서비스 계정에 Editor 권한으로 폴더를 공유해야 합니다.',
+        noGroups: '아직 그룹이 없습니다. 그룹 폴더를 만들거나 Drive를 동기화하세요.',
+        noEntryGroups: '아직 입국일별 그룹이 없습니다.',
+        unassignedEntry: '입국일 미지정'
       }
     };
 
@@ -1195,19 +1545,51 @@
       ['financial', 'financial', '💳']
     ];
 
+    const LOGIN_PASSWORD = 'bt2026';
     let currentLanguage = localStorage.getItem('bttourVisaLanguage') || 'vi';
-    let currentView = 'dashboard';
+    let currentView = 'drive';
     let currentStatus = 'all';
     let currentDocType = 'passport';
     let apiBaseUrl = null;
     let demoMode = false;
     let allApplicants = [];
     let groups = [];
+    let driveGroups = [];
+    let selectedDriveFiles = [];
+    let driveConfig = null;
+    let currentDriveGroup = '';
+    let currentEntryDate = 'all';
     let timeline = [];
 
     const $ = (selector) => document.querySelector(selector);
     const $$ = (selector) => Array.from(document.querySelectorAll(selector));
     const t = (key) => (i18n[currentLanguage] && i18n[currentLanguage][key]) || i18n.en[key] || key;
+
+    function applyAuthState() {
+      const loggedIn = sessionStorage.getItem('bttourVisaLoggedIn') === '1';
+      $('#login-screen').hidden = loggedIn;
+      $('#app-shell').hidden = !loggedIn;
+      if (!loggedIn) {
+        setTimeout(() => $('#login-password')?.focus(), 0);
+      }
+      return loggedIn;
+    }
+
+    async function handleLogin(event) {
+      event.preventDefault();
+      const input = $('#login-password');
+      const error = $('#login-error');
+      if ((input.value || '') !== LOGIN_PASSWORD) {
+        error.textContent = t('loginError');
+        input.select();
+        return;
+      }
+      sessionStorage.setItem('bttourVisaLoggedIn', '1');
+      error.textContent = '';
+      applyAuthState();
+      switchView('drive');
+      await refreshAll();
+    }
 
     function setLanguage(lang) {
       currentLanguage = lang;
@@ -1223,6 +1605,11 @@
       renderWorkflow();
       renderApplicants();
       renderDocuments();
+      populateGroups();
+      renderDrivePanel();
+      renderSelectedDriveFiles();
+      renderEntryDateButtons();
+      renderEntrySchedule();
       updateApiPanel();
     }
 
@@ -1235,6 +1622,8 @@
       $('#dashboard-view').hidden = view !== 'dashboard';
       $('#applicants-view').hidden = view !== 'applicants';
       $('#documents-view').hidden = view !== 'documents';
+      $('#schedule-view').hidden = view !== 'schedule';
+      $('#drive-view').hidden = view !== 'drive';
       $$('[data-view-button]').forEach((button) => button.classList.toggle('active', button.dataset.viewButton === view));
       if (window.innerWidth <= 820) $('#sidebar').classList.remove('open');
     }
@@ -1295,13 +1684,24 @@
       demoMode = true;
       allApplicants = demoApplicants;
       groups = buildGroupsFromApplicants(demoApplicants);
+      driveGroups = buildDriveGroupsFromGroups(groups);
+      driveConfig = null;
       timeline = buildTimeline(demoApplicants);
       updateApiPanel();
     }
 
     async function api(endpoint, options = {}) {
       if (!apiBaseUrl) throw new Error('API unavailable');
-      const response = await fetchWithTimeout(`${apiBaseUrl}${endpoint}`, options, 10000);
+      const { timeoutMs = 10000, ...fetchOptions } = options;
+      const response = await fetchWithTimeout(`${apiBaseUrl}${endpoint}`, fetchOptions, timeoutMs);
+      const json = await response.json();
+      if (!response.ok || !json.success) throw new Error(json.error || `HTTP ${response.status}`);
+      return json;
+    }
+
+    async function apiForm(endpoint, formData, timeoutMs = 180000) {
+      if (!apiBaseUrl) throw new Error('API unavailable');
+      const response = await fetchWithTimeout(`${apiBaseUrl}${endpoint}`, { method: 'POST', body: formData }, timeoutMs);
       const json = await response.json();
       if (!response.ok || !json.success) throw new Error(json.error || `HTTP ${response.status}`);
       return json;
@@ -1310,24 +1710,33 @@
     async function refreshAll() {
       await detectApi();
       if (!demoMode) {
-        const [statsResult, applicantsResult, timelineResult, groupsResult] = await Promise.allSettled([
+        const [statsResult, applicantsResult, timelineResult, groupsResult, driveGroupsResult, driveConfigResult] = await Promise.allSettled([
           api('/api/stats'),
           api('/api/applicants'),
           api('/api/timeline'),
-          api('/api/groups')
+          api('/api/groups'),
+          api('/api/drive/groups'),
+          api('/api/drive/config')
         ]);
 
         if (applicantsResult.status === 'fulfilled') allApplicants = applicantsResult.value.data || [];
         if (groupsResult.status === 'fulfilled') groups = groupsResult.value.data || buildGroupsFromApplicants(allApplicants);
+        if (driveGroupsResult.status === 'fulfilled') driveGroups = driveGroupsResult.value.data || [];
+        if (driveConfigResult.status === 'fulfilled') driveConfig = driveConfigResult.value.data || null;
         if (timelineResult.status === 'fulfilled') timeline = timelineResult.value.data || buildTimeline(allApplicants);
         if (statsResult.status !== 'fulfilled') timeline = buildTimeline(allApplicants);
       }
       populateGroups();
+      if (!demoMode && currentDriveGroup) await loadDriveFilesForGroup(currentDriveGroup, true);
       renderStats();
       renderTimeline();
       renderWorkflow();
       renderApplicants();
       renderDocuments();
+      renderDrivePanel();
+      renderSelectedDriveFiles();
+      renderEntryDateButtons();
+      renderEntrySchedule();
       toast(t('copied'));
     }
 
@@ -1343,12 +1752,102 @@
       return Array.from(map.values());
     }
 
+    function buildDriveGroupsFromGroups(sourceGroups) {
+      return sourceGroups.map((group) => ({
+        group_id: group.id,
+        name: group.name || group.id,
+        applicant_count: group.applicant_count || 0,
+        mirrored_file_count: group.drive_file_count || 0,
+        progress_percent: group.progress_percent || 0,
+        web_view_link: group.drive_link || '',
+        last_mirrored_at: group.last_mirrored_at || ''
+      }));
+    }
+
     function buildTimeline(applicants) {
       const total = applicants.length;
       return ['pending', 'processing', 'completed'].map((status) => {
         const count = applicants.filter((applicant) => (applicant.status || 'pending') === status).length;
         return { status, count, percent: total ? Math.round((count * 1000) / total) / 10 : 0 };
       });
+    }
+
+    function buildEntryGroups() {
+      const map = new Map();
+      const merged = mergeGroupSources();
+      merged.forEach((group) => {
+        const id = group.group_id || group.id;
+        map.set(id, {
+          ...group,
+          group_id: id,
+          entry_date: group.entry_date || '',
+          applicant_count: Number(group.applicant_count || 0),
+          progress_percent: Number(group.progress_percent || 0)
+        });
+      });
+
+      allApplicants.forEach((applicant) => {
+        const id = applicant.group_id || 'UNGROUPED';
+        const current = map.get(id) || { group_id: id, name: id, applicant_count: 0, progress_percent: 0 };
+        const totalDocs = Number(current.expected_documents || 0) + Number(applicant.total_documents || 0);
+        const doneDocs = Number(current.completed_documents || 0) + Number(applicant.documents_count || 0);
+        map.set(id, {
+          ...current,
+          group_id: id,
+          name: current.name || id,
+          entry_date: current.entry_date || applicant.entry_date || '',
+          applicant_count: Number(current.applicant_count || 0) + 1,
+          completed_documents: doneDocs,
+          expected_documents: totalDocs,
+          progress_percent: totalDocs > 0 ? Math.min(100, Math.round((doneDocs / totalDocs) * 100)) : Number(current.progress_percent || 0)
+        });
+      });
+
+      return Array.from(map.values()).sort((a, b) => {
+        const aDate = a.entry_date || '9999-12-31';
+        const bDate = b.entry_date || '9999-12-31';
+        return aDate.localeCompare(bDate) || String(a.name || a.group_id).localeCompare(String(b.name || b.group_id));
+      });
+    }
+
+    function renderEntryDateButtons() {
+      const target = $('#entry-date-buttons');
+      if (!target) return;
+      const groupsByDate = buildEntryGroups().reduce((acc, group) => {
+        const key = group.entry_date || 'unassigned';
+        acc[key] = (acc[key] || 0) + 1;
+        return acc;
+      }, {});
+      const rows = [['all', t('all'), Object.values(groupsByDate).reduce((a, b) => a + b, 0)]]
+        .concat(Object.entries(groupsByDate).map(([date, count]) => [date, date === 'unassigned' ? t('unassignedEntry') : date, count]));
+      target.innerHTML = rows.map(([value, label, count]) => `
+        <button class="nav-button ${currentEntryDate === value ? 'active' : ''}" onclick="filterEntryDate('${escapeJs(value)}')">
+          <span class="nav-label"><span>🛬</span><span>${escapeHtml(label)}</span></span>
+          <span class="badge">${count}</span>
+        </button>
+      `).join('');
+    }
+
+    function filterEntryDate(value) {
+      currentEntryDate = value || 'all';
+      renderEntryDateButtons();
+      renderEntrySchedule();
+      switchView('schedule');
+    }
+
+    function renderEntrySchedule() {
+      const target = $('#entry-schedule-grid');
+      if (!target) return;
+      const source = buildEntryGroups().filter((group) => {
+        if (currentEntryDate === 'all') return true;
+        if (currentEntryDate === 'unassigned') return !group.entry_date;
+        return group.entry_date === currentEntryDate;
+      });
+      if (!source.length) {
+        target.innerHTML = `<div class="empty-state">${t('noEntryGroups')}</div>`;
+        return;
+      }
+      target.innerHTML = source.map(renderGroupCard).join('');
     }
 
     function renderStats() {
@@ -1424,9 +1923,43 @@
       const previous = select.value || 'all';
       select.innerHTML = `<option value="all">${t('allGroups')}</option>` + groups.map((group) => {
         const name = currentLanguage === 'vi' ? (group.name_vi || group.name || group.id) : (group.name || group.name_vi || group.id);
-        return `<option value="${escapeHtml(group.id)}">${escapeHtml(name)} · ${group.applicant_count || 0}</option>`;
+        const progress = group.progress_percent != null ? ` · ${Math.round(group.progress_percent)}%` : '';
+        return `<option value="${escapeHtml(group.id)}">${escapeHtml(name)} · ${group.applicant_count || 0}${progress}</option>`;
       }).join('');
       select.value = Array.from(select.options).some((option) => option.value === previous) ? previous : 'all';
+
+      const driveSelect = $('#drive-group-filter');
+      if (!driveSelect) return;
+      const merged = mergeGroupSources();
+      const drivePrevious = currentDriveGroup || driveSelect.value || '';
+      driveSelect.innerHTML = `<option value="">${t('selectGroup')}</option>` + merged.map((group) => {
+        const id = group.group_id || group.id;
+        const name = group.name || group.name_vi || id;
+        const progress = group.progress_percent != null ? ` · ${Math.round(group.progress_percent)}%` : '';
+        return `<option value="${escapeHtml(id)}">${escapeHtml(name)}${progress}</option>`;
+      }).join('');
+      const fallbackGroup = merged[0]?.group_id || merged[0]?.id || '';
+      const nextGroup = Array.from(driveSelect.options).some((option) => option.value === drivePrevious) ? drivePrevious : fallbackGroup;
+      driveSelect.value = nextGroup;
+      currentDriveGroup = driveSelect.value;
+      if (currentDriveGroup) {
+        const group = merged.find((item) => (item.group_id || item.id) === currentDriveGroup);
+        if (group) {
+          $('#drive-group-id').value = currentDriveGroup;
+          $('#drive-group-name').value = group.name || group.name_vi || currentDriveGroup;
+          $('#drive-entry-date').value = group.entry_date || '';
+        }
+      }
+    }
+
+    function mergeGroupSources() {
+      const map = new Map();
+      groups.forEach((group) => map.set(group.id, { ...group, group_id: group.id }));
+      driveGroups.forEach((group) => {
+        const id = group.group_id || group.id;
+        map.set(id, { ...(map.get(id) || {}), ...group, group_id: id });
+      });
+      return Array.from(map.values());
     }
 
     function getFilteredApplicants() {
@@ -1470,7 +2003,6 @@
             <div class="progress-track"><div class="progress-fill" style="width:${progress}%"></div></div>
           </div>
           <div class="card-actions">
-            <button class="button primary" onclick="generatePdf('${escapeJs(applicant.id)}', this)">📄 ${t('generatePdf')}</button>
             <button class="button ghost" onclick="openDetails('${escapeJs(applicant.id)}')">${t('details')}</button>
           </div>
         </article>
@@ -1502,6 +2034,277 @@
       `;
     }
 
+    function renderDrivePanel() {
+      const state = $('#drive-root-state');
+      const url = $('#drive-root-url');
+      if (state && url) {
+        const root = driveConfig?.root;
+        const canWrite = root?.capabilities?.canAddChildren !== false;
+        state.innerHTML = canWrite
+          ? `✅ <span>${root?.name || 'Google Drive'}</span>`
+          : `⚠️ <span>${t('driveNoWrite')}</span>`;
+        url.textContent = root?.webViewLink || driveConfig?.root_folder_id || 'Google Drive';
+      }
+
+      renderSelectedDriveFiles();
+      const grid = $('#drive-groups-grid');
+      if (!grid) return;
+      const source = mergeGroupSources();
+      if (!source.length) {
+        grid.innerHTML = `<div class="empty-state">${t('noGroups')}</div>`;
+        return;
+      }
+
+      grid.innerHTML = source.map(renderGroupCard).join('');
+    }
+
+    function renderGroupCard(group) {
+      const id = group.group_id || group.id;
+      const name = group.name || group.name_vi || id;
+      const progress = Number(group.progress_percent || 0);
+      const fileCount = Number(group.mirrored_file_count ?? group.drive_file_count ?? group.file_count ?? 0);
+      const applicantCount = Number(group.applicant_count ?? group.drive_applicant_count ?? 0);
+      const selected = currentDriveGroup === id ? 'selected' : '';
+      return `
+        <article class="group-card ${selected}">
+          <div class="card-top">
+            <div>
+              <div class="group-title">${escapeHtml(name)}</div>
+              <div class="applicant-sub">${escapeHtml(id)}</div>
+            </div>
+            ${group.web_view_link || group.drive_link ? `<a class="drive-link" href="${escapeHtml(group.web_view_link || group.drive_link)}" target="_blank" rel="noopener">${t('openDrive')}</a>` : ''}
+          </div>
+          <div class="progress-line">
+            <div class="progress-meta"><span>${t('groupProgress')}</span><span>${Math.round(progress)}%</span></div>
+            <div class="progress-track"><div class="progress-fill" style="width:${Math.min(100, progress)}%"></div></div>
+          </div>
+          <div class="group-meta">
+            <div>${t('entryDate')}: ${escapeHtml(group.entry_date || t('unassignedEntry'))}</div>
+            <div>${t('driveFiles')}: ${fileCount}</div>
+            <div>${t('driveApplicants')}: ${applicantCount}</div>
+            <div>${t('lastMirrored')}: ${escapeHtml(formatDate(group.last_mirrored_at))}</div>
+          </div>
+          <div class="card-actions">
+            <button class="button ghost" onclick="selectDriveGroup('${escapeJs(id)}')">${t('selectGroup')}</button>
+            <button class="button primary" onclick="generateFinalPackageById('${escapeJs(id)}', this)">🗃️ ${t('finalPackage')}</button>
+            <button class="button primary" onclick="batchPdfById('${escapeJs(id)}', this)">📄 ${t('groupPdf')}</button>
+            <button class="button secondary" onclick="batchExcelById('${escapeJs(id)}', this)">📊 ${t('groupExcel')}</button>
+            <button class="button secondary" onclick="syncDriveGroupById('${escapeJs(id)}', this)">↻ ${t('syncSelectedGroup')}</button>
+            <button class="button ghost" onclick="uploadGeneratedById('${escapeJs(id)}', this)">📦 ${t('uploadGenerated')}</button>
+          </div>
+        </article>
+      `;
+    }
+
+    function selectDriveGroup(groupId) {
+      currentDriveGroup = groupId || '';
+      const driveSelect = $('#drive-group-filter');
+      if (driveSelect) driveSelect.value = currentDriveGroup;
+      const groupSelect = $('#group-filter');
+      if (groupSelect && currentDriveGroup && Array.from(groupSelect.options).some((option) => option.value === currentDriveGroup)) {
+        groupSelect.value = currentDriveGroup;
+      }
+      const group = mergeGroupSources().find((item) => (item.group_id || item.id) === currentDriveGroup);
+      if (group) {
+        $('#drive-group-id').value = currentDriveGroup;
+        $('#drive-group-name').value = group.name || group.name_vi || currentDriveGroup;
+        $('#drive-entry-date').value = group.entry_date || '';
+      }
+      selectedDriveFiles = [];
+      loadDriveFilesForGroup(currentDriveGroup, true);
+      renderDrivePanel();
+    }
+
+    function renderSelectedDriveFiles() {
+      const target = $('#selected-drive-files');
+      if (!target) return;
+      if (!currentDriveGroup) {
+        target.innerHTML = `<div class="empty-state">${t('selectGroup')}</div>`;
+        return;
+      }
+      const rows = selectedDriveFiles.slice(0, 12).map((file) => `
+        <a class="drive-file-row" href="${escapeHtml(file.web_view_link || '#')}" target="_blank" rel="noopener">
+          <span class="drive-file-name">${escapeHtml(file.name || '-')}</span>
+          <span class="drive-file-type">${escapeHtml(file.doc_type || file.mime_type || '-')}</span>
+        </a>
+      `).join('');
+      target.innerHTML = `
+        <div class="drive-file-row">
+          <span class="drive-file-name">${t('mirroredFiles')} · ${escapeHtml(currentDriveGroup)}</span>
+          <span class="drive-file-type">${selectedDriveFiles.length}</span>
+        </div>
+        ${rows || `<div class="empty-state">${t('noDriveFiles')}</div>`}
+      `;
+    }
+
+    async function loadDriveFilesForGroup(groupId, silent = false) {
+      if (!groupId || demoMode || !apiBaseUrl) {
+        selectedDriveFiles = [];
+        renderSelectedDriveFiles();
+        return;
+      }
+      try {
+        const result = await api(`/api/drive/files?groupId=${encodeURIComponent(groupId)}`);
+        selectedDriveFiles = result.data || [];
+      } catch (error) {
+        selectedDriveFiles = [];
+        if (!silent) toast(error.message);
+      }
+      renderSelectedDriveFiles();
+    }
+
+    async function createDriveGroup(button) {
+      if (demoMode || !apiBaseUrl) return toast(t('actionNeedsApi'));
+      const groupId = ($('#drive-group-id').value || '').trim();
+      const name = ($('#drive-group-name').value || groupId).trim();
+      const entryDate = ($('#drive-entry-date').value || '').trim();
+      if (!groupId || !name) return toast(t('promptGroup'));
+      setButtonLoading(button, true);
+      try {
+        await api('/api/drive/groups', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ group_id: groupId, name, name_vi: name, entry_date: entryDate })
+        });
+        currentDriveGroup = groupId;
+        toast(t('createDone'));
+        await refreshAll();
+      } catch (error) {
+        toast(error.message);
+      } finally {
+        setButtonLoading(button, false);
+      }
+    }
+
+    async function updateDriveGroup(button) {
+      if (demoMode || !apiBaseUrl) return toast(t('actionNeedsApi'));
+      const groupId = currentDriveGroup || ($('#drive-group-id').value || '').trim();
+      const name = ($('#drive-group-name').value || '').trim();
+      const entryDate = ($('#drive-entry-date').value || '').trim();
+      if (!groupId || !name) return toast(t('promptGroup'));
+      setButtonLoading(button, true);
+      try {
+        await api(`/api/drive/groups/${encodeURIComponent(groupId)}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, name_vi: name, entry_date: entryDate })
+        });
+        toast(t('updateDone'));
+        await refreshAll();
+      } catch (error) {
+        toast(error.message);
+      } finally {
+        setButtonLoading(button, false);
+      }
+    }
+
+    async function syncSelectedDriveGroup(button) {
+      const groupId = currentDriveGroup || chooseGroup();
+      if (!groupId) return;
+      await syncDriveGroupById(groupId, button);
+    }
+
+    async function syncDriveGroupById(groupId, button) {
+      if (demoMode || !apiBaseUrl) return toast(t('actionNeedsApi'));
+      setButtonLoading(button, true);
+      try {
+        currentDriveGroup = groupId;
+        await api(`/api/drive/sync/${encodeURIComponent(groupId)}`, { method: 'POST' });
+        toast(t('syncDone'));
+        await refreshAll();
+      } catch (error) {
+        toast(error.message);
+      } finally {
+        setButtonLoading(button, false);
+      }
+    }
+
+    async function syncAllDrive(button) {
+      if (demoMode || !apiBaseUrl) return toast(t('actionNeedsApi'));
+      setButtonLoading(button, true);
+      try {
+        await api('/api/drive/sync', { method: 'POST' });
+        toast(t('syncDone'));
+        await refreshAll();
+      } catch (error) {
+        toast(error.message);
+      } finally {
+        setButtonLoading(button, false);
+      }
+    }
+
+    async function uploadDriveFiles(button) {
+      if (demoMode || !apiBaseUrl) return toast(t('actionNeedsApi'));
+      const groupId = currentDriveGroup || chooseGroup();
+      const input = $('#drive-files');
+      if (!groupId) return;
+      if (!input.files || input.files.length === 0) return toast(t('uploadGroupFiles'));
+      const form = new FormData();
+      Array.from(input.files).forEach((file) => form.append('files', file));
+      const folderName = ($('#drive-upload-folder').value || '').trim();
+      if (folderName) form.append('folder_name', folderName);
+      setButtonLoading(button, true);
+      try {
+        await apiForm(`/api/drive/upload/${encodeURIComponent(groupId)}`, form);
+        input.value = '';
+        toast(t('uploadDone'));
+        await syncDriveGroupById(groupId);
+      } catch (error) {
+        toast(error.message);
+      } finally {
+        setButtonLoading(button, false);
+      }
+    }
+
+    async function uploadGeneratedDrive(button) {
+      const groupId = currentDriveGroup || chooseGroup();
+      if (!groupId) return;
+      await uploadGeneratedById(groupId, button);
+    }
+
+    async function uploadGeneratedById(groupId, button) {
+      if (demoMode || !apiBaseUrl) return toast(t('actionNeedsApi'));
+      setButtonLoading(button, true);
+      try {
+        await api(`/api/drive/upload-generated/${encodeURIComponent(groupId)}`, { method: 'POST' });
+        toast(t('generatedUploadDone'));
+        await syncDriveGroupById(groupId);
+      } catch (error) {
+        toast(error.message);
+      } finally {
+        setButtonLoading(button, false);
+      }
+    }
+
+    async function generateFinalPackage(button) {
+      const groupId = currentDriveGroup || chooseGroup();
+      if (!groupId) return;
+      await generateFinalPackageById(groupId, button);
+    }
+
+    async function generateFinalPackageById(groupId, button) {
+      if (demoMode || !apiBaseUrl) return toast(t('actionNeedsApi'));
+      setButtonLoading(button, true);
+      try {
+        const result = await api(`/api/generate/final-package/${encodeURIComponent(groupId)}`, {
+          method: 'POST',
+          timeoutMs: 180000
+        });
+        if (result.zip_path) download(`${apiBaseUrl}${result.zip_path}`, `${groupId}_complete_package.zip`);
+        toast(t('finalPackageDone'));
+        await refreshAll();
+      } catch (error) {
+        toast(error.message);
+      } finally {
+        setButtonLoading(button, false);
+      }
+    }
+
+    function formatDate(value) {
+      if (!value) return '-';
+      return String(value).replace('T', ' ').replace(/\.\d+Z?$/, '');
+    }
+
     function emptyState() {
       return `<div class="empty-state">${t('noApplicants')}</div>`;
     }
@@ -1525,7 +2328,6 @@
           <div class="detail-value">${escapeHtml(value || '-')}</div>
         </div>
       `).join('');
-      $('#modal-pdf-button').onclick = () => generatePdf(applicant.id, $('#modal-pdf-button'));
       $('#detail-modal').classList.add('show');
     }
 
@@ -1550,6 +2352,10 @@
     async function batchPdf(button) {
       const groupId = chooseGroup();
       if (!groupId) return;
+      await batchPdfById(groupId, button);
+    }
+
+    async function batchPdfById(groupId, button) {
       if (demoMode || !apiBaseUrl) return toast(t('actionNeedsApi'));
       setButtonLoading(button, true);
       try {
@@ -1565,6 +2371,10 @@
     async function batchExcel(button) {
       const groupId = chooseGroup();
       if (!groupId) return;
+      await batchExcelById(groupId, button);
+    }
+
+    async function batchExcelById(groupId, button) {
       if (demoMode || !apiBaseUrl) return toast(t('actionNeedsApi'));
       setButtonLoading(button, true);
       try {
@@ -1579,10 +2389,13 @@
     }
 
     function chooseGroup() {
+      if (currentDriveGroup) return currentDriveGroup;
       const selected = $('#group-filter')?.value;
       if (selected && selected !== 'all') return selected;
       if (groups.length === 1) return groups[0].id;
-      return window.prompt(t('promptGroup'), groups[0]?.id || '');
+      const merged = mergeGroupSources();
+      if (merged.length === 1) return merged[0].group_id || merged[0].id;
+      return window.prompt(t('promptGroup'), merged[0]?.group_id || groups[0]?.id || '');
     }
 
     function download(url, filename) {
@@ -1646,8 +2459,10 @@
 
     window.addEventListener('load', async () => {
       setLanguage(currentLanguage);
-      switchView('dashboard');
-      await refreshAll();
+      if (applyAuthState()) {
+        switchView('drive');
+        await refreshAll();
+      }
     });
 
     $('#detail-modal').addEventListener('click', (event) => {
