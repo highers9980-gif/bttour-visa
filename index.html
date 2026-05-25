@@ -1,0 +1,1177 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#2563eb">
+    <title>BT TOUR Quản lý Visa</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        :root {
+            --primary: #2563eb;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --secondary: #6b7280;
+            --light: #f3f4f6;
+            --border: #e5e7eb;
+            --text: #1f2937;
+            --text-light: #6b7280;
+        }
+
+        html, body {
+            height: 100%;
+            width: 100%;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #fafbfc;
+            color: var(--text);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* 안전 영역 (노치/홈바 대응) */
+        @supports (padding: max(0px)) {
+            header {
+                padding-left: max(1rem, env(safe-area-inset-left));
+                padding-right: max(1rem, env(safe-area-inset-right));
+                padding-top: max(1rem, env(safe-area-inset-top));
+            }
+        }
+
+        /* 헤더 */
+        header {
+            background: white;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            padding: 1rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .logo-text {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .lang-switcher {
+            display: flex;
+            gap: 6px;
+            background: var(--light);
+            padding: 4px;
+            border-radius: 6px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .lang-btn {
+            padding: 6px 10px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-size: 11px;
+            border-radius: 4px;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .lang-btn.active {
+            background: white;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        /* 메인 컨테이너 */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem;
+            padding-bottom: 80px;
+        }
+
+        @media (min-width: 768px) {
+            .container {
+                padding: 2rem;
+            }
+        }
+
+        /* 통계 카드 */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.5rem;
+            line-height: 1.2;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .stat-secondary {
+            font-size: 12px;
+            color: var(--text-light);
+            margin-top: 0.25rem;
+        }
+
+        /* 필터 */
+        .filters {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            margin-bottom: 1.5rem;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .filter-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .filter-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-light);
+            text-transform: uppercase;
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+            white-space: nowrap;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        .filter-btn:active {
+            transform: scale(0.95);
+        }
+
+        .filter-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .filter-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        /* 폴더 목록 */
+        .folders {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 480px) {
+            .folders {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .folder-card {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+
+        .folder-card:active {
+            transform: scale(0.98);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .folder-header {
+            padding: 1rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .folder-name {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            word-break: break-word;
+        }
+
+        .folder-meta {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        .folder-body {
+            padding: 1rem;
+        }
+
+        .progress-section {
+            margin-bottom: 1rem;
+        }
+
+        .progress-label {
+            font-size: 12px;
+            color: var(--text-light);
+            margin-bottom: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .progress-bar {
+            height: 6px;
+            background: var(--light);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-bottom: 0.5rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981, #059669);
+            transition: width 0.3s ease;
+        }
+
+        .progress-time {
+            font-size: 11px;
+            color: var(--text-light);
+        }
+
+        /* 서류 목록 */
+        .documents {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 6px;
+            margin-bottom: 1rem;
+        }
+
+        .doc-item {
+            padding: 8px;
+            background: var(--light);
+            border-radius: 6px;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            min-height: 28px;
+        }
+
+        .doc-item.done {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .doc-item.pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .doc-icon {
+            font-size: 12px;
+            flex-shrink: 0;
+        }
+
+        /* 액션 버튼 */
+        .actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+        }
+
+        .btn {
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        .btn:active {
+            transform: scale(0.95);
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:active {
+            background: #1d4ed8;
+        }
+
+        .btn-primary:disabled {
+            background: var(--border);
+            cursor: not-allowed;
+            color: var(--text-light);
+        }
+
+        .btn-secondary {
+            background: var(--light);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:active {
+            background: #e5e7eb;
+        }
+
+        /* 탭 */
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border);
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .tab {
+            padding: 0.75rem 1rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-light);
+            position: relative;
+            transition: all 0.2s;
+            white-space: nowrap;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        .tab.active {
+            color: var(--primary);
+        }
+
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--primary);
+        }
+
+        /* 매뉴얼 */
+        .manual {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (min-width: 768px) {
+            .manual {
+                padding: 2rem;
+            }
+        }
+
+        .manual-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .manual-section h3 {
+            font-size: 15px;
+            margin-bottom: 0.75rem;
+            color: var(--primary);
+            border-left: 3px solid var(--primary);
+            padding-left: 0.75rem;
+        }
+
+        .manual-content {
+            font-size: 13px;
+            line-height: 1.6;
+            color: var(--text-light);
+        }
+
+        .code-block {
+            background: #1f2937;
+            color: #e5e7eb;
+            padding: 0.75rem;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            margin: 0.75rem 0;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .step-list {
+            list-style: none;
+            counter-reset: item;
+        }
+
+        .step-list li {
+            counter-increment: item;
+            margin-bottom: 1rem;
+            display: grid;
+            grid-template-columns: 28px 1fr;
+            gap: 0.75rem;
+        }
+
+        .step-list li::before {
+            content: counter(item);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            font-weight: 600;
+            font-size: 12px;
+            flex-shrink: 0;
+        }
+
+        /* 모달 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: flex-end;
+            justify-content: center;
+            padding: env(safe-area-inset-bottom);
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px 12px 0 0;
+            padding: 1.5rem;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        @media (min-width: 768px) {
+            .modal {
+                align-items: center;
+                justify-content: center;
+                padding: 1rem;
+            }
+
+            .modal-content {
+                border-radius: 12px;
+                max-width: 600px;
+                max-height: 80vh;
+            }
+        }
+
+        .modal-header {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .modal-body {
+            margin-bottom: 1.5rem;
+        }
+
+        .file-list {
+            display: grid;
+            gap: 0.75rem;
+        }
+
+        .file-item {
+            padding: 0.75rem;
+            background: var(--light);
+            border-radius: 6px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+        }
+
+        .file-name {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex: 1;
+            min-width: 0;
+            word-break: break-word;
+        }
+
+        .file-status {
+            padding: 4px 8px;
+            background: var(--light);
+            border-radius: 4px;
+            font-size: 10px;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .file-status.processing {
+            background: #dbeafe;
+            color: #0c4a6e;
+        }
+
+        .file-status.done {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .modal-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+        }
+
+        /* 로딩 */
+        .spinner {
+            border: 2px solid var(--light);
+            border-top: 2px solid var(--primary);
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* 입력 요소 최적화 (모바일) */
+        input, button, select, textarea {
+            font-size: 16px; /* iOS 자동 줌 방지 */
+            min-height: 44px; /* iOS 터치 영역 */
+        }
+
+        button {
+            border: none;
+        }
+
+        /* 아이폰 특화 */
+        @supports (padding: max(0px)) {
+            body {
+                padding-bottom: max(0px, env(safe-area-inset-bottom));
+            }
+        }
+
+        /* 다크모드 (선택) */
+        @media (prefers-color-scheme: dark) {
+            body {
+                background: #111827;
+                color: #f3f4f6;
+            }
+
+            header, .stat-card, .filters, .folder-card, .manual {
+                background: #1f2937;
+                border-color: #374151;
+            }
+
+            .stat-label, .text-light, .filter-label {
+                color: #d1d5db;
+            }
+
+            .code-block {
+                background: #0f1419;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 헤더 -->
+    <header>
+        <div class="logo">
+            <span>📋</span>
+            <div class="logo-text">
+                <span lang="vi">BT TOUR Visa</span>
+                <span lang="en" style="display: none;">BT TOUR Visa</span>
+                <span lang="ko" style="display: none;">BT TOUR 비자</span>
+            </div>
+        </div>
+        <div class="lang-switcher">
+            <button class="lang-btn active" onclick="switchLanguage('vi')" title="Tiếng Việt">Việt</button>
+            <button class="lang-btn" onclick="switchLanguage('en')" title="English">ENG</button>
+            <button class="lang-btn" onclick="switchLanguage('ko')" title="한국어">한</button>
+        </div>
+    </header>
+
+    <!-- 메인 콘텐츠 -->
+    <div class="container">
+        <!-- 탭 -->
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('dashboard')">
+                <span lang="vi">📊 Bảng điều khiển</span>
+                <span lang="en" style="display: none;">📊 Dashboard</span>
+                <span lang="ko" style="display: none;">📊 대시보드</span>
+            </button>
+            <button class="tab" onclick="switchTab('manual')">
+                <span lang="vi">📖 Hướng dẫn</span>
+                <span lang="en" style="display: none;">📖 Manual</span>
+                <span lang="ko" style="display: none;">📖 설명서</span>
+            </button>
+            <button class="tab" onclick="switchTab('documents')">
+                <span lang="vi">📋 Tài liệu</span>
+                <span lang="en" style="display: none;">📋 Documents</span>
+                <span lang="ko" style="display: none;">📋 서류</span>
+            </button>
+        </div>
+
+        <!-- 대시보드 -->
+        <div id="dashboard" class="tab-content active">
+            <!-- 통계 -->
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-label"><span lang="vi">Nhóm hoạt động</span><span lang="en" style="display: none;">Groups</span><span lang="ko" style="display: none;">그룹</span></div>
+                    <div class="stat-value" id="groupCount">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label"><span lang="vi">Tổng ứng viên</span><span lang="en" style="display: none;">Applicants</span><span lang="ko" style="display: none;">신청자</span></div>
+                    <div class="stat-value" id="applicantCount">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label"><span lang="vi">Hoàn thành</span><span lang="en" style="display: none;">Completed</span><span lang="ko" style="display: none;">완료</span></div>
+                    <div class="stat-value" style="color: var(--success);" id="completedCount">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label"><span lang="vi">Tiến độ TB</span><span lang="en" style="display: none;">Avg</span><span lang="ko" style="display: none;">평균</span></div>
+                    <div class="stat-value" id="avgProgress">0%</div>
+                </div>
+            </div>
+
+            <!-- 필터 -->
+            <div class="filters">
+                <div class="filter-group">
+                    <label class="filter-label"><span lang="vi">Lọc nhóm</span><span lang="en" style="display: none;">Groups</span><span lang="ko" style="display: none;">그룹</span></label>
+                    <div class="filter-buttons" id="groupFilter"></div>
+                </div>
+            </div>
+
+            <!-- 폴더 목록 -->
+            <div class="folders" id="foldersList"></div>
+        </div>
+
+        <!-- 사용 설명서 -->
+        <div id="manual" class="tab-content" style="display: none;">
+            <div class="manual">
+                <div class="manual-section">
+                    <h3><span lang="vi">🚀 Bắt đầu</span><span lang="en" style="display: none;">Getting Started</span><span lang="ko" style="display: none;">시작</span></h3>
+                    <div class="manual-content">
+                        <ol class="step-list">
+                            <li>
+                                <div>
+                                    <strong lang="vi">Chuẩn bị tệp</strong>
+                                    <strong lang="en" style="display: none;">Prepare files</strong>
+                                    <strong lang="ko" style="display: none;">파일 준비</strong>
+                                    <p style="margin-top: 0.5rem; color: var(--secondary);">
+                                        <span lang="vi">passport_NguyenVanA_S0123.pdf</span>
+                                        <span lang="en" style="display: none;">passport_NguyenVanA_S0123.pdf</span>
+                                        <span lang="ko" style="display: none;">passport_NguyenVanA_S0123.pdf</span>
+                                    </p>
+                                </div>
+                            </li>
+                            <li>
+                                <div>
+                                    <strong lang="vi">Tải lên Google Drive</strong>
+                                    <strong lang="en" style="display: none;">Upload to Drive</strong>
+                                    <strong lang="ko" style="display: none;">업로드</strong>
+                                    <p style="margin-top: 0.5rem; color: var(--secondary); word-break: break-all; font-size: 11px;">
+                                        https://drive.google.com/drive/folders/1AsE1Kc998LZKmOLYjtFvZDKN4YHJWxgz
+                                    </p>
+                                </div>
+                            </li>
+                            <li>
+                                <div>
+                                    <strong lang="vi">Nhấp nút "Xử lý"</strong>
+                                    <strong lang="en" style="display: none;">Click "Process"</strong>
+                                    <strong lang="ko" style="display: none;">버튼 클릭</strong>
+                                </div>
+                            </li>
+                            <li>
+                                <div>
+                                    <strong lang="vi">Chờ hoàn thành</strong>
+                                    <strong lang="en" style="display: none;">Wait to complete</strong>
+                                    <strong lang="ko" style="display: none;">완료 대기</strong>
+                                    <p style="margin-top: 0.5rem; color: var(--secondary);">
+                                        <span lang="vi">~12 phút cho 30 ứng viên</span>
+                                        <span lang="en" style="display: none;">~12 minutes for 30 applicants</span>
+                                        <span lang="ko" style="display: none;">~30명 12분</span>
+                                    </p>
+                                </div>
+                            </li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="manual-section">
+                    <h3><span lang="vi">📋 Quy tắc tên tệp</span><span lang="en" style="display: none;">Filename Rules</span><span lang="ko" style="display: none;">파일명 규칙</span></h3>
+                    <div class="manual-content">
+                        <p lang="vi"><strong>[Loại tài liệu]_[Tên]_[Số].pdf</strong></p>
+                        <p lang="en" style="display: none;"><strong>[Document]_[Name]_[ID].pdf</strong></p>
+                        <p lang="ko" style="display: none;"><strong>[문서]_[이름]_[번호].pdf</strong></p>
+                        <div class="code-block">
+                            <span lang="vi">passport_NguyenVanA_S0123456.pdf
+CCCD_Nguyen_0123456789012.jpg
+photo_NguyenVanA.jpg
+hotel_NguyenVanA_Marina.pdf
+flight_NguyenVanA_VN123.pdf</span>
+                            <span lang="en" style="display: none;">passport_NguyenVanA_S0123456.pdf
+CCCD_Nguyen_0123456789012.jpg
+photo_NguyenVanA.jpg
+hotel_NguyenVanA_Marina.pdf
+flight_NguyenVanA_VN123.pdf</span>
+                            <span lang="ko" style="display: none;">passport_NguyenVanA_S0123456.pdf
+CCCD_Nguyen_0123456789012.jpg
+photo_NguyenVanA.jpg
+hotel_NguyenVanA_Marina.pdf
+flight_NguyenVanA_VN123.pdf</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="manual-section">
+                    <h3><span lang="vi">⚡ Tính năng tự động</span><span lang="en" style="display: none;">Automation</span><span lang="ko" style="display: none;">자동화</span></h3>
+                    <div class="manual-content">
+                        <p lang="vi">✓ Sắp xếp tự động | Xử lý OCR | Tạo PDF | Cập nhật thực tế</p>
+                        <p lang="en" style="display: none;">✓ Auto-organize | OCR processing | PDF generation | Real-time updates</p>
+                        <p lang="ko" style="display: none;">✓ 자동정렬 | OCR처리 | PDF생성 | 실시간업데이트</span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 서류 목록 -->
+        <div id="documents" class="tab-content" style="display: none;">
+            <div class="manual">
+                <div class="manual-section">
+                    <h3><span lang="vi">📋 Tài liệu bắt buộc (C-3-9)</span><span lang="en" style="display: none;">Required Documents</span><span lang="ko" style="display: none;">필수서류</span></h3>
+                    <div class="manual-content" style="font-size: 12px; line-height: 1.8;">
+                        <p lang="vi"><strong>Cơ bản:</strong><br/>
+                        1. Hộ chiếu (6 tháng hạn)<br/>
+                        2. CCCD/Căn cước<br/>
+                        3. Ảnh hộ chiếu (3.5×4.5cm)<br/>
+                        4. Mẫu TRS (đơn xin visa)<br/>
+                        5. Lịch trình du lịch<br/>
+                        6. Khách sạn đặt chỗ<br/>
+                        7. Vé máy bay (khứ hồi)</p>
+
+                        <p lang="en" style="display: none;"><strong>Basic:</strong><br/>
+                        1. Passport (6 months validity)<br/>
+                        2. ID Card<br/>
+                        3. Photo (3.5×4.5cm)<br/>
+                        4. Application Form (TRS)<br/>
+                        5. Travel Itinerary<br/>
+                        6. Hotel Booking<br/>
+                        7. Flight Tickets (Return)</p>
+
+                        <p lang="ko" style="display: none;"><strong>기본:</strong><br/>
+                        1. 여권 (6개월 유효)<br/>
+                        2. 신분증<br/>
+                        3. 사진 (3.5×4.5cm)<br/>
+                        4. 신청서 (TRS)<br/>
+                        5. 여행 일정표<br/>
+                        6. 호텔 예약<br/>
+                        7. 항공권 (왕복)</p>
+                    </div>
+                </div>
+
+                <div class="manual-section">
+                    <h3><span lang="vi">👥 Tài liệu theo nghề</span><span lang="en" style="display: none;">By Profession</span><span lang="ko" style="display: none;">직업별서류</span></h3>
+                    <div class="manual-content" style="font-size: 12px; line-height: 1.8;">
+                        <p lang="vi"><strong>Nhân viên công ty:</strong><br/>
+                        • Giấy xác nhận công tác<br/>
+                        • Bảng lương (3 tháng)<br/>
+                        • Hợp đồng lao động<br/>
+                        • Bảo hiểm xã hội<br/><br/>
+                        
+                        <strong>Học sinh/Sinh viên:</strong><br/>
+                        • Giấy xác nhận nhập học<br/>
+                        • Thẻ học sinh<br/>
+                        • Biên bản học tập<br/><br/>
+
+                        <strong>Tự doanh:</strong><br/>
+                        • Giấy đăng ký kinh doanh<br/>
+                        • Sổ sách tài chính<br/>
+                        • Báo cáo thuế<br/>
+                        • Bảo hiểm xã hội<br/><br/>
+
+                        <strong>Người ngoài lao động:</strong><br/>
+                        • Giấy xác nhận hưởng lương hưu<br/>
+                        • Giấy xác nhận tài chính (ngân hàng)<br/>
+                        • Giấy xác nhận tài sản</p>
+
+                        <p lang="en" style="display: none;"><strong>Employees:</strong><br/>
+                        • Employment letter<br/>
+                        • Salary slip (3 months)<br/>
+                        • Labor contract<br/>
+                        • Social insurance<br/><br/>
+                        
+                        <strong>Students:</strong><br/>
+                        • Enrollment certificate<br/>
+                        • Student ID<br/>
+                        • Academic transcript<br/><br/>
+
+                        <strong>Self-employed:</strong><br/>
+                        • Business registration<br/>
+                        • Financial records<br/>
+                        • Tax report<br/>
+                        • Social insurance<br/><br/>
+
+                        <strong>Retirees:</strong><br/>
+                        • Pension certificate<br/>
+                        • Bank statement<br/>
+                        • Asset proof</p>
+
+                        <p lang="ko" style="display: none;"><strong>직원:</strong><br/>
+                        • 재직증명서<br/>
+                        • 월급명세서 (3개월)<br/>
+                        • 근로계약서<br/>
+                        • 사회보험<br/><br/>
+                        
+                        <strong>학생:</strong><br/>
+                        • 재학증명서<br/>
+                        • 학생증<br/>
+                        • 성적표<br/><br/>
+
+                        <strong>자영업:</strong><br/>
+                        • 사업자등록증<br/>
+                        • 재무기록<br/>
+                        • 세무신고서<br/>
+                        • 사회보험<br/><br/>
+
+                        <strong>퇴직자:</strong><br/>
+                        • 연금증명서<br/>
+                        • 은행잔고증명서<br/>
+                        • 자산증명</p>
+                    </div>
+                </div>
+
+                <div class="manual-section">
+                    <h3><span lang="vi">📄 Tài liệu khác (Tùy chọn)</span><span lang="en" style="display: none;">Additional (Optional)</span><span lang="ko" style="display: none;">추가서류</span></h3>
+                    <div class="manual-content" style="font-size: 12px; line-height: 1.8;">
+                        <p lang="vi">• Giấy xác nhận nhập cảnh (quá khứ)<br/>
+                        • Giấy xác nhận nơi ở<br/>
+                        • Hối đoái (thẻ tín dụng/tiền mặt)<br/>
+                        • Vé tàu/tuyến lữ hành<br/>
+                        • Booking xe<br/>
+                        • Bảo hiểm du lịch<br/>
+                        • Giấy xác nhận tái nhập cảnh<br/>
+                        • Giấy xác nhận nằm lỳ<br/>
+                        • Biên bản về nơi ở<br/>
+                        • Thư mời từ Hàn Quốc</p>
+
+                        <p lang="en" style="display: none;">• Entry history proof<br/>
+                        • Address certificate<br/>
+                        • Exchange/Funds proof<br/>
+                        • Train/Tour tickets<br/>
+                        • Car booking<br/>
+                        • Travel insurance<br/>
+                        • Re-entry permit<br/>
+                        • Extension proof<br/>
+                        • Housing proof<br/>
+                        • Invitation from Korea</p>
+
+                        <p lang="ko" style="display: none;">• 입국기록 증명<br/>
+                        • 주소증명<br/>
+                        • 환전/자금증명<br/>
+                        • 기차/투어 티켓<br/>
+                        • 자동차 예약<br/>
+                        • 여행보험<br/>
+                        • 재입국 허가<br/>
+                        • 연장 증명<br/>
+                        • 숙소 증명<br/>
+                        • 한국 초청장</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 모달 -->
+    <div class="modal" id="folderModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span id="modalTitle">Tên thư mục</span>
+            </div>
+            <div class="modal-body">
+                <div class="file-list" id="modalFileList"></div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeModal()">
+                    <span lang="vi">Đóng</span>
+                    <span lang="en" style="display: none;">Close</span>
+                    <span lang="ko" style="display: none;">닫기</span>
+                </button>
+                <button class="btn btn-primary" onclick="processFolder()">
+                    <span lang="vi">⚙️ Xử lý</span>
+                    <span lang="en" style="display: none;">⚙️ Process</span>
+                    <span lang="ko" style="display: none;">⚙️ 자료화</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentLanguage = 'vi';
+
+        const foldersData = [
+            {
+                id: 'GROUP_SUMMER_2025',
+                name_vi: 'Hè 2025 - Nhóm A',
+                name_en: 'Summer 2025 - Group A',
+                name_ko: '여름 2025 - 그룹 A',
+                applicants: 30,
+                completed: 28,
+                estimatedTime: 8,
+                documents: [
+                    { name: 'passport_Nguyen_S0123.pdf', status: 'done' },
+                    { name: 'CCCD_Nguyen_0123456789012.jpg', status: 'done' },
+                    { name: 'photo_Nguyen.jpg', status: 'done' },
+                ]
+            },
+            {
+                id: 'GROUP_SPRING_2026',
+                name_vi: 'Xuân 2026 - Nhóm B',
+                name_en: 'Spring 2026 - Group B',
+                name_ko: '봄 2026 - 그룹 B',
+                applicants: 25,
+                completed: 12,
+                estimatedTime: 15,
+                documents: [
+                    { name: 'passport_Le_S0456.pdf', status: 'processing' },
+                    { name: 'hotel_Le_Marina.pdf', status: 'pending' },
+                ]
+            }
+        ];
+
+        function switchLanguage(lang) {
+            currentLanguage = lang;
+            document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            document.querySelectorAll('[lang]').forEach(el => {
+                el.style.display = el.getAttribute('lang') === lang ? 'block' : 'none';
+            });
+
+            renderFolders();
+        }
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.style.display = 'none';
+            });
+            
+            document.getElementById(tab).style.display = 'block';
+        }
+
+        function renderFolders() {
+            const foldersList = document.getElementById('foldersList');
+            foldersList.innerHTML = '';
+
+            foldersData.forEach(folder => {
+                const folderName = currentLanguage === 'vi' ? folder.name_vi : 
+                                  currentLanguage === 'en' ? folder.name_en : folder.name_ko;
+                const progress = Math.round((folder.completed / folder.applicants) * 100);
+
+                const docType = currentLanguage === 'vi' ? '서류' : 
+                               currentLanguage === 'en' ? 'Documents' : '서류';
+
+                const html = `
+                    <div class="folder-card">
+                        <div class="folder-header">
+                            <div class="folder-name">${folderName}</div>
+                            <div class="folder-meta">${folder.applicants} <span lang="vi">ứng viên</span><span lang="en" style="display: none;">applicants</span><span lang="ko" style="display: none;">신청자</span></div>
+                        </div>
+                        <div class="folder-body">
+                            <div class="progress-section">
+                                <div class="progress-label">
+                                    <span lang="vi">Tiến độ</span>
+                                    <span lang="en" style="display: none;">Progress</span>
+                                    <span lang="ko" style="display: none;">진행률</span>
+                                    <span>${progress}%</span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: ${progress}%"></div>
+                                </div>
+                                <div class="progress-time">
+                                    <span lang="vi">Thời gian dự kiến:</span>
+                                    <span lang="en" style="display: none;">Est. time:</span>
+                                    <span lang="ko" style="display: none;">예상시간:</span>
+                                    <strong>${folder.estimatedTime}
+                                    <span lang="vi">phút</span>
+                                    <span lang="en" style="display: none;">min</span>
+                                    <span lang="ko" style="display: none;">분</span></strong>
+                                </div>
+                            </div>
+
+                            <div class="documents">
+                                <div class="doc-item done"><span class="doc-icon">✓</span> <span lang="vi">Hộ chiếu</span><span lang="en" style="display: none;">Passport</span><span lang="ko" style="display: none;">여권</span></div>
+                                <div class="doc-item done"><span class="doc-icon">✓</span> <span lang="vi">CCCD</span><span lang="en" style="display: none;">ID</span><span lang="ko" style="display: none;">신분증</span></div>
+                                <div class="doc-item done"><span class="doc-icon">✓</span> <span lang="vi">Ảnh</span><span lang="en" style="display: none;">Photo</span><span lang="ko" style="display: none;">사진</span></div>
+                                <div class="doc-item ${progress > 75 ? 'done' : 'pending'}"><span class="doc-icon">${progress > 75 ? '✓' : '○'}</span> <span lang="vi">Khách sạn</span><span lang="en" style="display: none;">Hotel</span><span lang="ko" style="display: none;">호텔</span></div>
+                                <div class="doc-item ${progress > 85 ? 'done' : 'pending'}"><span class="doc-icon">${progress > 85 ? '✓' : '○'}</span> <span lang="vi">Chuyến bay</span><span lang="en" style="display: none;">Flight</span><span lang="ko" style="display: none;">항공권</span></div>
+                                <div class="doc-item pending"><span class="doc-icon">○</span> <span lang="vi">Lịch trình</span><span lang="en" style="display: none;">Itinerary</span><span lang="ko" style="display: none;">일정</span></div>
+                            </div>
+
+                            <div class="actions">
+                                <button class="btn btn-secondary" onclick="viewFolder('${folder.id}')">
+                                    <span lang="vi">📁 Xem</span>
+                                    <span lang="en" style="display: none;">📁 View</span>
+                                    <span lang="ko" style="display: none;">📁 보기</span>
+                                </button>
+                                <button class="btn btn-primary" onclick="processFolder('${folder.id}')">
+                                    <span lang="vi">⚙️ Xử lý</span>
+                                    <span lang="en" style="display: none;">⚙️ Run</span>
+                                    <span lang="ko" style="display: none;">⚙️ 처리</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                foldersList.innerHTML += html;
+            });
+        }
+
+        function viewFolder(folderId) {
+            const folder = foldersData.find(f => f.id === folderId);
+            const folderName = currentLanguage === 'vi' ? folder.name_vi : 
+                              currentLanguage === 'en' ? folder.name_en : folder.name_ko;
+            document.getElementById('modalTitle').textContent = folderName;
+            
+            const fileList = document.getElementById('modalFileList');
+            fileList.innerHTML = folder.documents.map(doc => `
+                <div class="file-item">
+                    <div class="file-name">
+                        <span style="font-size: 14px;">${doc.status === 'done' ? '✓' : '⏳'}</span>
+                        <span>${doc.name}</span>
+                    </div>
+                    <span class="file-status ${doc.status}">
+                        ${doc.status === 'done' ? (currentLanguage === 'vi' ? '✓ Xong' : currentLanguage === 'en' ? '✓ Done' : '✓ 완료') : 
+                          doc.status === 'processing' ? (currentLanguage === 'vi' ? '⏳ Xử lý' : currentLanguage === 'en' ? '⏳ Processing' : '⏳ 처리중') : 
+                          currentLanguage === 'vi' ? '⏸ Chờ' : currentLanguage === 'en' ? '⏸ Pending' : '⏸ 대기'}
+                    </span>
+                </div>
+            `).join('');
+            
+            document.getElementById('folderModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('folderModal').classList.remove('active');
+        }
+
+        function processFolder(folderId) {
+            const messages = {
+                vi: 'Bắt đầu xử lý tệp...',
+                en: 'Starting processing...',
+                ko: '처리를 시작합니다...'
+            };
+            alert(messages[currentLanguage]);
+            closeModal();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderFolders();
+            
+            document.getElementById('groupCount').textContent = foldersData.length;
+            const totalApplicants = foldersData.reduce((sum, f) => sum + f.applicants, 0);
+            const totalCompleted = foldersData.reduce((sum, f) => sum + f.completed, 0);
+            document.getElementById('applicantCount').textContent = totalApplicants;
+            document.getElementById('completedCount').textContent = totalCompleted;
+            document.getElementById('avgProgress').textContent = Math.round((totalCompleted / totalApplicants) * 100) + '%';
+        });
+
+        // 모바일 안전 영역 대응
+        document.addEventListener('touchmove', function(e) {
+            if (document.getElementById('folderModal').classList.contains('active')) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+    </script>
+</body>
+</html>

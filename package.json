@@ -1,0 +1,17 @@
+{
+  "name": "bttour-visa",
+  "version": "1.0.0",
+  "description": "BT TOUR Visa Management System - Vietnamese First, Mobile Optimized",
+  "main": "index.html",
+  "scripts": {
+    "dev": "http-server",
+    "start": "http-server"
+  },
+  "keywords": ["visa", "korea", "vietnam", "management", "bttour"],
+  "author": "BT TOUR",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/highers9980-gif/bttour-visa.git"
+  }
+}
