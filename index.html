@@ -1,1177 +1,1658 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#2563eb">
-    <title>BT TOUR Quản lý Visa</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        :root {
-            --primary: #2563eb;
-            --success: #10b981;
-            --warning: #f59e0b;
-            --danger: #ef4444;
-            --secondary: #6b7280;
-            --light: #f3f4f6;
-            --border: #e5e7eb;
-            --text: #1f2937;
-            --text-light: #6b7280;
-        }
-
-        html, body {
-            height: 100%;
-            width: 100%;
-            -webkit-user-select: none;
-            user-select: none;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: #fafbfc;
-            color: var(--text);
-            line-height: 1.6;
-            overflow-x: hidden;
-        }
-
-        /* 안전 영역 (노치/홈바 대응) */
-        @supports (padding: max(0px)) {
-            header {
-                padding-left: max(1rem, env(safe-area-inset-left));
-                padding-right: max(1rem, env(safe-area-inset-right));
-                padding-top: max(1rem, env(safe-area-inset-top));
-            }
-        }
-
-        /* 헤더 */
-        header {
-            background: white;
-            border-bottom: 1px solid var(--border);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            padding: 1rem 1.5rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .logo {
-            font-size: 18px;
-            font-weight: 700;
-            color: var(--primary);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            white-space: nowrap;
-            flex: 1;
-            min-width: 0;
-        }
-
-        .logo-text {
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        .lang-switcher {
-            display: flex;
-            gap: 6px;
-            background: var(--light);
-            padding: 4px;
-            border-radius: 6px;
-            flex-wrap: wrap;
-            justify-content: flex-end;
-        }
-
-        .lang-btn {
-            padding: 6px 10px;
-            border: none;
-            background: transparent;
-            cursor: pointer;
-            font-size: 11px;
-            border-radius: 4px;
-            transition: all 0.2s;
-            white-space: nowrap;
-        }
-
-        .lang-btn.active {
-            background: white;
-            font-weight: 600;
-            color: var(--primary);
-        }
-
-        /* 메인 컨테이너 */
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 1rem;
-            padding-bottom: 80px;
-        }
-
-        @media (min-width: 768px) {
-            .container {
-                padding: 2rem;
-            }
-        }
-
-        /* 통계 카드 */
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 0.75rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .stat-card {
-            background: white;
-            padding: 1rem;
-            border-radius: 8px;
-            border: 1px solid var(--border);
-            text-align: center;
-        }
-
-        .stat-label {
-            font-size: 11px;
-            color: var(--text-light);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 0.5rem;
-            line-height: 1.2;
-        }
-
-        .stat-value {
-            font-size: 24px;
-            font-weight: 700;
-            color: var(--primary);
-        }
-
-        .stat-secondary {
-            font-size: 12px;
-            color: var(--text-light);
-            margin-top: 0.25rem;
-        }
-
-        /* 필터 */
-        .filters {
-            background: white;
-            padding: 1rem;
-            border-radius: 8px;
-            border: 1px solid var(--border);
-            margin-bottom: 1.5rem;
-        }
-
-        .filter-group {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-            margin-bottom: 1rem;
-        }
-
-        .filter-group:last-child {
-            margin-bottom: 0;
-        }
-
-        .filter-label {
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--text-light);
-            text-transform: uppercase;
-        }
-
-        .filter-buttons {
-            display: flex;
-            gap: 6px;
-            flex-wrap: wrap;
-        }
-
-        .filter-btn {
-            padding: 8px 12px;
-            border: 1px solid var(--border);
-            background: white;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 12px;
-            transition: all 0.2s;
-            white-space: nowrap;
-            -webkit-user-select: none;
-            user-select: none;
-        }
-
-        .filter-btn:active {
-            transform: scale(0.95);
-        }
-
-        .filter-btn:hover {
-            border-color: var(--primary);
-            color: var(--primary);
-        }
-
-        .filter-btn.active {
-            background: var(--primary);
-            color: white;
-            border-color: var(--primary);
-        }
-
-        /* 폴더 목록 */
-        .folders {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 1rem;
-            margin-bottom: 2rem;
-        }
-
-        @media (max-width: 480px) {
-            .folders {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .folder-card {
-            background: white;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            overflow: hidden;
-            transition: all 0.3s;
-        }
-
-        .folder-card:active {
-            transform: scale(0.98);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        .folder-header {
-            padding: 1rem;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-
-        .folder-name {
-            font-size: 15px;
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-            word-break: break-word;
-        }
-
-        .folder-meta {
-            font-size: 12px;
-            opacity: 0.9;
-        }
-
-        .folder-body {
-            padding: 1rem;
-        }
-
-        .progress-section {
-            margin-bottom: 1rem;
-        }
-
-        .progress-label {
-            font-size: 12px;
-            color: var(--text-light);
-            margin-bottom: 0.5rem;
-            display: flex;
-            justify-content: space-between;
-        }
-
-        .progress-bar {
-            height: 6px;
-            background: var(--light);
-            border-radius: 3px;
-            overflow: hidden;
-            margin-bottom: 0.5rem;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #10b981, #059669);
-            transition: width 0.3s ease;
-        }
-
-        .progress-time {
-            font-size: 11px;
-            color: var(--text-light);
-        }
-
-        /* 서류 목록 */
-        .documents {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 6px;
-            margin-bottom: 1rem;
-        }
-
-        .doc-item {
-            padding: 8px;
-            background: var(--light);
-            border-radius: 6px;
-            font-size: 11px;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            min-height: 28px;
-        }
-
-        .doc-item.done {
-            background: #d1fae5;
-            color: #065f46;
-        }
-
-        .doc-item.pending {
-            background: #fef3c7;
-            color: #92400e;
-        }
-
-        .doc-icon {
-            font-size: 12px;
-            flex-shrink: 0;
-        }
-
-        /* 액션 버튼 */
-        .actions {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 6px;
-        }
-
-        .btn {
-            padding: 10px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 12px;
-            font-weight: 600;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 4px;
-            -webkit-user-select: none;
-            user-select: none;
-        }
-
-        .btn:active {
-            transform: scale(0.95);
-        }
-
-        .btn-primary {
-            background: var(--primary);
-            color: white;
-        }
-
-        .btn-primary:active {
-            background: #1d4ed8;
-        }
-
-        .btn-primary:disabled {
-            background: var(--border);
-            cursor: not-allowed;
-            color: var(--text-light);
-        }
-
-        .btn-secondary {
-            background: var(--light);
-            color: var(--text);
-            border: 1px solid var(--border);
-        }
-
-        .btn-secondary:active {
-            background: #e5e7eb;
-        }
-
-        /* 탭 */
-        .tabs {
-            display: flex;
-            gap: 0.5rem;
-            margin-bottom: 1.5rem;
-            border-bottom: 1px solid var(--border);
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-        }
-
-        .tab {
-            padding: 0.75rem 1rem;
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--text-light);
-            position: relative;
-            transition: all 0.2s;
-            white-space: nowrap;
-            -webkit-user-select: none;
-            user-select: none;
-        }
-
-        .tab.active {
-            color: var(--primary);
-        }
-
-        .tab.active::after {
-            content: '';
-            position: absolute;
-            bottom: -1px;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background: var(--primary);
-        }
-
-        /* 매뉴얼 */
-        .manual {
-            background: white;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 1rem;
-            margin-bottom: 2rem;
-        }
-
-        @media (min-width: 768px) {
-            .manual {
-                padding: 2rem;
-            }
-        }
-
-        .manual-section {
-            margin-bottom: 1.5rem;
-        }
-
-        .manual-section h3 {
-            font-size: 15px;
-            margin-bottom: 0.75rem;
-            color: var(--primary);
-            border-left: 3px solid var(--primary);
-            padding-left: 0.75rem;
-        }
-
-        .manual-content {
-            font-size: 13px;
-            line-height: 1.6;
-            color: var(--text-light);
-        }
-
-        .code-block {
-            background: #1f2937;
-            color: #e5e7eb;
-            padding: 0.75rem;
-            border-radius: 6px;
-            overflow-x: auto;
-            font-family: 'Courier New', monospace;
-            font-size: 11px;
-            margin: 0.75rem 0;
-            -webkit-overflow-scrolling: touch;
-        }
-
-        .step-list {
-            list-style: none;
-            counter-reset: item;
-        }
-
-        .step-list li {
-            counter-increment: item;
-            margin-bottom: 1rem;
-            display: grid;
-            grid-template-columns: 28px 1fr;
-            gap: 0.75rem;
-        }
-
-        .step-list li::before {
-            content: counter(item);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 28px;
-            height: 28px;
-            background: var(--primary);
-            color: white;
-            border-radius: 50%;
-            font-weight: 600;
-            font-size: 12px;
-            flex-shrink: 0;
-        }
-
-        /* 모달 */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 1000;
-            align-items: flex-end;
-            justify-content: center;
-            padding: env(safe-area-inset-bottom);
-        }
-
-        .modal.active {
-            display: flex;
-        }
-
-        .modal-content {
-            background: white;
-            border-radius: 12px 12px 0 0;
-            padding: 1.5rem;
-            width: 100%;
-            max-height: 80vh;
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
-        }
-
-        @media (min-width: 768px) {
-            .modal {
-                align-items: center;
-                justify-content: center;
-                padding: 1rem;
-            }
-
-            .modal-content {
-                border-radius: 12px;
-                max-width: 600px;
-                max-height: 80vh;
-            }
-        }
-
-        .modal-header {
-            font-size: 16px;
-            font-weight: 700;
-            margin-bottom: 1rem;
-            padding-bottom: 1rem;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .modal-body {
-            margin-bottom: 1.5rem;
-        }
-
-        .file-list {
-            display: grid;
-            gap: 0.75rem;
-        }
-
-        .file-item {
-            padding: 0.75rem;
-            background: var(--light);
-            border-radius: 6px;
-            font-size: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 0.75rem;
-        }
-
-        .file-name {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            flex: 1;
-            min-width: 0;
-            word-break: break-word;
-        }
-
-        .file-status {
-            padding: 4px 8px;
-            background: var(--light);
-            border-radius: 4px;
-            font-size: 10px;
-            white-space: nowrap;
-            flex-shrink: 0;
-        }
-
-        .file-status.processing {
-            background: #dbeafe;
-            color: #0c4a6e;
-        }
-
-        .file-status.done {
-            background: #d1fae5;
-            color: #065f46;
-        }
-
-        .modal-actions {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 0.75rem;
-        }
-
-        /* 로딩 */
-        .spinner {
-            border: 2px solid var(--light);
-            border-top: 2px solid var(--primary);
-            border-radius: 50%;
-            width: 16px;
-            height: 16px;
-            animation: spin 0.8s linear infinite;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        /* 입력 요소 최적화 (모바일) */
-        input, button, select, textarea {
-            font-size: 16px; /* iOS 자동 줌 방지 */
-            min-height: 44px; /* iOS 터치 영역 */
-        }
-
-        button {
-            border: none;
-        }
-
-        /* 아이폰 특화 */
-        @supports (padding: max(0px)) {
-            body {
-                padding-bottom: max(0px, env(safe-area-inset-bottom));
-            }
-        }
-
-        /* 다크모드 (선택) */
-        @media (prefers-color-scheme: dark) {
-            body {
-                background: #111827;
-                color: #f3f4f6;
-            }
-
-            header, .stat-card, .filters, .folder-card, .manual {
-                background: #1f2937;
-                border-color: #374151;
-            }
-
-            .stat-label, .text-light, .filter-label {
-                color: #d1d5db;
-            }
-
-            .code-block {
-                background: #0f1419;
-            }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#059669">
+  <title>BT TOUR Visa System</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg: #f7faf9;
+      --surface: #ffffff;
+      --surface-alt: #eef7f3;
+      --ink: #17211d;
+      --muted: #66736e;
+      --line: #d9e3df;
+      --primary: #07865f;
+      --primary-strong: #05684d;
+      --cyan: #087f95;
+      --yellow: #b7791f;
+      --red: #c2413a;
+      --green-soft: #dff5eb;
+      --cyan-soft: #dcf3f7;
+      --yellow-soft: #fff4d7;
+      --red-soft: #fde7e5;
+      --shadow: 0 10px 30px rgba(15, 37, 29, 0.08);
+      --radius: 8px;
+      --header-height: 64px;
+      --sidebar-width: 292px;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      line-height: 1.45;
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    .app-shell {
+      min-height: 100vh;
+    }
+
+    .topbar {
+      align-items: center;
+      background: rgba(255, 255, 255, 0.94);
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      gap: 16px;
+      height: var(--header-height);
+      justify-content: space-between;
+      left: 0;
+      padding: 0 max(16px, env(safe-area-inset-left)) 0 max(16px, env(safe-area-inset-right));
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      backdrop-filter: blur(14px);
+    }
+
+    .brand {
+      align-items: center;
+      display: flex;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .brand-mark {
+      align-items: center;
+      background: var(--green-soft);
+      border: 1px solid #b9e6d3;
+      border-radius: var(--radius);
+      color: var(--primary-strong);
+      display: grid;
+      font-size: 20px;
+      font-weight: 800;
+      height: 40px;
+      place-items: center;
+      width: 40px;
+    }
+
+    .brand-copy {
+      min-width: 0;
+    }
+
+    .brand-title {
+      font-size: 17px;
+      font-weight: 760;
+      line-height: 1.2;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .brand-subtitle {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 2px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .topbar-actions {
+      align-items: center;
+      display: flex;
+      gap: 8px;
+    }
+
+    .language-switcher {
+      align-items: center;
+      background: var(--surface-alt);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      display: flex;
+      gap: 4px;
+      padding: 4px;
+    }
+
+    .language-button {
+      background: transparent;
+      border: 0;
+      border-radius: 6px;
+      color: var(--muted);
+      min-height: 32px;
+      padding: 6px 10px;
+      white-space: nowrap;
+    }
+
+    .language-button.active {
+      background: var(--surface);
+      box-shadow: 0 1px 6px rgba(15, 37, 29, 0.1);
+      color: var(--primary-strong);
+      font-weight: 740;
+    }
+
+    .icon-button {
+      align-items: center;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      color: var(--ink);
+      display: none;
+      height: 40px;
+      justify-content: center;
+      width: 40px;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+      min-height: calc(100vh - var(--header-height));
+    }
+
+    .sidebar {
+      background: var(--surface);
+      border-right: 1px solid var(--line);
+      height: calc(100vh - var(--header-height));
+      overflow-y: auto;
+      padding: 16px;
+      position: sticky;
+      top: var(--header-height);
+    }
+
+    .sidebar-block {
+      margin-bottom: 22px;
+    }
+
+    .sidebar-heading {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 760;
+      margin: 0 0 8px;
+      text-transform: uppercase;
+    }
+
+    .nav-button {
+      align-items: center;
+      background: transparent;
+      border: 0;
+      border-radius: var(--radius);
+      color: var(--ink);
+      display: flex;
+      gap: 10px;
+      justify-content: space-between;
+      min-height: 40px;
+      padding: 9px 10px;
+      text-align: left;
+      width: 100%;
+    }
+
+    .nav-button:hover {
+      background: var(--surface-alt);
+    }
+
+    .nav-button.active {
+      background: var(--primary);
+      color: #ffffff;
+    }
+
+    .nav-label {
+      align-items: center;
+      display: flex;
+      gap: 9px;
+      min-width: 0;
+    }
+
+    .badge {
+      background: var(--surface-alt);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: 12px;
+      min-width: 28px;
+      padding: 2px 8px;
+      text-align: center;
+    }
+
+    .nav-button.active .badge {
+      background: rgba(255, 255, 255, 0.18);
+      border-color: rgba(255, 255, 255, 0.34);
+      color: #ffffff;
+    }
+
+    .api-panel {
+      background: var(--surface-alt);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 10px;
+    }
+
+    .api-state {
+      align-items: center;
+      display: flex;
+      font-size: 13px;
+      font-weight: 700;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .api-url {
+      color: var(--muted);
+      font-size: 12px;
+      overflow-wrap: anywhere;
+    }
+
+    .main {
+      min-width: 0;
+      padding: 22px;
+    }
+
+    .hero-strip {
+      align-items: center;
+      background: linear-gradient(135deg, #e8f8f0 0%, #e4f7fb 100%);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      display: flex;
+      gap: 18px;
+      justify-content: space-between;
+      margin-bottom: 18px;
+      padding: 18px;
+    }
+
+    .hero-title {
+      font-size: 24px;
+      font-weight: 800;
+      margin: 0 0 4px;
+    }
+
+    .hero-text {
+      color: var(--muted);
+      margin: 0;
+      max-width: 720px;
+    }
+
+    .hero-actions,
+    .content-actions,
+    .card-actions,
+    .modal-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .button {
+      align-items: center;
+      border: 0;
+      border-radius: var(--radius);
+      display: inline-flex;
+      font-weight: 740;
+      gap: 8px;
+      min-height: 38px;
+      justify-content: center;
+      padding: 9px 12px;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .button.primary {
+      background: var(--primary);
+      color: #ffffff;
+    }
+
+    .button.secondary {
+      background: var(--cyan);
+      color: #ffffff;
+    }
+
+    .button.ghost {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      color: var(--ink);
+    }
+
+    .button:disabled {
+      cursor: not-allowed;
+      opacity: 0.62;
+    }
+
+    .stats-grid {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      margin-bottom: 18px;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      min-height: 118px;
+      padding: 16px;
+      box-shadow: var(--shadow);
+    }
+
+    .stat-kicker {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 760;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+    }
+
+    .stat-value {
+      font-size: 34px;
+      font-weight: 840;
+      line-height: 1;
+    }
+
+    .stat-note {
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 8px;
+    }
+
+    .workspace-grid {
+      display: grid;
+      gap: 18px;
+      grid-template-columns: minmax(0, 1fr) 360px;
+    }
+
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      margin-bottom: 18px;
+      padding: 16px;
+    }
+
+    .panel-header {
+      align-items: center;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      gap: 12px;
+      justify-content: space-between;
+      margin: -2px 0 14px;
+      padding-bottom: 12px;
+    }
+
+    .panel-title {
+      font-size: 17px;
+      font-weight: 800;
+      margin: 0;
+    }
+
+    .search-row {
+      display: grid;
+      gap: 10px;
+      grid-template-columns: minmax(0, 1fr) 180px;
+      margin-bottom: 12px;
+    }
+
+    .search-input,
+    .select-input {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      color: var(--ink);
+      min-height: 40px;
+      padding: 9px 10px;
+      width: 100%;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 14px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+    }
+
+    .tab {
+      background: var(--surface-alt);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      color: var(--muted);
+      min-height: 36px;
+      padding: 8px 12px;
+      white-space: nowrap;
+    }
+
+    .tab.active {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #ffffff;
+      font-weight: 740;
+    }
+
+    .applicant-grid {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(auto-fill, minmax(286px, 1fr));
+    }
+
+    .applicant-card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      min-height: 228px;
+      padding: 14px;
+      transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+    }
+
+    .applicant-card:hover {
+      border-color: #a5d9c5;
+      box-shadow: var(--shadow);
+      transform: translateY(-1px);
+    }
+
+    .card-top {
+      align-items: flex-start;
+      display: flex;
+      gap: 10px;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .applicant-name {
+      font-size: 16px;
+      font-weight: 820;
+      margin-bottom: 2px;
+      word-break: break-word;
+    }
+
+    .applicant-sub {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .status-pill {
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 780;
+      padding: 4px 9px;
+      white-space: nowrap;
+    }
+
+    .status-pending {
+      background: var(--red-soft);
+      color: var(--red);
+    }
+
+    .status-processing {
+      background: var(--yellow-soft);
+      color: var(--yellow);
+    }
+
+    .status-completed {
+      background: var(--green-soft);
+      color: var(--primary-strong);
+    }
+
+    .info-list {
+      color: var(--muted);
+      display: grid;
+      font-size: 13px;
+      gap: 5px;
+      margin: 10px 0 12px;
+    }
+
+    .progress-line {
+      margin: 10px 0 12px;
+    }
+
+    .progress-meta {
+      color: var(--muted);
+      display: flex;
+      font-size: 12px;
+      justify-content: space-between;
+      margin-bottom: 5px;
+    }
+
+    .progress-track {
+      background: var(--surface-alt);
+      border-radius: 999px;
+      height: 8px;
+      overflow: hidden;
+      width: 100%;
+    }
+
+    .progress-fill {
+      background: linear-gradient(90deg, var(--primary), var(--cyan));
+      border-radius: inherit;
+      height: 100%;
+      min-width: 0;
+      transition: width 0.25s;
+    }
+
+    .timeline-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .timeline-row {
+      display: grid;
+      gap: 10px;
+      grid-template-columns: 44px minmax(0, 1fr);
+    }
+
+    .timeline-icon {
+      align-items: center;
+      border-radius: 999px;
+      display: grid;
+      font-size: 18px;
+      height: 40px;
+      place-items: center;
+      width: 40px;
+    }
+
+    .timeline-row.pending .timeline-icon {
+      background: var(--red-soft);
+      color: var(--red);
+    }
+
+    .timeline-row.processing .timeline-icon {
+      background: var(--yellow-soft);
+      color: var(--yellow);
+    }
+
+    .timeline-row.completed .timeline-icon {
+      background: var(--green-soft);
+      color: var(--primary-strong);
+    }
+
+    .timeline-title {
+      font-weight: 780;
+      margin-bottom: 3px;
+    }
+
+    .timeline-caption {
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 6px;
+    }
+
+    .document-grid {
+      display: grid;
+      gap: 10px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .document-tile {
+      background: var(--surface-alt);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 12px;
+    }
+
+    .document-title {
+      font-weight: 780;
+      margin-bottom: 4px;
+    }
+
+    .document-caption {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .empty-state {
+      align-items: center;
+      background: var(--surface-alt);
+      border: 1px dashed #b8c9c2;
+      border-radius: var(--radius);
+      color: var(--muted);
+      display: grid;
+      min-height: 160px;
+      padding: 18px;
+      place-items: center;
+      text-align: center;
+    }
+
+    .toast {
+      background: #17211d;
+      border-radius: var(--radius);
+      bottom: 18px;
+      color: #ffffff;
+      left: 50%;
+      max-width: min(520px, calc(100vw - 32px));
+      opacity: 0;
+      padding: 12px 14px;
+      pointer-events: none;
+      position: fixed;
+      transform: translate(-50%, 20px);
+      transition: opacity 0.2s, transform 0.2s;
+      z-index: 60;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+
+    .modal-backdrop {
+      align-items: center;
+      background: rgba(9, 18, 15, 0.45);
+      display: none;
+      inset: 0;
+      justify-content: center;
+      padding: 18px;
+      position: fixed;
+      z-index: 70;
+    }
+
+    .modal-backdrop.show {
+      display: flex;
+    }
+
+    .modal {
+      background: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: 0 22px 70px rgba(0, 0, 0, 0.22);
+      max-height: min(760px, calc(100vh - 36px));
+      max-width: 720px;
+      overflow-y: auto;
+      padding: 18px;
+      width: 100%;
+    }
+
+    .modal h2 {
+      margin: 0 0 8px;
+    }
+
+    .detail-grid {
+      display: grid;
+      gap: 10px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      margin: 14px 0;
+    }
+
+    .detail-item {
+      background: var(--surface-alt);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 10px;
+    }
+
+    .detail-label {
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 3px;
+    }
+
+    .detail-value {
+      font-weight: 740;
+      overflow-wrap: anywhere;
+    }
+
+    .spinner {
+      animation: spin 0.8s linear infinite;
+      border: 2px solid rgba(255, 255, 255, 0.42);
+      border-radius: 50%;
+      border-top-color: #ffffff;
+      display: inline-block;
+      height: 15px;
+      width: 15px;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    @media (max-width: 1100px) {
+      .workspace-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .stats-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 820px) {
+      .icon-button {
+        display: inline-flex;
+      }
+
+      .layout {
+        display: block;
+      }
+
+      .sidebar {
+        box-shadow: var(--shadow);
+        height: calc(100vh - var(--header-height));
+        left: 0;
+        max-width: min(320px, 86vw);
+        position: fixed;
+        transform: translateX(-105%);
+        transition: transform 0.2s;
+        width: var(--sidebar-width);
+        z-index: 50;
+      }
+
+      .sidebar.open {
+        transform: translateX(0);
+      }
+
+      .main {
+        padding: 14px;
+      }
+
+      .hero-strip {
+        align-items: stretch;
+        flex-direction: column;
+      }
+    }
+
+    @media (max-width: 620px) {
+      .topbar {
+        gap: 8px;
+      }
+
+      .brand-subtitle {
+        display: none;
+      }
+
+      .language-switcher {
+        max-width: 178px;
+        overflow-x: auto;
+      }
+
+      .language-button {
+        min-width: 58px;
+      }
+
+      .stats-grid,
+      .document-grid,
+      .detail-grid,
+      .search-row {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-title {
+        font-size: 21px;
+      }
+
+      .panel-header {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+    }
+  </style>
 </head>
 <body>
-    <!-- 헤더 -->
-    <header>
-        <div class="logo">
-            <span>📋</span>
-            <div class="logo-text">
-                <span lang="vi">BT TOUR Visa</span>
-                <span lang="en" style="display: none;">BT TOUR Visa</span>
-                <span lang="ko" style="display: none;">BT TOUR 비자</span>
-            </div>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark">BT</div>
+        <div class="brand-copy">
+          <div class="brand-title" data-i18n="brandTitle">BT TOUR Visa System</div>
+          <div class="brand-subtitle">Tiếng Việt / English / 한국어</div>
         </div>
-        <div class="lang-switcher">
-            <button class="lang-btn active" onclick="switchLanguage('vi')" title="Tiếng Việt">Việt</button>
-            <button class="lang-btn" onclick="switchLanguage('en')" title="English">ENG</button>
-            <button class="lang-btn" onclick="switchLanguage('ko')" title="한국어">한</button>
+      </div>
+      <div class="topbar-actions">
+        <div class="language-switcher" aria-label="Language">
+          <button class="language-button active" data-lang-button="vi" onclick="setLanguage('vi')">Tiếng Việt</button>
+          <button class="language-button" data-lang-button="en" onclick="setLanguage('en')">English</button>
+          <button class="language-button" data-lang-button="ko" onclick="setLanguage('ko')">한국어</button>
         </div>
+        <button class="icon-button" onclick="toggleSidebar()" aria-label="Menu">☰</button>
+      </div>
     </header>
 
-    <!-- 메인 콘텐츠 -->
-    <div class="container">
-        <!-- 탭 -->
-        <div class="tabs">
-            <button class="tab active" onclick="switchTab('dashboard')">
-                <span lang="vi">📊 Bảng điều khiển</span>
-                <span lang="en" style="display: none;">📊 Dashboard</span>
-                <span lang="ko" style="display: none;">📊 대시보드</span>
-            </button>
-            <button class="tab" onclick="switchTab('manual')">
-                <span lang="vi">📖 Hướng dẫn</span>
-                <span lang="en" style="display: none;">📖 Manual</span>
-                <span lang="ko" style="display: none;">📖 설명서</span>
-            </button>
-            <button class="tab" onclick="switchTab('documents')">
-                <span lang="vi">📋 Tài liệu</span>
-                <span lang="en" style="display: none;">📋 Documents</span>
-                <span lang="ko" style="display: none;">📋 서류</span>
-            </button>
-        </div>
+    <div class="layout">
+      <aside class="sidebar" id="sidebar">
+        <section class="sidebar-block">
+          <h2 class="sidebar-heading" data-i18n="menu">Menu</h2>
+          <button class="nav-button active" data-view-button="dashboard" onclick="switchView('dashboard')">
+            <span class="nav-label"><span>📊</span><span data-i18n="dashboard">Dashboard</span></span>
+          </button>
+          <button class="nav-button" data-view-button="applicants" onclick="switchView('applicants')">
+            <span class="nav-label"><span>📋</span><span data-i18n="applicants">Applicants</span></span>
+          </button>
+          <button class="nav-button" data-view-button="documents" onclick="switchView('documents')">
+            <span class="nav-label"><span>📄</span><span data-i18n="documentTypes">Document Types</span></span>
+          </button>
+        </section>
 
-        <!-- 대시보드 -->
-        <div id="dashboard" class="tab-content active">
-            <!-- 통계 -->
-            <div class="stats">
-                <div class="stat-card">
-                    <div class="stat-label"><span lang="vi">Nhóm hoạt động</span><span lang="en" style="display: none;">Groups</span><span lang="ko" style="display: none;">그룹</span></div>
-                    <div class="stat-value" id="groupCount">0</div>
+        <section class="sidebar-block">
+          <h2 class="sidebar-heading" data-i18n="statusFilter">Applicant Status</h2>
+          <button class="nav-button active" data-status-button="all" onclick="filterStatus('all')">
+            <span class="nav-label"><span>📌</span><span data-i18n="all">All</span></span>
+            <span class="badge" id="badge-all">0</span>
+          </button>
+          <button class="nav-button" data-status-button="pending" onclick="filterStatus('pending')">
+            <span class="nav-label"><span>⏳</span><span data-i18n="pending">Pending</span></span>
+            <span class="badge" id="badge-pending">0</span>
+          </button>
+          <button class="nav-button" data-status-button="processing" onclick="filterStatus('processing')">
+            <span class="nav-label"><span>⚙️</span><span data-i18n="processing">Processing</span></span>
+            <span class="badge" id="badge-processing">0</span>
+          </button>
+          <button class="nav-button" data-status-button="completed" onclick="filterStatus('completed')">
+            <span class="nav-label"><span>✅</span><span data-i18n="completed">Completed</span></span>
+            <span class="badge" id="badge-completed">0</span>
+          </button>
+        </section>
+
+        <section class="sidebar-block">
+          <h2 class="sidebar-heading" data-i18n="language">Language</h2>
+          <button class="nav-button" onclick="setLanguage('vi')">
+            <span class="nav-label"><span>🇻🇳</span><span>Tiếng Việt</span></span>
+          </button>
+          <button class="nav-button" onclick="setLanguage('en')">
+            <span class="nav-label"><span>🇬🇧</span><span>English</span></span>
+          </button>
+          <button class="nav-button" onclick="setLanguage('ko')">
+            <span class="nav-label"><span>🇰🇷</span><span>한국어</span></span>
+          </button>
+        </section>
+
+        <section class="sidebar-block">
+          <h2 class="sidebar-heading" data-i18n="apiStatus">API Status</h2>
+          <div class="api-panel">
+            <div class="api-state" id="api-state"><span class="spinner"></span><span data-i18n="checking">Checking</span></div>
+            <div class="api-url" id="api-url">http://localhost:3510</div>
+          </div>
+        </section>
+      </aside>
+
+      <main class="main">
+        <section class="hero-strip">
+          <div>
+            <h1 class="hero-title" data-i18n="heroTitle">Visa operations dashboard</h1>
+            <p class="hero-text" data-i18n="heroText">Monitor applicants, documents, progress, and generated visa packets from one workspace.</p>
+          </div>
+          <div class="hero-actions">
+            <button class="button primary" onclick="refreshAll()"><span>↻</span><span data-i18n="refresh">Refresh</span></button>
+            <button class="button secondary" onclick="batchPdf(this)"><span>📄</span><span data-i18n="batchPdf">Batch PDF</span></button>
+            <button class="button ghost" onclick="batchExcel(this)"><span>📊</span><span data-i18n="batchExcel">Batch Excel</span></button>
+          </div>
+        </section>
+
+        <section class="stats-grid">
+          <article class="stat-card">
+            <div class="stat-kicker" data-i18n="totalApplicants">Total applicants</div>
+            <div class="stat-value" id="stat-total">0</div>
+            <div class="stat-note" data-i18n="totalApplicantsNote">All active visa records</div>
+          </article>
+          <article class="stat-card">
+            <div class="stat-kicker" data-i18n="completed">Completed</div>
+            <div class="stat-value" id="stat-completed">0</div>
+            <div class="stat-note" data-i18n="completedNote">Ready for submission</div>
+          </article>
+          <article class="stat-card">
+            <div class="stat-kicker" data-i18n="processing">Processing</div>
+            <div class="stat-value" id="stat-processing">0</div>
+            <div class="stat-note" data-i18n="processingNote">Documents being checked</div>
+          </article>
+          <article class="stat-card">
+            <div class="stat-kicker" data-i18n="pending">Pending</div>
+            <div class="stat-value" id="stat-pending">0</div>
+            <div class="stat-note" data-i18n="pendingNote">Waiting for documents</div>
+          </article>
+        </section>
+
+        <div class="workspace-grid">
+          <section>
+            <div class="panel" id="dashboard-view">
+              <div class="panel-header">
+                <h2 class="panel-title" data-i18n="recentApplicants">Recent applicants</h2>
+                <div class="content-actions">
+                  <button class="button ghost" onclick="switchView('applicants')" data-i18n="viewAll">View all</button>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-label"><span lang="vi">Tổng ứng viên</span><span lang="en" style="display: none;">Applicants</span><span lang="ko" style="display: none;">신청자</span></div>
-                    <div class="stat-value" id="applicantCount">0</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label"><span lang="vi">Hoàn thành</span><span lang="en" style="display: none;">Completed</span><span lang="ko" style="display: none;">완료</span></div>
-                    <div class="stat-value" style="color: var(--success);" id="completedCount">0</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label"><span lang="vi">Tiến độ TB</span><span lang="en" style="display: none;">Avg</span><span lang="ko" style="display: none;">평균</span></div>
-                    <div class="stat-value" id="avgProgress">0%</div>
-                </div>
+              </div>
+              <div class="applicant-grid" id="recent-grid"></div>
             </div>
 
-            <!-- 필터 -->
-            <div class="filters">
-                <div class="filter-group">
-                    <label class="filter-label"><span lang="vi">Lọc nhóm</span><span lang="en" style="display: none;">Groups</span><span lang="ko" style="display: none;">그룹</span></label>
-                    <div class="filter-buttons" id="groupFilter"></div>
+            <div class="panel" id="applicants-view" hidden>
+              <div class="panel-header">
+                <h2 class="panel-title" data-i18n="applicantManagement">Applicant management</h2>
+                <div class="content-actions">
+                  <button class="button primary" onclick="refreshAll()"><span>↻</span><span data-i18n="refresh">Refresh</span></button>
                 </div>
+              </div>
+              <div class="search-row">
+                <input class="search-input" id="search-input" oninput="renderApplicants()" data-i18n-placeholder="searchPlaceholder" placeholder="Search by name, passport, phone">
+                <select class="select-input" id="group-filter" onchange="renderApplicants()">
+                  <option value="all" data-i18n="allGroups">All groups</option>
+                </select>
+              </div>
+              <div class="tabs" id="status-tabs"></div>
+              <div class="applicant-grid" id="applicants-grid"></div>
             </div>
 
-            <!-- 폴더 목록 -->
-            <div class="folders" id="foldersList"></div>
-        </div>
-
-        <!-- 사용 설명서 -->
-        <div id="manual" class="tab-content" style="display: none;">
-            <div class="manual">
-                <div class="manual-section">
-                    <h3><span lang="vi">🚀 Bắt đầu</span><span lang="en" style="display: none;">Getting Started</span><span lang="ko" style="display: none;">시작</span></h3>
-                    <div class="manual-content">
-                        <ol class="step-list">
-                            <li>
-                                <div>
-                                    <strong lang="vi">Chuẩn bị tệp</strong>
-                                    <strong lang="en" style="display: none;">Prepare files</strong>
-                                    <strong lang="ko" style="display: none;">파일 준비</strong>
-                                    <p style="margin-top: 0.5rem; color: var(--secondary);">
-                                        <span lang="vi">passport_NguyenVanA_S0123.pdf</span>
-                                        <span lang="en" style="display: none;">passport_NguyenVanA_S0123.pdf</span>
-                                        <span lang="ko" style="display: none;">passport_NguyenVanA_S0123.pdf</span>
-                                    </p>
-                                </div>
-                            </li>
-                            <li>
-                                <div>
-                                    <strong lang="vi">Tải lên Google Drive</strong>
-                                    <strong lang="en" style="display: none;">Upload to Drive</strong>
-                                    <strong lang="ko" style="display: none;">업로드</strong>
-                                    <p style="margin-top: 0.5rem; color: var(--secondary); word-break: break-all; font-size: 11px;">
-                                        https://drive.google.com/drive/folders/1AsE1Kc998LZKmOLYjtFvZDKN4YHJWxgz
-                                    </p>
-                                </div>
-                            </li>
-                            <li>
-                                <div>
-                                    <strong lang="vi">Nhấp nút "Xử lý"</strong>
-                                    <strong lang="en" style="display: none;">Click "Process"</strong>
-                                    <strong lang="ko" style="display: none;">버튼 클릭</strong>
-                                </div>
-                            </li>
-                            <li>
-                                <div>
-                                    <strong lang="vi">Chờ hoàn thành</strong>
-                                    <strong lang="en" style="display: none;">Wait to complete</strong>
-                                    <strong lang="ko" style="display: none;">완료 대기</strong>
-                                    <p style="margin-top: 0.5rem; color: var(--secondary);">
-                                        <span lang="vi">~12 phút cho 30 ứng viên</span>
-                                        <span lang="en" style="display: none;">~12 minutes for 30 applicants</span>
-                                        <span lang="ko" style="display: none;">~30명 12분</span>
-                                    </p>
-                                </div>
-                            </li>
-                        </ol>
-                    </div>
-                </div>
-
-                <div class="manual-section">
-                    <h3><span lang="vi">📋 Quy tắc tên tệp</span><span lang="en" style="display: none;">Filename Rules</span><span lang="ko" style="display: none;">파일명 규칙</span></h3>
-                    <div class="manual-content">
-                        <p lang="vi"><strong>[Loại tài liệu]_[Tên]_[Số].pdf</strong></p>
-                        <p lang="en" style="display: none;"><strong>[Document]_[Name]_[ID].pdf</strong></p>
-                        <p lang="ko" style="display: none;"><strong>[문서]_[이름]_[번호].pdf</strong></p>
-                        <div class="code-block">
-                            <span lang="vi">passport_NguyenVanA_S0123456.pdf
-CCCD_Nguyen_0123456789012.jpg
-photo_NguyenVanA.jpg
-hotel_NguyenVanA_Marina.pdf
-flight_NguyenVanA_VN123.pdf</span>
-                            <span lang="en" style="display: none;">passport_NguyenVanA_S0123456.pdf
-CCCD_Nguyen_0123456789012.jpg
-photo_NguyenVanA.jpg
-hotel_NguyenVanA_Marina.pdf
-flight_NguyenVanA_VN123.pdf</span>
-                            <span lang="ko" style="display: none;">passport_NguyenVanA_S0123456.pdf
-CCCD_Nguyen_0123456789012.jpg
-photo_NguyenVanA.jpg
-hotel_NguyenVanA_Marina.pdf
-flight_NguyenVanA_VN123.pdf</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="manual-section">
-                    <h3><span lang="vi">⚡ Tính năng tự động</span><span lang="en" style="display: none;">Automation</span><span lang="ko" style="display: none;">자동화</span></h3>
-                    <div class="manual-content">
-                        <p lang="vi">✓ Sắp xếp tự động | Xử lý OCR | Tạo PDF | Cập nhật thực tế</p>
-                        <p lang="en" style="display: none;">✓ Auto-organize | OCR processing | PDF generation | Real-time updates</p>
-                        <p lang="ko" style="display: none;">✓ 자동정렬 | OCR처리 | PDF생성 | 실시간업데이트</span></p>
-                    </div>
-                </div>
+            <div class="panel" id="documents-view" hidden>
+              <div class="panel-header">
+                <h2 class="panel-title" data-i18n="documentTypes">Document Types</h2>
+              </div>
+              <div class="tabs" id="document-tabs"></div>
+              <div class="document-grid" id="document-grid"></div>
             </div>
+          </section>
+
+          <aside>
+            <section class="panel">
+              <div class="panel-header">
+                <h2 class="panel-title" data-i18n="timeline">Progress timeline</h2>
+              </div>
+              <div class="timeline-list" id="timeline-list"></div>
+            </section>
+
+            <section class="panel">
+              <div class="panel-header">
+                <h2 class="panel-title" data-i18n="workflow">Workflow</h2>
+              </div>
+              <div class="timeline-list" id="workflow-list"></div>
+            </section>
+          </aside>
         </div>
-
-        <!-- 서류 목록 -->
-        <div id="documents" class="tab-content" style="display: none;">
-            <div class="manual">
-                <div class="manual-section">
-                    <h3><span lang="vi">📋 Tài liệu bắt buộc (C-3-9)</span><span lang="en" style="display: none;">Required Documents</span><span lang="ko" style="display: none;">필수서류</span></h3>
-                    <div class="manual-content" style="font-size: 12px; line-height: 1.8;">
-                        <p lang="vi"><strong>Cơ bản:</strong><br/>
-                        1. Hộ chiếu (6 tháng hạn)<br/>
-                        2. CCCD/Căn cước<br/>
-                        3. Ảnh hộ chiếu (3.5×4.5cm)<br/>
-                        4. Mẫu TRS (đơn xin visa)<br/>
-                        5. Lịch trình du lịch<br/>
-                        6. Khách sạn đặt chỗ<br/>
-                        7. Vé máy bay (khứ hồi)</p>
-
-                        <p lang="en" style="display: none;"><strong>Basic:</strong><br/>
-                        1. Passport (6 months validity)<br/>
-                        2. ID Card<br/>
-                        3. Photo (3.5×4.5cm)<br/>
-                        4. Application Form (TRS)<br/>
-                        5. Travel Itinerary<br/>
-                        6. Hotel Booking<br/>
-                        7. Flight Tickets (Return)</p>
-
-                        <p lang="ko" style="display: none;"><strong>기본:</strong><br/>
-                        1. 여권 (6개월 유효)<br/>
-                        2. 신분증<br/>
-                        3. 사진 (3.5×4.5cm)<br/>
-                        4. 신청서 (TRS)<br/>
-                        5. 여행 일정표<br/>
-                        6. 호텔 예약<br/>
-                        7. 항공권 (왕복)</p>
-                    </div>
-                </div>
-
-                <div class="manual-section">
-                    <h3><span lang="vi">👥 Tài liệu theo nghề</span><span lang="en" style="display: none;">By Profession</span><span lang="ko" style="display: none;">직업별서류</span></h3>
-                    <div class="manual-content" style="font-size: 12px; line-height: 1.8;">
-                        <p lang="vi"><strong>Nhân viên công ty:</strong><br/>
-                        • Giấy xác nhận công tác<br/>
-                        • Bảng lương (3 tháng)<br/>
-                        • Hợp đồng lao động<br/>
-                        • Bảo hiểm xã hội<br/><br/>
-                        
-                        <strong>Học sinh/Sinh viên:</strong><br/>
-                        • Giấy xác nhận nhập học<br/>
-                        • Thẻ học sinh<br/>
-                        • Biên bản học tập<br/><br/>
-
-                        <strong>Tự doanh:</strong><br/>
-                        • Giấy đăng ký kinh doanh<br/>
-                        • Sổ sách tài chính<br/>
-                        • Báo cáo thuế<br/>
-                        • Bảo hiểm xã hội<br/><br/>
-
-                        <strong>Người ngoài lao động:</strong><br/>
-                        • Giấy xác nhận hưởng lương hưu<br/>
-                        • Giấy xác nhận tài chính (ngân hàng)<br/>
-                        • Giấy xác nhận tài sản</p>
-
-                        <p lang="en" style="display: none;"><strong>Employees:</strong><br/>
-                        • Employment letter<br/>
-                        • Salary slip (3 months)<br/>
-                        • Labor contract<br/>
-                        • Social insurance<br/><br/>
-                        
-                        <strong>Students:</strong><br/>
-                        • Enrollment certificate<br/>
-                        • Student ID<br/>
-                        • Academic transcript<br/><br/>
-
-                        <strong>Self-employed:</strong><br/>
-                        • Business registration<br/>
-                        • Financial records<br/>
-                        • Tax report<br/>
-                        • Social insurance<br/><br/>
-
-                        <strong>Retirees:</strong><br/>
-                        • Pension certificate<br/>
-                        • Bank statement<br/>
-                        • Asset proof</p>
-
-                        <p lang="ko" style="display: none;"><strong>직원:</strong><br/>
-                        • 재직증명서<br/>
-                        • 월급명세서 (3개월)<br/>
-                        • 근로계약서<br/>
-                        • 사회보험<br/><br/>
-                        
-                        <strong>학생:</strong><br/>
-                        • 재학증명서<br/>
-                        • 학생증<br/>
-                        • 성적표<br/><br/>
-
-                        <strong>자영업:</strong><br/>
-                        • 사업자등록증<br/>
-                        • 재무기록<br/>
-                        • 세무신고서<br/>
-                        • 사회보험<br/><br/>
-
-                        <strong>퇴직자:</strong><br/>
-                        • 연금증명서<br/>
-                        • 은행잔고증명서<br/>
-                        • 자산증명</p>
-                    </div>
-                </div>
-
-                <div class="manual-section">
-                    <h3><span lang="vi">📄 Tài liệu khác (Tùy chọn)</span><span lang="en" style="display: none;">Additional (Optional)</span><span lang="ko" style="display: none;">추가서류</span></h3>
-                    <div class="manual-content" style="font-size: 12px; line-height: 1.8;">
-                        <p lang="vi">• Giấy xác nhận nhập cảnh (quá khứ)<br/>
-                        • Giấy xác nhận nơi ở<br/>
-                        • Hối đoái (thẻ tín dụng/tiền mặt)<br/>
-                        • Vé tàu/tuyến lữ hành<br/>
-                        • Booking xe<br/>
-                        • Bảo hiểm du lịch<br/>
-                        • Giấy xác nhận tái nhập cảnh<br/>
-                        • Giấy xác nhận nằm lỳ<br/>
-                        • Biên bản về nơi ở<br/>
-                        • Thư mời từ Hàn Quốc</p>
-
-                        <p lang="en" style="display: none;">• Entry history proof<br/>
-                        • Address certificate<br/>
-                        • Exchange/Funds proof<br/>
-                        • Train/Tour tickets<br/>
-                        • Car booking<br/>
-                        • Travel insurance<br/>
-                        • Re-entry permit<br/>
-                        • Extension proof<br/>
-                        • Housing proof<br/>
-                        • Invitation from Korea</p>
-
-                        <p lang="ko" style="display: none;">• 입국기록 증명<br/>
-                        • 주소증명<br/>
-                        • 환전/자금증명<br/>
-                        • 기차/투어 티켓<br/>
-                        • 자동차 예약<br/>
-                        • 여행보험<br/>
-                        • 재입국 허가<br/>
-                        • 연장 증명<br/>
-                        • 숙소 증명<br/>
-                        • 한국 초청장</p>
-                    </div>
-                </div>
-            </div>
-        </div>
+      </main>
     </div>
+  </div>
 
-    <!-- 모달 -->
-    <div class="modal" id="folderModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <span id="modalTitle">Tên thư mục</span>
-            </div>
-            <div class="modal-body">
-                <div class="file-list" id="modalFileList"></div>
-            </div>
-            <div class="modal-actions">
-                <button class="btn btn-secondary" onclick="closeModal()">
-                    <span lang="vi">Đóng</span>
-                    <span lang="en" style="display: none;">Close</span>
-                    <span lang="ko" style="display: none;">닫기</span>
-                </button>
-                <button class="btn btn-primary" onclick="processFolder()">
-                    <span lang="vi">⚙️ Xử lý</span>
-                    <span lang="en" style="display: none;">⚙️ Process</span>
-                    <span lang="ko" style="display: none;">⚙️ 자료화</span>
-                </button>
-            </div>
-        </div>
+  <div class="modal-backdrop" id="detail-modal">
+    <div class="modal">
+      <h2 id="modal-title">Applicant</h2>
+      <p class="hero-text" id="modal-subtitle"></p>
+      <div class="detail-grid" id="modal-details"></div>
+      <div class="modal-actions">
+        <button class="button primary" id="modal-pdf-button"><span>📄</span><span data-i18n="generatePdf">Generate PDF</span></button>
+        <button class="button ghost" onclick="closeModal()" data-i18n="close">Close</button>
+      </div>
     </div>
+  </div>
 
-    <script>
-        let currentLanguage = 'vi';
+  <div class="toast" id="toast"></div>
 
-        const foldersData = [
-            {
-                id: 'GROUP_SUMMER_2025',
-                name_vi: 'Hè 2025 - Nhóm A',
-                name_en: 'Summer 2025 - Group A',
-                name_ko: '여름 2025 - 그룹 A',
-                applicants: 30,
-                completed: 28,
-                estimatedTime: 8,
-                documents: [
-                    { name: 'passport_Nguyen_S0123.pdf', status: 'done' },
-                    { name: 'CCCD_Nguyen_0123456789012.jpg', status: 'done' },
-                    { name: 'photo_Nguyen.jpg', status: 'done' },
-                ]
-            },
-            {
-                id: 'GROUP_SPRING_2026',
-                name_vi: 'Xuân 2026 - Nhóm B',
-                name_en: 'Spring 2026 - Group B',
-                name_ko: '봄 2026 - 그룹 B',
-                applicants: 25,
-                completed: 12,
-                estimatedTime: 15,
-                documents: [
-                    { name: 'passport_Le_S0456.pdf', status: 'processing' },
-                    { name: 'hotel_Le_Marina.pdf', status: 'pending' },
-                ]
-            }
-        ];
+  <script>
+    const API_CANDIDATES = [
+      localStorage.getItem('bttourVisaApiUrl'),
+      'http://localhost:3510',
+      'http://127.0.0.1:3510',
+      'http://100.65.187.12:3510'
+    ].filter(Boolean);
 
-        function switchLanguage(lang) {
-            currentLanguage = lang;
-            document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
-            
-            document.querySelectorAll('[lang]').forEach(el => {
-                el.style.display = el.getAttribute('lang') === lang ? 'block' : 'none';
-            });
+    const demoApplicants = [
+      { id: 'demo_001', name_vi: 'Nguyen Van An', name_en: 'NGUYEN VAN AN', passport_number: 'P0123456', nationality: 'Vietnam', phone: '+84 90 000 0001', group_id: 'DEMO_GROUP_A', entry_date: '2026-06-01', departure_date: '2026-06-07', hotel: 'BT TOUR Seoul Hotel', gender: 'M', status: 'completed', documents_count: 7, total_documents: 7 },
+      { id: 'demo_002', name_vi: 'Tran Thi Binh', name_en: 'TRAN THI BINH', passport_number: 'P0765432', nationality: 'Vietnam', phone: '+84 90 000 0002', group_id: 'DEMO_GROUP_A', entry_date: '2026-06-01', departure_date: '2026-06-07', hotel: 'BT TOUR Seoul Hotel', gender: 'F', status: 'processing', documents_count: 5, total_documents: 7 },
+      { id: 'demo_003', name_vi: 'Le Minh Chau', name_en: 'LE MINH CHAU', passport_number: 'P0987654', nationality: 'Vietnam', phone: '+84 90 000 0003', group_id: 'DEMO_GROUP_B', entry_date: '2026-07-10', departure_date: '2026-07-15', hotel: 'BT TOUR Busan Hotel', gender: 'F', status: 'pending', documents_count: 2, total_documents: 7 }
+    ];
 
-            renderFolders();
+    const i18n = {
+      vi: {
+        brandTitle: 'Hệ thống Visa BT TOUR',
+        menu: 'Menu',
+        dashboard: 'Bảng điều khiển',
+        applicants: 'Ứng viên',
+        documentTypes: 'Loại tài liệu',
+        statusFilter: 'Trạng thái ứng viên',
+        all: 'Tất cả',
+        pending: 'Đang chờ',
+        processing: 'Đang xử lý',
+        completed: 'Hoàn thành',
+        language: 'Ngôn ngữ',
+        apiStatus: 'Trạng thái API',
+        checking: 'Đang kiểm tra',
+        heroTitle: 'Bảng điều khiển vận hành visa',
+        heroText: 'Theo dõi ứng viên, tài liệu, tiến độ và bộ hồ sơ visa trong một màn hình làm việc.',
+        refresh: 'Làm mới',
+        batchPdf: 'PDF hàng loạt',
+        batchExcel: 'Excel hàng loạt',
+        totalApplicants: 'Tổng ứng viên',
+        totalApplicantsNote: 'Tất cả hồ sơ đang mở',
+        completedNote: 'Sẵn sàng nộp',
+        processingNote: 'Đang kiểm tra tài liệu',
+        pendingNote: 'Chờ bổ sung tài liệu',
+        recentApplicants: 'Ứng viên gần đây',
+        viewAll: 'Xem tất cả',
+        applicantManagement: 'Quản lý ứng viên',
+        searchPlaceholder: 'Tìm theo tên, hộ chiếu, điện thoại',
+        allGroups: 'Tất cả nhóm',
+        timeline: 'Dòng tiến độ',
+        workflow: 'Quy trình',
+        generatePdf: 'Tạo PDF',
+        details: 'Chi tiết',
+        close: 'Đóng',
+        noApplicants: 'Chưa có ứng viên. Khi API không truy cập được, dữ liệu mẫu sẽ hiển thị để kiểm tra giao diện.',
+        demoMode: 'Chế độ mẫu',
+        liveApi: 'API đang hoạt động',
+        apiFailed: 'Không thể kết nối API, đang dùng dữ liệu mẫu',
+        passport: 'Hộ chiếu',
+        idCard: 'CCCD',
+        photo: 'Ảnh',
+        hotel: 'Khách sạn',
+        flight: 'Chuyến bay',
+        itinerary: 'Lịch trình',
+        financial: 'Tài chính',
+        group: 'Nhóm',
+        phone: 'Điện thoại',
+        nationality: 'Quốc tịch',
+        period: 'Thời gian',
+        documents: 'Tài liệu',
+        progress: 'Tiến độ',
+        copied: 'Đã cập nhật',
+        promptGroup: 'Nhập Group ID',
+        actionNeedsApi: 'Chức năng này cần API thật trên cổng 3510.',
+        pdfDone: 'PDF đã được tạo.',
+        excelDone: 'Excel đã được tạo.',
+        batchPdfDone: 'PDF hàng loạt đã tạo xong.',
+        batchExcelDone: 'Excel hàng loạt đã tạo xong.',
+        basicInfo: 'Thông tin cơ bản',
+        documentCheck: 'Kiểm tra tài liệu',
+        readySubmit: 'Sẵn sàng nộp'
+      },
+      en: {
+        brandTitle: 'BT TOUR Visa System',
+        menu: 'Menu',
+        dashboard: 'Dashboard',
+        applicants: 'Applicants',
+        documentTypes: 'Document Types',
+        statusFilter: 'Applicant Status',
+        all: 'All',
+        pending: 'Pending',
+        processing: 'Processing',
+        completed: 'Completed',
+        language: 'Language',
+        apiStatus: 'API Status',
+        checking: 'Checking',
+        heroTitle: 'Visa operations dashboard',
+        heroText: 'Monitor applicants, documents, progress, and generated visa packets from one workspace.',
+        refresh: 'Refresh',
+        batchPdf: 'Batch PDF',
+        batchExcel: 'Batch Excel',
+        totalApplicants: 'Total applicants',
+        totalApplicantsNote: 'All active visa records',
+        completedNote: 'Ready for submission',
+        processingNote: 'Documents being checked',
+        pendingNote: 'Waiting for documents',
+        recentApplicants: 'Recent applicants',
+        viewAll: 'View all',
+        applicantManagement: 'Applicant management',
+        searchPlaceholder: 'Search by name, passport, phone',
+        allGroups: 'All groups',
+        timeline: 'Progress timeline',
+        workflow: 'Workflow',
+        generatePdf: 'Generate PDF',
+        details: 'Details',
+        close: 'Close',
+        noApplicants: 'No applicants yet. Demo data appears when the API cannot be reached so the interface can still be checked.',
+        demoMode: 'Demo mode',
+        liveApi: 'API online',
+        apiFailed: 'API unavailable, using demo data',
+        passport: 'Passport',
+        idCard: 'ID card',
+        photo: 'Photo',
+        hotel: 'Hotel',
+        flight: 'Flight',
+        itinerary: 'Itinerary',
+        financial: 'Financial',
+        group: 'Group',
+        phone: 'Phone',
+        nationality: 'Nationality',
+        period: 'Period',
+        documents: 'Documents',
+        progress: 'Progress',
+        copied: 'Updated',
+        promptGroup: 'Enter Group ID',
+        actionNeedsApi: 'This action needs the live API on port 3510.',
+        pdfDone: 'PDF generated.',
+        excelDone: 'Excel generated.',
+        batchPdfDone: 'Batch PDF completed.',
+        batchExcelDone: 'Batch Excel completed.',
+        basicInfo: 'Basic information',
+        documentCheck: 'Document check',
+        readySubmit: 'Ready to submit'
+      },
+      ko: {
+        brandTitle: 'BT TOUR 비자 시스템',
+        menu: '메뉴',
+        dashboard: '대시보드',
+        applicants: '신청자',
+        documentTypes: '문서 타입',
+        statusFilter: '신청자 상태',
+        all: '전체',
+        pending: '대기중',
+        processing: '진행중',
+        completed: '완료',
+        language: '언어',
+        apiStatus: 'API 상태',
+        checking: '확인 중',
+        heroTitle: '비자 운영 대시보드',
+        heroText: '신청자, 서류, 진행률, 생성된 비자 접수 문서를 한 화면에서 관리합니다.',
+        refresh: '새로고침',
+        batchPdf: '일괄 PDF',
+        batchExcel: '일괄 Excel',
+        totalApplicants: '총 신청자',
+        totalApplicantsNote: '전체 활성 비자 기록',
+        completedNote: '접수 준비 완료',
+        processingNote: '서류 확인 중',
+        pendingNote: '서류 대기 중',
+        recentApplicants: '최근 신청자',
+        viewAll: '전체 보기',
+        applicantManagement: '신청자 관리',
+        searchPlaceholder: '이름, 여권, 연락처 검색',
+        allGroups: '전체 그룹',
+        timeline: '진행상황 타임라인',
+        workflow: '업무 흐름',
+        generatePdf: 'PDF 생성',
+        details: '상세',
+        close: '닫기',
+        noApplicants: '신청자가 아직 없습니다. API에 접근하지 못하는 환경에서는 화면 검증용 데모 데이터가 표시됩니다.',
+        demoMode: '데모 모드',
+        liveApi: 'API 정상',
+        apiFailed: 'API 연결 실패, 데모 데이터 사용 중',
+        passport: '여권',
+        idCard: '신분증',
+        photo: '사진',
+        hotel: '호텔',
+        flight: '항공권',
+        itinerary: '일정표',
+        financial: '재정서류',
+        group: '그룹',
+        phone: '연락처',
+        nationality: '국적',
+        period: '기간',
+        documents: '서류',
+        progress: '진행률',
+        copied: '업데이트 완료',
+        promptGroup: 'Group ID를 입력하세요',
+        actionNeedsApi: '이 기능은 3510 포트의 실제 API 연결이 필요합니다.',
+        pdfDone: 'PDF 생성이 완료되었습니다.',
+        excelDone: 'Excel 생성이 완료되었습니다.',
+        batchPdfDone: '일괄 PDF 생성이 완료되었습니다.',
+        batchExcelDone: '일괄 Excel 생성이 완료되었습니다.',
+        basicInfo: '기초정보',
+        documentCheck: '서류수집',
+        readySubmit: '접수준비'
+      }
+    };
+
+    const docTypes = [
+      ['passport', 'passport', '🛂'],
+      ['idCard', 'id_card', '🪪'],
+      ['photo', 'photo', '🖼️'],
+      ['hotel', 'hotel', '🏨'],
+      ['flight', 'flight', '✈️'],
+      ['itinerary', 'itinerary', '🗓️'],
+      ['financial', 'financial', '💳']
+    ];
+
+    let currentLanguage = localStorage.getItem('bttourVisaLanguage') || 'vi';
+    let currentView = 'dashboard';
+    let currentStatus = 'all';
+    let currentDocType = 'passport';
+    let apiBaseUrl = null;
+    let demoMode = false;
+    let allApplicants = [];
+    let groups = [];
+    let timeline = [];
+
+    const $ = (selector) => document.querySelector(selector);
+    const $$ = (selector) => Array.from(document.querySelectorAll(selector));
+    const t = (key) => (i18n[currentLanguage] && i18n[currentLanguage][key]) || i18n.en[key] || key;
+
+    function setLanguage(lang) {
+      currentLanguage = lang;
+      localStorage.setItem('bttourVisaLanguage', lang);
+      document.documentElement.lang = lang;
+      $$('[data-lang-button]').forEach((button) => button.classList.toggle('active', button.dataset.langButton === lang));
+      $$('[data-i18n]').forEach((node) => node.textContent = t(node.dataset.i18n));
+      $$('[data-i18n-placeholder]').forEach((node) => node.placeholder = t(node.dataset.i18nPlaceholder));
+      renderStatusTabs();
+      renderDocumentTabs();
+      renderStats();
+      renderTimeline();
+      renderWorkflow();
+      renderApplicants();
+      renderDocuments();
+      updateApiPanel();
+    }
+
+    function toggleSidebar() {
+      $('#sidebar').classList.toggle('open');
+    }
+
+    function switchView(view) {
+      currentView = view;
+      $('#dashboard-view').hidden = view !== 'dashboard';
+      $('#applicants-view').hidden = view !== 'applicants';
+      $('#documents-view').hidden = view !== 'documents';
+      $$('[data-view-button]').forEach((button) => button.classList.toggle('active', button.dataset.viewButton === view));
+      if (window.innerWidth <= 820) $('#sidebar').classList.remove('open');
+    }
+
+    function filterStatus(status) {
+      currentStatus = status;
+      $$('[data-status-button]').forEach((button) => button.classList.toggle('active', button.dataset.statusButton === status));
+      renderStatusTabs();
+      renderApplicants();
+      if (currentView === 'dashboard') switchView('applicants');
+    }
+
+    function getStatusLabel(status) {
+      return t(status || 'pending');
+    }
+
+    function getApplicantName(applicant) {
+      if (currentLanguage === 'en') return applicant.name_en || applicant.name_vi || applicant.id;
+      return applicant.name_vi || applicant.name_en || applicant.id;
+    }
+
+    function getProgress(applicant) {
+      const total = Number(applicant.total_documents || 0);
+      const done = Number(applicant.documents_count || 0);
+      return total > 0 ? Math.round((done / total) * 100) : 0;
+    }
+
+    async function fetchWithTimeout(url, options = {}, timeoutMs = 3500) {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), timeoutMs);
+      try {
+        const response = await fetch(url, { ...options, signal: controller.signal });
+        clearTimeout(timeout);
+        return response;
+      } catch (error) {
+        clearTimeout(timeout);
+        throw error;
+      }
+    }
+
+    async function detectApi() {
+      for (const baseUrl of API_CANDIDATES) {
+        try {
+          const response = await fetchWithTimeout(`${baseUrl}/api/stats`);
+          if (!response.ok) continue;
+          const json = await response.json();
+          if (json && json.success) {
+            apiBaseUrl = baseUrl;
+            demoMode = false;
+            updateApiPanel();
+            return;
+          }
+        } catch (error) {
+          console.warn('API candidate failed', baseUrl, error.message);
         }
+      }
+      apiBaseUrl = null;
+      demoMode = true;
+      allApplicants = demoApplicants;
+      groups = buildGroupsFromApplicants(demoApplicants);
+      timeline = buildTimeline(demoApplicants);
+      updateApiPanel();
+    }
 
-        function switchTab(tab) {
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            event.target.classList.add('active');
-            
-            document.querySelectorAll('.tab-content').forEach(content => {
-                content.style.display = 'none';
-            });
-            
-            document.getElementById(tab).style.display = 'block';
-        }
+    async function api(endpoint, options = {}) {
+      if (!apiBaseUrl) throw new Error('API unavailable');
+      const response = await fetchWithTimeout(`${apiBaseUrl}${endpoint}`, options, 10000);
+      const json = await response.json();
+      if (!response.ok || !json.success) throw new Error(json.error || `HTTP ${response.status}`);
+      return json;
+    }
 
-        function renderFolders() {
-            const foldersList = document.getElementById('foldersList');
-            foldersList.innerHTML = '';
+    async function refreshAll() {
+      await detectApi();
+      if (!demoMode) {
+        const [statsResult, applicantsResult, timelineResult, groupsResult] = await Promise.allSettled([
+          api('/api/stats'),
+          api('/api/applicants'),
+          api('/api/timeline'),
+          api('/api/groups')
+        ]);
 
-            foldersData.forEach(folder => {
-                const folderName = currentLanguage === 'vi' ? folder.name_vi : 
-                                  currentLanguage === 'en' ? folder.name_en : folder.name_ko;
-                const progress = Math.round((folder.completed / folder.applicants) * 100);
+        if (applicantsResult.status === 'fulfilled') allApplicants = applicantsResult.value.data || [];
+        if (groupsResult.status === 'fulfilled') groups = groupsResult.value.data || buildGroupsFromApplicants(allApplicants);
+        if (timelineResult.status === 'fulfilled') timeline = timelineResult.value.data || buildTimeline(allApplicants);
+        if (statsResult.status !== 'fulfilled') timeline = buildTimeline(allApplicants);
+      }
+      populateGroups();
+      renderStats();
+      renderTimeline();
+      renderWorkflow();
+      renderApplicants();
+      renderDocuments();
+      toast(t('copied'));
+    }
 
-                const docType = currentLanguage === 'vi' ? '서류' : 
-                               currentLanguage === 'en' ? 'Documents' : '서류';
+    function buildGroupsFromApplicants(applicants) {
+      const map = new Map();
+      applicants.forEach((applicant) => {
+        const id = applicant.group_id || 'UNGROUPED';
+        const item = map.get(id) || { id, name: id, name_vi: id, applicant_count: 0, completed_count: 0 };
+        item.applicant_count += 1;
+        if (applicant.status === 'completed') item.completed_count += 1;
+        map.set(id, item);
+      });
+      return Array.from(map.values());
+    }
 
-                const html = `
-                    <div class="folder-card">
-                        <div class="folder-header">
-                            <div class="folder-name">${folderName}</div>
-                            <div class="folder-meta">${folder.applicants} <span lang="vi">ứng viên</span><span lang="en" style="display: none;">applicants</span><span lang="ko" style="display: none;">신청자</span></div>
-                        </div>
-                        <div class="folder-body">
-                            <div class="progress-section">
-                                <div class="progress-label">
-                                    <span lang="vi">Tiến độ</span>
-                                    <span lang="en" style="display: none;">Progress</span>
-                                    <span lang="ko" style="display: none;">진행률</span>
-                                    <span>${progress}%</span>
-                                </div>
-                                <div class="progress-bar">
-                                    <div class="progress-fill" style="width: ${progress}%"></div>
-                                </div>
-                                <div class="progress-time">
-                                    <span lang="vi">Thời gian dự kiến:</span>
-                                    <span lang="en" style="display: none;">Est. time:</span>
-                                    <span lang="ko" style="display: none;">예상시간:</span>
-                                    <strong>${folder.estimatedTime}
-                                    <span lang="vi">phút</span>
-                                    <span lang="en" style="display: none;">min</span>
-                                    <span lang="ko" style="display: none;">분</span></strong>
-                                </div>
-                            </div>
+    function buildTimeline(applicants) {
+      const total = applicants.length;
+      return ['pending', 'processing', 'completed'].map((status) => {
+        const count = applicants.filter((applicant) => (applicant.status || 'pending') === status).length;
+        return { status, count, percent: total ? Math.round((count * 1000) / total) / 10 : 0 };
+      });
+    }
 
-                            <div class="documents">
-                                <div class="doc-item done"><span class="doc-icon">✓</span> <span lang="vi">Hộ chiếu</span><span lang="en" style="display: none;">Passport</span><span lang="ko" style="display: none;">여권</span></div>
-                                <div class="doc-item done"><span class="doc-icon">✓</span> <span lang="vi">CCCD</span><span lang="en" style="display: none;">ID</span><span lang="ko" style="display: none;">신분증</span></div>
-                                <div class="doc-item done"><span class="doc-icon">✓</span> <span lang="vi">Ảnh</span><span lang="en" style="display: none;">Photo</span><span lang="ko" style="display: none;">사진</span></div>
-                                <div class="doc-item ${progress > 75 ? 'done' : 'pending'}"><span class="doc-icon">${progress > 75 ? '✓' : '○'}</span> <span lang="vi">Khách sạn</span><span lang="en" style="display: none;">Hotel</span><span lang="ko" style="display: none;">호텔</span></div>
-                                <div class="doc-item ${progress > 85 ? 'done' : 'pending'}"><span class="doc-icon">${progress > 85 ? '✓' : '○'}</span> <span lang="vi">Chuyến bay</span><span lang="en" style="display: none;">Flight</span><span lang="ko" style="display: none;">항공권</span></div>
-                                <div class="doc-item pending"><span class="doc-icon">○</span> <span lang="vi">Lịch trình</span><span lang="en" style="display: none;">Itinerary</span><span lang="ko" style="display: none;">일정</span></div>
-                            </div>
+    function renderStats() {
+      const counts = {
+        total: allApplicants.length,
+        pending: allApplicants.filter((a) => (a.status || 'pending') === 'pending').length,
+        processing: allApplicants.filter((a) => a.status === 'processing').length,
+        completed: allApplicants.filter((a) => a.status === 'completed').length
+      };
+      $('#stat-total').textContent = counts.total;
+      $('#stat-pending').textContent = counts.pending;
+      $('#stat-processing').textContent = counts.processing;
+      $('#stat-completed').textContent = counts.completed;
+      $('#badge-all').textContent = counts.total;
+      $('#badge-pending').textContent = counts.pending;
+      $('#badge-processing').textContent = counts.processing;
+      $('#badge-completed').textContent = counts.completed;
+    }
 
-                            <div class="actions">
-                                <button class="btn btn-secondary" onclick="viewFolder('${folder.id}')">
-                                    <span lang="vi">📁 Xem</span>
-                                    <span lang="en" style="display: none;">📁 View</span>
-                                    <span lang="ko" style="display: none;">📁 보기</span>
-                                </button>
-                                <button class="btn btn-primary" onclick="processFolder('${folder.id}')">
-                                    <span lang="vi">⚙️ Xử lý</span>
-                                    <span lang="en" style="display: none;">⚙️ Run</span>
-                                    <span lang="ko" style="display: none;">⚙️ 처리</span>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                `;
-                
-                foldersList.innerHTML += html;
-            });
-        }
+    function renderTimeline() {
+      const list = $('#timeline-list');
+      const source = timeline.length ? timeline : buildTimeline(allApplicants);
+      list.innerHTML = source.map((item) => `
+        <div class="timeline-row ${item.status}">
+          <div class="timeline-icon">${item.status === 'completed' ? '✅' : item.status === 'processing' ? '⚙️' : '⏳'}</div>
+          <div>
+            <div class="timeline-title">${getStatusLabel(item.status)}</div>
+            <div class="timeline-caption">${item.count} · ${item.percent}%</div>
+            <div class="progress-track"><div class="progress-fill" style="width:${item.percent}%"></div></div>
+          </div>
+        </div>
+      `).join('');
+    }
 
-        function viewFolder(folderId) {
-            const folder = foldersData.find(f => f.id === folderId);
-            const folderName = currentLanguage === 'vi' ? folder.name_vi : 
-                              currentLanguage === 'en' ? folder.name_en : folder.name_ko;
-            document.getElementById('modalTitle').textContent = folderName;
-            
-            const fileList = document.getElementById('modalFileList');
-            fileList.innerHTML = folder.documents.map(doc => `
-                <div class="file-item">
-                    <div class="file-name">
-                        <span style="font-size: 14px;">${doc.status === 'done' ? '✓' : '⏳'}</span>
-                        <span>${doc.name}</span>
-                    </div>
-                    <span class="file-status ${doc.status}">
-                        ${doc.status === 'done' ? (currentLanguage === 'vi' ? '✓ Xong' : currentLanguage === 'en' ? '✓ Done' : '✓ 완료') : 
-                          doc.status === 'processing' ? (currentLanguage === 'vi' ? '⏳ Xử lý' : currentLanguage === 'en' ? '⏳ Processing' : '⏳ 처리중') : 
-                          currentLanguage === 'vi' ? '⏸ Chờ' : currentLanguage === 'en' ? '⏸ Pending' : '⏸ 대기'}
-                    </span>
-                </div>
-            `).join('');
-            
-            document.getElementById('folderModal').classList.add('active');
-        }
+    function renderWorkflow() {
+      const rows = [
+        ['pending', 'basicInfo', '⏳'],
+        ['processing', 'documentCheck', '⚙️'],
+        ['completed', 'readySubmit', '✅']
+      ];
+      $('#workflow-list').innerHTML = rows.map(([status, key, icon]) => `
+        <div class="timeline-row ${status}">
+          <div class="timeline-icon">${icon}</div>
+          <div>
+            <div class="timeline-title">${t(key)}</div>
+            <div class="timeline-caption">${t(`${status}Note`)}</div>
+          </div>
+        </div>
+      `).join('');
+    }
 
-        function closeModal() {
-            document.getElementById('folderModal').classList.remove('active');
-        }
+    function renderStatusTabs() {
+      const statuses = ['all', 'pending', 'processing', 'completed'];
+      $('#status-tabs').innerHTML = statuses.map((status) => `
+        <button class="tab ${currentStatus === status ? 'active' : ''}" onclick="filterStatus('${status}')">${t(status)}</button>
+      `).join('');
+    }
 
-        function processFolder(folderId) {
-            const messages = {
-                vi: 'Bắt đầu xử lý tệp...',
-                en: 'Starting processing...',
-                ko: '처리를 시작합니다...'
-            };
-            alert(messages[currentLanguage]);
-            closeModal();
-        }
+    function renderDocumentTabs() {
+      $('#document-tabs').innerHTML = docTypes.map(([labelKey, type, icon]) => `
+        <button class="tab ${currentDocType === type ? 'active' : ''}" onclick="setDocType('${type}')">${icon} ${t(labelKey)}</button>
+      `).join('');
+    }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            renderFolders();
-            
-            document.getElementById('groupCount').textContent = foldersData.length;
-            const totalApplicants = foldersData.reduce((sum, f) => sum + f.applicants, 0);
-            const totalCompleted = foldersData.reduce((sum, f) => sum + f.completed, 0);
-            document.getElementById('applicantCount').textContent = totalApplicants;
-            document.getElementById('completedCount').textContent = totalCompleted;
-            document.getElementById('avgProgress').textContent = Math.round((totalCompleted / totalApplicants) * 100) + '%';
-        });
+    function setDocType(type) {
+      currentDocType = type;
+      renderDocumentTabs();
+      renderDocuments();
+    }
 
-        // 모바일 안전 영역 대응
-        document.addEventListener('touchmove', function(e) {
-            if (document.getElementById('folderModal').classList.contains('active')) {
-                e.preventDefault();
-            }
-        }, { passive: false });
-    </script>
+    function populateGroups() {
+      const select = $('#group-filter');
+      const previous = select.value || 'all';
+      select.innerHTML = `<option value="all">${t('allGroups')}</option>` + groups.map((group) => {
+        const name = currentLanguage === 'vi' ? (group.name_vi || group.name || group.id) : (group.name || group.name_vi || group.id);
+        return `<option value="${escapeHtml(group.id)}">${escapeHtml(name)} · ${group.applicant_count || 0}</option>`;
+      }).join('');
+      select.value = Array.from(select.options).some((option) => option.value === previous) ? previous : 'all';
+    }
+
+    function getFilteredApplicants() {
+      const query = ($('#search-input')?.value || '').trim().toLowerCase();
+      const group = $('#group-filter')?.value || 'all';
+      return allApplicants.filter((applicant) => {
+        const statusOk = currentStatus === 'all' || (applicant.status || 'pending') === currentStatus;
+        const groupOk = group === 'all' || (applicant.group_id || 'UNGROUPED') === group;
+        const haystack = [applicant.name_vi, applicant.name_en, applicant.passport_number, applicant.phone, applicant.group_id].filter(Boolean).join(' ').toLowerCase();
+        const queryOk = !query || haystack.includes(query);
+        return statusOk && groupOk && queryOk;
+      });
+    }
+
+    function renderApplicants() {
+      const filtered = getFilteredApplicants();
+      const fullHtml = filtered.length ? filtered.map(renderApplicantCard).join('') : emptyState();
+      $('#applicants-grid').innerHTML = fullHtml;
+      $('#recent-grid').innerHTML = allApplicants.length ? allApplicants.slice(0, 6).map(renderApplicantCard).join('') : emptyState();
+    }
+
+    function renderApplicantCard(applicant) {
+      const status = applicant.status || 'pending';
+      const progress = getProgress(applicant);
+      return `
+        <article class="applicant-card">
+          <div class="card-top">
+            <div>
+              <div class="applicant-name">${escapeHtml(getApplicantName(applicant))}</div>
+              <div class="applicant-sub">${escapeHtml(applicant.id || '')}</div>
+            </div>
+            <span class="status-pill status-${status}">${getStatusLabel(status)}</span>
+          </div>
+          <div class="info-list">
+            <div>${t('passport')}: ${escapeHtml(applicant.passport_number || '-')}</div>
+            <div>${t('group')}: ${escapeHtml(applicant.group_id || '-')}</div>
+            <div>${t('phone')}: ${escapeHtml(applicant.phone || '-')}</div>
+          </div>
+          <div class="progress-line">
+            <div class="progress-meta"><span>${t('progress')}</span><span>${applicant.documents_count || 0}/${applicant.total_documents || 0} · ${progress}%</span></div>
+            <div class="progress-track"><div class="progress-fill" style="width:${progress}%"></div></div>
+          </div>
+          <div class="card-actions">
+            <button class="button primary" onclick="generatePdf('${escapeJs(applicant.id)}', this)">📄 ${t('generatePdf')}</button>
+            <button class="button ghost" onclick="openDetails('${escapeJs(applicant.id)}')">${t('details')}</button>
+          </div>
+        </article>
+      `;
+    }
+
+    function renderDocuments() {
+      const selected = docTypes.find(([, type]) => type === currentDocType) || docTypes[0];
+      const [labelKey, type, icon] = selected;
+      const completed = allApplicants.filter((applicant) => getProgress(applicant) >= 100).length;
+      const partial = allApplicants.filter((applicant) => getProgress(applicant) > 0 && getProgress(applicant) < 100).length;
+      $('#document-grid').innerHTML = `
+        <div class="document-tile">
+          <div class="document-title">${icon} ${t(labelKey)}</div>
+          <div class="document-caption">${t('completed')}: ${completed}</div>
+        </div>
+        <div class="document-tile">
+          <div class="document-title">⚙️ ${t('processing')}</div>
+          <div class="document-caption">${t('documentCheck')}: ${partial}</div>
+        </div>
+        <div class="document-tile">
+          <div class="document-title">📌 API</div>
+          <div class="document-caption">GET /api/documents/type/${escapeHtml(type)}</div>
+        </div>
+        <div class="document-tile">
+          <div class="document-title">📦 ${t('batchPdf')}</div>
+          <div class="document-caption">${t('documents')}: ${allApplicants.length}</div>
+        </div>
+      `;
+    }
+
+    function emptyState() {
+      return `<div class="empty-state">${t('noApplicants')}</div>`;
+    }
+
+    function openDetails(applicantId) {
+      const applicant = allApplicants.find((item) => item.id === applicantId);
+      if (!applicant) return;
+      $('#modal-title').textContent = getApplicantName(applicant);
+      $('#modal-subtitle').textContent = `${t('passport')}: ${applicant.passport_number || '-'} · ${getStatusLabel(applicant.status || 'pending')}`;
+      const details = [
+        [t('group'), applicant.group_id],
+        [t('phone'), applicant.phone],
+        [t('nationality'), applicant.nationality],
+        [t('period'), `${applicant.entry_date || '-'} → ${applicant.departure_date || '-'}`],
+        [t('hotel'), applicant.hotel],
+        [t('documents'), `${applicant.documents_count || 0}/${applicant.total_documents || 0}`]
+      ];
+      $('#modal-details').innerHTML = details.map(([label, value]) => `
+        <div class="detail-item">
+          <div class="detail-label">${escapeHtml(label)}</div>
+          <div class="detail-value">${escapeHtml(value || '-')}</div>
+        </div>
+      `).join('');
+      $('#modal-pdf-button').onclick = () => generatePdf(applicant.id, $('#modal-pdf-button'));
+      $('#detail-modal').classList.add('show');
+    }
+
+    function closeModal() {
+      $('#detail-modal').classList.remove('show');
+    }
+
+    async function generatePdf(applicantId, button) {
+      if (demoMode || !apiBaseUrl) return toast(t('actionNeedsApi'));
+      setButtonLoading(button, true);
+      try {
+        const result = await api(`/api/generate/pdf/${encodeURIComponent(applicantId)}`, { method: 'POST' });
+        download(`${apiBaseUrl}${result.pdf_path}`, `${applicantId}_visa_packet.pdf`);
+        toast(t('pdfDone'));
+      } catch (error) {
+        toast(error.message);
+      } finally {
+        setButtonLoading(button, false);
+      }
+    }
+
+    async function batchPdf(button) {
+      const groupId = chooseGroup();
+      if (!groupId) return;
+      if (demoMode || !apiBaseUrl) return toast(t('actionNeedsApi'));
+      setButtonLoading(button, true);
+      try {
+        await api(`/api/batch/pdf/${encodeURIComponent(groupId)}`, { method: 'POST' });
+        toast(t('batchPdfDone'));
+      } catch (error) {
+        toast(error.message);
+      } finally {
+        setButtonLoading(button, false);
+      }
+    }
+
+    async function batchExcel(button) {
+      const groupId = chooseGroup();
+      if (!groupId) return;
+      if (demoMode || !apiBaseUrl) return toast(t('actionNeedsApi'));
+      setButtonLoading(button, true);
+      try {
+        const result = await api(`/api/batch/excel/${encodeURIComponent(groupId)}`, { method: 'POST' });
+        download(`${apiBaseUrl}${result.excel_path}`, `${groupId}_NAME_LIST.xlsx`);
+        toast(t('batchExcelDone'));
+      } catch (error) {
+        toast(error.message);
+      } finally {
+        setButtonLoading(button, false);
+      }
+    }
+
+    function chooseGroup() {
+      const selected = $('#group-filter')?.value;
+      if (selected && selected !== 'all') return selected;
+      if (groups.length === 1) return groups[0].id;
+      return window.prompt(t('promptGroup'), groups[0]?.id || '');
+    }
+
+    function download(url, filename) {
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    }
+
+    function setButtonLoading(button, loading) {
+      if (!button) return;
+      if (loading) {
+        button.dataset.originalText = button.innerHTML;
+        button.disabled = true;
+        button.innerHTML = '<span class="spinner"></span>';
+      } else {
+        button.disabled = false;
+        button.innerHTML = button.dataset.originalText || button.innerHTML;
+      }
+    }
+
+    function updateApiPanel() {
+      const state = $('#api-state');
+      const url = $('#api-url');
+      if (!state || !url) return;
+      if (demoMode) {
+        state.innerHTML = `⚠️ <span>${t('apiFailed')}</span>`;
+        url.textContent = API_CANDIDATES.join(' · ');
+      } else if (apiBaseUrl) {
+        state.innerHTML = `✅ <span>${t('liveApi')}</span>`;
+        url.textContent = apiBaseUrl;
+      } else {
+        state.innerHTML = `<span class="spinner"></span><span>${t('checking')}</span>`;
+        url.textContent = 'http://localhost:3510';
+      }
+    }
+
+    function toast(message) {
+      const node = $('#toast');
+      node.textContent = message;
+      node.classList.add('show');
+      clearTimeout(node.dataset.timer);
+      node.dataset.timer = setTimeout(() => node.classList.remove('show'), 2600);
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? '').replace(/[&<>"']/g, (char) => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+      }[char]));
+    }
+
+    function escapeJs(value) {
+      return String(value ?? '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+    }
+
+    window.addEventListener('load', async () => {
+      setLanguage(currentLanguage);
+      switchView('dashboard');
+      await refreshAll();
+    });
+
+    $('#detail-modal').addEventListener('click', (event) => {
+      if (event.target.id === 'detail-modal') closeModal();
+    });
+  </script>
 </body>
 </html>
