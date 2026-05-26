@@ -1005,6 +1005,34 @@
       padding: 12px;
     }
 
+    .workspace-panel {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      margin-bottom: 12px;
+      padding: 14px;
+    }
+
+    .workspace-layout {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: minmax(260px, 0.85fr) minmax(340px, 1.15fr);
+    }
+
+    .workspace-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .workspace-chat-header {
+      align-items: center;
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
     .chat-box {
       background: #f7fbf9;
       border: 1px solid var(--line);
@@ -1141,6 +1169,7 @@
       .chat-compose,
       .selected-group-bar,
       .group-upload-row,
+      .workspace-layout,
       .group-toolbar,
       .search-row {
         grid-template-columns: 1fr;
@@ -1358,6 +1387,41 @@
                   <div class="drive-file-list" id="selected-drive-files"></div>
                 </div>
               </details>
+
+              <section class="workspace-panel" id="group-workspace-panel">
+                <div class="panel-header">
+                  <div>
+                    <h2 class="panel-title" id="workspace-group-title" data-i18n="currentGroupWorkspace">Group workspace</h2>
+                    <p class="hero-text" id="workspace-group-subtitle" data-i18n="workspaceHint">Select a group to keep its chat and tools open here.</p>
+                  </div>
+                </div>
+                <div class="workspace-layout">
+                  <div class="group-panel">
+                    <h3 class="panel-title" data-i18n="groupActions">Group actions</h3>
+                    <div class="detail-grid" id="workspace-overview-grid"></div>
+                    <div class="workspace-actions">
+                      <button class="button secondary" onclick="normalizeGroupFiles(this)"><span>⇄</span><span data-i18n="normalizeFiles">Normalize files</span></button>
+                      <button class="button primary" onclick="downloadFinalPackage(this)">🗃️ <span data-i18n="finalPackage">Final package</span></button>
+                      <button class="button secondary" onclick="batchExcelById(currentGroupId, this)">📊 <span data-i18n="groupExcel">Group Excel</span></button>
+                      <button class="button secondary" onclick="batchPdfById(currentGroupId, this)">📄 <span data-i18n="groupPdf">Group PDF</span></button>
+                      <button class="button ghost" onclick="uploadGeneratedById(currentGroupId, this)">📦 <span data-i18n="uploadGenerated">Upload generated docs</span></button>
+                    </div>
+                    <div class="detail-grid" id="workspace-validation-grid"></div>
+                  </div>
+                  <div class="group-panel">
+                    <div class="workspace-chat-header">
+                      <h3 class="panel-title" data-i18n="groupChat">Group chat</h3>
+                      <button class="button ghost" onclick="runGroupAnalysis(this)" data-i18n="runGeminiAnalysis">Run Gemini analysis</button>
+                    </div>
+                    <div class="chat-box" id="chatMessages"></div>
+                    <div class="chat-compose">
+                      <input class="search-input" id="chat-input" data-i18n-placeholder="chatPlaceholder" placeholder="Ask Gemini about this group">
+                      <button class="button primary" onclick="sendMessage(this)" data-i18n="send">Send</button>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
               <div class="group-grid" id="drive-groups-grid"></div>
             </div>
           </section>
@@ -1434,7 +1498,6 @@
         <button class="tab active" data-group-tab="overview" onclick="switchGroupTab('overview')" data-i18n="overview">Overview</button>
         <button class="tab" data-group-tab="applicants" onclick="switchGroupTab('applicants')" data-i18n="applicants">Applicants</button>
         <button class="tab" data-group-tab="validation" onclick="switchGroupTab('validation')" data-i18n="validation">Validation</button>
-        <button class="tab" data-group-tab="chat" onclick="switchGroupTab('chat')" data-i18n="geminiChat">Gemini chat</button>
         <button class="tab" data-group-tab="package" onclick="switchGroupTab('package')" data-i18n="finalPackage">Final package</button>
       </div>
 
@@ -1456,17 +1519,6 @@
             <button class="button primary" onclick="validateGroupDocs(this)" data-i18n="runValidation">Run validation</button>
           </div>
           <div class="detail-grid" id="group-validation-grid"></div>
-        </section>
-
-        <section class="group-panel" data-group-panel="chat" hidden>
-          <div class="chat-box" id="chatMessages"></div>
-          <div class="chat-compose">
-            <input class="search-input" id="chat-input" data-i18n-placeholder="chatPlaceholder" placeholder="Ask Gemini about this group">
-            <button class="button primary" onclick="sendMessage(this)" data-i18n="send">Send</button>
-          </div>
-          <div class="modal-actions" style="margin-top:10px">
-            <button class="button secondary" onclick="runGroupAnalysis(this)" data-i18n="runGeminiAnalysis">Run Gemini analysis</button>
-          </div>
         </section>
 
         <section class="group-panel" data-group-panel="package" hidden>
@@ -1580,6 +1632,10 @@
         updateGroupFolder: 'Sửa tên',
         selectGroup: 'Chọn nhóm',
         openWorkspace: 'Mở nhóm',
+        currentGroupWorkspace: 'Không gian nhóm đang chọn',
+        workspaceHint: 'Chọn nhóm để giữ chat và công cụ nhóm ở đây.',
+        groupActions: 'Thao tác nhóm',
+        groupChat: 'Chat nhóm',
         advancedTools: 'Công cụ nâng cao',
         groupFileUpload: 'Tải file theo nhóm',
         uploadFolderPlaceholder: 'Thư mục con tùy chọn',
@@ -1713,6 +1769,10 @@
         updateGroupFolder: 'Update',
         selectGroup: 'Select group',
         openWorkspace: 'Open workspace',
+        currentGroupWorkspace: 'Selected group workspace',
+        workspaceHint: 'Select a group to keep its chat and tools open here.',
+        groupActions: 'Group actions',
+        groupChat: 'Group chat',
         advancedTools: 'Advanced tools',
         groupFileUpload: 'Group file upload',
         uploadFolderPlaceholder: 'Optional subfolder',
@@ -1846,6 +1906,10 @@
         updateGroupFolder: '수정',
         selectGroup: '그룹 선택',
         openWorkspace: '작업공간 열기',
+        currentGroupWorkspace: '선택 그룹 작업공간',
+        workspaceHint: '그룹을 선택하면 채팅과 처리 도구가 여기에 계속 열립니다.',
+        groupActions: '그룹 작업',
+        groupChat: '그룹 채팅',
         advancedTools: '고급 도구',
         groupFileUpload: '그룹 파일 일괄 업로드',
         uploadFolderPlaceholder: '선택 서브폴더',
@@ -1993,6 +2057,7 @@
       renderEntryDateButtons();
       renderEntrySchedule();
       renderGroupDetail();
+      renderWorkspacePanel();
       updateApiPanel();
     }
 
@@ -2110,7 +2175,6 @@
         if (statsResult.status !== 'fulfilled') timeline = buildTimeline(allApplicants);
       }
       populateGroups();
-      if (!demoMode && currentDriveGroup) await loadDriveFilesForGroup(currentDriveGroup, true);
       renderStats();
       renderTimeline();
       renderWorkflow();
@@ -2120,6 +2184,8 @@
       renderSelectedDriveFiles();
       renderEntryDateButtons();
       renderEntrySchedule();
+      renderWorkspacePanel();
+      if (currentDriveGroup) await activateGroupWorkspace(currentDriveGroup, true);
       toast(t('copied'));
     }
 
@@ -2468,8 +2534,7 @@
             <div>${t('lastMirrored')}: ${escapeHtml(formatDate(group.last_mirrored_at))}</div>
           </div>
           <div class="card-actions">
-            <button class="button primary" onclick="openGroupDetail('${escapeJs(id)}')">${t('details')}</button>
-            <button class="button ghost" onclick="selectDriveGroup('${escapeJs(id)}')">${t('selectGroup')}</button>
+            <button class="button primary" onclick="activateGroupWorkspace('${escapeJs(id)}')">${t('openWorkspace')}</button>
             ${group.web_view_link || group.drive_link ? `<a class="button ghost" href="${escapeHtml(group.web_view_link || group.drive_link)}" target="_blank" rel="noopener">${t('openDrive')}</a>` : ''}
           </div>
         </article>
@@ -2481,29 +2546,94 @@
       if (!groupId) return toast(t('promptGroup'));
       setButtonLoading(button, true);
       try {
-        await openGroupDetail(groupId);
+        await activateGroupWorkspace(groupId);
       } finally {
         setButtonLoading(button, false);
       }
     }
 
-    function selectDriveGroup(groupId) {
-      currentDriveGroup = groupId || '';
+    async function selectDriveGroup(groupId) {
+      if (!groupId) {
+        currentDriveGroup = '';
+        currentGroupId = '';
+        selectedDriveFiles = [];
+        renderSelectedDriveFiles();
+        renderWorkspacePanel();
+        renderChatMessages([]);
+        return;
+      }
+      await activateGroupWorkspace(groupId, true);
+    }
+
+    async function activateGroupWorkspace(groupId, silent = false) {
+      if (!groupId) return;
+      const groupChanged = currentGroupId !== groupId;
+      currentGroupId = groupId;
+      currentDriveGroup = groupId;
+      if (groupChanged) {
+        groupValidation = null;
+        currentGroupAnalysis = null;
+      }
+
       const driveSelect = $('#drive-group-filter');
-      if (driveSelect) driveSelect.value = currentDriveGroup;
+      if (driveSelect && Array.from(driveSelect.options).some((option) => option.value === groupId)) {
+        driveSelect.value = groupId;
+      }
       const groupSelect = $('#group-filter');
-      if (groupSelect && currentDriveGroup && Array.from(groupSelect.options).some((option) => option.value === currentDriveGroup)) {
-        groupSelect.value = currentDriveGroup;
+      if (groupSelect && Array.from(groupSelect.options).some((option) => option.value === groupId)) {
+        groupSelect.value = groupId;
       }
-      const group = mergeGroupSources().find((item) => (item.group_id || item.id) === currentDriveGroup);
-      if (group) {
-        $('#drive-group-id').value = currentDriveGroup;
-        $('#drive-group-name').value = group.name || group.name_vi || currentDriveGroup;
-        $('#drive-entry-date').value = group.entry_date || '';
-      }
-      selectedDriveFiles = [];
-      loadDriveFilesForGroup(currentDriveGroup, true);
+
+      const group = mergeGroupSources().find((item) => (item.group_id || item.id) === groupId);
+      if ($('#drive-group-id')) $('#drive-group-id').value = groupId;
+      if ($('#drive-group-name')) $('#drive-group-name').value = group?.name || group?.name_vi || groupId;
+      if ($('#drive-entry-date')) $('#drive-entry-date').value = group?.entry_date || '';
+
+      currentGroupApplicants = allApplicants.filter((applicant) => (applicant.group_id || 'UNGROUPED') === groupId);
+      if (!demoMode && apiBaseUrl) await loadDriveFilesForGroup(groupId, true);
       renderDrivePanel();
+      renderWorkspacePanel();
+      await loadChatHistory(groupId);
+      if (!silent) toast(t('openWorkspace'));
+    }
+
+    function renderWorkspacePanel() {
+      const overviewTarget = $('#workspace-overview-grid');
+      const title = $('#workspace-group-title');
+      const subtitle = $('#workspace-group-subtitle');
+      if (!overviewTarget || !title || !subtitle) return;
+      const groupId = currentGroupId || currentDriveGroup;
+      if (!groupId) {
+        title.textContent = t('currentGroupWorkspace');
+        subtitle.textContent = t('workspaceHint');
+        overviewTarget.innerHTML = `<div class="empty-state">${t('selectGroup')}</div>`;
+        renderValidationResult();
+        renderChatMessages([]);
+        return;
+      }
+
+      const group = mergeGroupSources().find((item) => (item.group_id || item.id) === groupId) || { group_id: groupId, name: groupId };
+      const progress = Number(group.progress_percent || 0);
+      const fileCount = Number(group.mirrored_file_count ?? group.drive_file_count ?? group.file_count ?? selectedDriveFiles.length ?? 0);
+      const applicantsCount = currentGroupApplicants.length || Number(group.applicant_count || 0);
+      const name = group.name || group.name_vi || groupId;
+      title.textContent = name;
+      subtitle.textContent = `${groupId} · ${t('entryDate')}: ${group.entry_date || t('unassignedEntry')}`;
+      const overview = [
+        [t('group'), groupId],
+        [t('entryDate'), group.entry_date || t('unassignedEntry')],
+        [t('progress'), `${Math.round(progress)}%`],
+        [t('applicants'), applicantsCount],
+        [t('driveFiles'), fileCount],
+        [t('lastMirrored'), formatDate(group.last_mirrored_at)]
+      ];
+      overviewTarget.innerHTML = overview.map(([label, value]) => `
+        <div class="detail-item">
+          <div class="detail-label">${escapeHtml(label)}</div>
+          <div class="detail-value">${escapeHtml(value || '-')}</div>
+        </div>
+      `).join('');
+      renderValidationResult();
     }
 
     function renderSelectedDriveFiles() {
@@ -2721,14 +2851,8 @@
     }
 
     async function openGroupDetail(groupId) {
-      currentGroupId = groupId;
-      currentDriveGroup = groupId;
-      const chatBox = $('#chatMessages');
-      if (chatBox) chatBox.innerHTML = '';
-      $('#group-detail-modal').classList.add('show');
-      switchGroupTab('overview');
-      await loadGroupDetailData(groupId);
-      await loadChatHistory(groupId);
+      switchView('drive');
+      await activateGroupWorkspace(groupId);
     }
 
     function closeGroupDetail() {
@@ -2804,14 +2928,17 @@
     }
 
     function renderValidationResult() {
-      const target = $('#group-validation-grid');
-      if (!target) return;
+      const targets = ['#group-validation-grid', '#workspace-validation-grid'].map((selector) => $(selector)).filter(Boolean);
+      if (!targets.length) return;
+      let html = '';
       if (!groupValidation) {
-        target.innerHTML = `<div class="empty-state">${t('runValidation')}</div>`;
+        html = `<div class="empty-state">${t('runValidation')}</div>`;
+        targets.forEach((target) => target.innerHTML = html);
         return;
       }
       if (groupValidation.error) {
-        target.innerHTML = `<div class="empty-state">${escapeHtml(groupValidation.error)}</div>`;
+        html = `<div class="empty-state">${escapeHtml(groupValidation.error)}</div>`;
+        targets.forEach((target) => target.innerHTML = html);
         return;
       }
       const rows = [
@@ -2820,12 +2947,13 @@
         [t('progress'), `${groupValidation.ready_rate ?? 0}%`],
         [t('statusFilter'), groupValidation.group_status || '-']
       ];
-      target.innerHTML = rows.map(([label, value]) => `
+      html = rows.map(([label, value]) => `
         <div class="detail-item">
           <div class="detail-label">${escapeHtml(label)}</div>
           <div class="detail-value">${escapeHtml(value)}</div>
         </div>
       `).join('');
+      targets.forEach((target) => target.innerHTML = html);
     }
 
     function renderPackagePanel() {
