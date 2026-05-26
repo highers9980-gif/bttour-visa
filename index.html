@@ -119,8 +119,11 @@
     }
 
     .login-language {
-      margin-top: 18px;
-      width: max-content;
+      position: fixed;
+      right: 18px;
+      top: 18px;
+      width: 132px;
+      z-index: 2;
     }
 
     .topbar {
@@ -188,31 +191,39 @@
       gap: 8px;
     }
 
-    .language-switcher {
+    .language-select {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      color: var(--ink);
+      font-size: 13px;
+      min-height: 34px;
+      padding: 6px 9px;
+      width: 126px;
+    }
+
+    .api-compact {
       align-items: center;
       background: var(--surface-alt);
       border: 1px solid var(--line);
       border-radius: var(--radius);
       display: flex;
-      gap: 4px;
-      padding: 4px;
+      gap: 8px;
+      max-width: min(360px, 34vw);
+      min-height: 34px;
+      padding: 6px 9px;
     }
 
-    .language-button {
-      background: transparent;
-      border: 0;
-      border-radius: 6px;
-      color: var(--muted);
-      min-height: 32px;
-      padding: 6px 10px;
+    .api-compact .api-state {
+      margin: 0;
       white-space: nowrap;
     }
 
-    .language-button.active {
-      background: var(--surface);
-      box-shadow: 0 1px 6px rgba(15, 37, 29, 0.1);
-      color: var(--primary-strong);
-      font-weight: 740;
+    .api-compact .api-url {
+      max-width: 190px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .icon-button {
@@ -481,6 +492,25 @@
       min-height: 40px;
       padding: 9px 10px;
       width: 100%;
+    }
+
+    .form-grid {
+      display: grid;
+      gap: 10px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      margin: 12px 0;
+    }
+
+    .field-label {
+      color: var(--muted);
+      display: grid;
+      font-size: 12px;
+      gap: 5px;
+      min-width: 0;
+    }
+
+    .field-label.full {
+      grid-column: 1 / -1;
     }
 
     .tabs {
@@ -832,6 +862,10 @@
       width: 100%;
     }
 
+    .modal.wide {
+      max-width: min(1120px, calc(100vw - 36px));
+    }
+
     .modal h2 {
       margin: 0 0 8px;
     }
@@ -841,6 +875,83 @@
       gap: 10px;
       grid-template-columns: repeat(2, minmax(0, 1fr));
       margin: 14px 0;
+    }
+
+    .document-slots {
+      display: grid;
+      gap: 10px;
+      grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+      margin: 14px 0;
+    }
+
+    .document-slot {
+      background: var(--surface-alt);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      display: grid;
+      gap: 8px;
+      padding: 10px;
+    }
+
+    .document-slot-title {
+      font-weight: 780;
+    }
+
+    .document-slot-meta,
+    .chat-meta {
+      color: var(--muted);
+      font-size: 12px;
+      overflow-wrap: anywhere;
+    }
+
+    .group-detail-layout {
+      display: grid;
+      gap: 14px;
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .group-panel {
+      background: var(--surface-alt);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 12px;
+    }
+
+    .chat-box {
+      background: #f7fbf9;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      display: grid;
+      gap: 8px;
+      max-height: 340px;
+      overflow-y: auto;
+      padding: 10px;
+    }
+
+    .chat-message {
+      border-radius: var(--radius);
+      max-width: 88%;
+      padding: 9px 10px;
+      overflow-wrap: anywhere;
+    }
+
+    .chat-message.user {
+      background: var(--primary);
+      color: #ffffff;
+      justify-self: end;
+    }
+
+    .chat-message.assistant {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      justify-self: start;
+    }
+
+    .chat-compose {
+      display: grid;
+      gap: 8px;
+      grid-template-columns: minmax(0, 1fr) auto;
+      margin-top: 10px;
     }
 
     .detail-item {
@@ -931,18 +1042,15 @@
         display: none;
       }
 
-      .language-switcher {
-        max-width: 178px;
-        overflow-x: auto;
-      }
-
-      .language-button {
-        min-width: 58px;
+      .api-compact {
+        display: none;
       }
 
       .stats-grid,
       .document-grid,
       .detail-grid,
+      .form-grid,
+      .chat-compose,
       .group-toolbar,
       .search-row {
         grid-template-columns: 1fr;
@@ -961,6 +1069,11 @@
 </head>
 <body>
   <div class="login-screen" id="login-screen">
+    <select class="language-select login-language" data-language-select onchange="setLanguage(this.value)" aria-label="Language">
+      <option value="vi">Tiếng Việt</option>
+      <option value="en">English</option>
+      <option value="ko">한국어</option>
+    </select>
     <form class="login-card" onsubmit="handleLogin(event)">
       <div class="login-head">
         <div class="brand-mark">BT</div>
@@ -973,11 +1086,6 @@
         <input class="search-input" id="login-password" type="password" autocomplete="current-password" data-i18n-placeholder="passwordPlaceholder" placeholder="Password">
         <button class="button primary" type="submit" data-i18n="loginButton">Login</button>
         <div class="login-error" id="login-error"></div>
-      </div>
-      <div class="language-switcher login-language" aria-label="Language">
-        <button class="language-button active" type="button" data-lang-button="vi" onclick="setLanguage('vi')">Tiếng Việt</button>
-        <button class="language-button" type="button" data-lang-button="en" onclick="setLanguage('en')">English</button>
-        <button class="language-button" type="button" data-lang-button="ko" onclick="setLanguage('ko')">한국어</button>
       </div>
     </form>
   </div>
@@ -992,11 +1100,15 @@
         </div>
       </div>
       <div class="topbar-actions">
-        <div class="language-switcher" aria-label="Language">
-          <button class="language-button active" data-lang-button="vi" onclick="setLanguage('vi')">Tiếng Việt</button>
-          <button class="language-button" data-lang-button="en" onclick="setLanguage('en')">English</button>
-          <button class="language-button" data-lang-button="ko" onclick="setLanguage('ko')">한국어</button>
+        <div class="api-compact">
+          <div class="api-state" id="api-state"><span class="spinner"></span><span data-i18n="checking">Checking</span></div>
+          <div class="api-url" id="api-url">http://localhost:3510</div>
         </div>
+        <select class="language-select" data-language-select onchange="setLanguage(this.value)" aria-label="Language">
+          <option value="vi">Tiếng Việt</option>
+          <option value="en">English</option>
+          <option value="ko">한국어</option>
+        </select>
         <button class="icon-button" onclick="toggleSidebar()" aria-label="Menu">☰</button>
       </div>
     </header>
@@ -1022,51 +1134,6 @@
           </button>
         </section>
 
-        <section class="sidebar-block">
-          <h2 class="sidebar-heading" data-i18n="entryDate">Entry date</h2>
-          <div id="entry-date-buttons"></div>
-        </section>
-
-        <section class="sidebar-block">
-          <h2 class="sidebar-heading" data-i18n="statusFilter">Applicant Status</h2>
-          <button class="nav-button active" data-status-button="all" onclick="filterStatus('all')">
-            <span class="nav-label"><span>📌</span><span data-i18n="all">All</span></span>
-            <span class="badge" id="badge-all">0</span>
-          </button>
-          <button class="nav-button" data-status-button="pending" onclick="filterStatus('pending')">
-            <span class="nav-label"><span>⏳</span><span data-i18n="pending">Pending</span></span>
-            <span class="badge" id="badge-pending">0</span>
-          </button>
-          <button class="nav-button" data-status-button="processing" onclick="filterStatus('processing')">
-            <span class="nav-label"><span>⚙️</span><span data-i18n="processing">Processing</span></span>
-            <span class="badge" id="badge-processing">0</span>
-          </button>
-          <button class="nav-button" data-status-button="completed" onclick="filterStatus('completed')">
-            <span class="nav-label"><span>✅</span><span data-i18n="completed">Completed</span></span>
-            <span class="badge" id="badge-completed">0</span>
-          </button>
-        </section>
-
-        <section class="sidebar-block">
-          <h2 class="sidebar-heading" data-i18n="language">Language</h2>
-          <button class="nav-button" onclick="setLanguage('vi')">
-            <span class="nav-label"><span>🇻🇳</span><span>Tiếng Việt</span></span>
-          </button>
-          <button class="nav-button" onclick="setLanguage('en')">
-            <span class="nav-label"><span>🇬🇧</span><span>English</span></span>
-          </button>
-          <button class="nav-button" onclick="setLanguage('ko')">
-            <span class="nav-label"><span>🇰🇷</span><span>한국어</span></span>
-          </button>
-        </section>
-
-        <section class="sidebar-block">
-          <h2 class="sidebar-heading" data-i18n="apiStatus">API Status</h2>
-          <div class="api-panel">
-            <div class="api-state" id="api-state"><span class="spinner"></span><span data-i18n="checking">Checking</span></div>
-            <div class="api-url" id="api-url">http://localhost:3510</div>
-          </div>
-        </section>
       </aside>
 
       <main class="main">
@@ -1123,6 +1190,7 @@
               <div class="panel-header">
                 <h2 class="panel-title" data-i18n="applicantManagement">Applicant management</h2>
                 <div class="content-actions">
+                  <button class="button primary" onclick="openApplicantForm()"><span>＋</span><span data-i18n="addApplicant">Add applicant</span></button>
                   <button class="button primary" onclick="refreshAll()"><span>↻</span><span data-i18n="refresh">Refresh</span></button>
                 </div>
               </div>
@@ -1168,6 +1236,7 @@
                 <input class="search-input" id="drive-group-name" data-i18n-placeholder="groupNamePlaceholder" placeholder="Group name">
                 <button class="button primary" onclick="createDriveGroup(this)"><span>＋</span><span data-i18n="createGroupFolder">Create folder</span></button>
                 <button class="button ghost" onclick="updateDriveGroup(this)"><span>✎</span><span data-i18n="updateGroupFolder">Update</span></button>
+                <button class="button secondary" onclick="openApplicantForm(currentDriveGroup || document.getElementById('drive-group-id').value)"><span>＋</span><span data-i18n="addApplicant">Add applicant</span></button>
               </div>
 
               <div class="search-row">
@@ -1220,8 +1289,98 @@
       <h2 id="modal-title">Applicant</h2>
       <p class="hero-text" id="modal-subtitle"></p>
       <div class="detail-grid" id="modal-details"></div>
+      <h3 class="panel-title" data-i18n="documentUpload">Document upload</h3>
+      <div class="document-slots" id="modal-documents"></div>
       <div class="modal-actions">
+        <button class="button secondary" onclick="openApplicantForm(currentApplicantId)" data-i18n="editApplicant">Edit applicant</button>
+        <button class="button ghost" onclick="deleteApplicant(currentApplicantId)" data-i18n="deleteApplicant">Delete applicant</button>
         <button class="button ghost" onclick="closeModal()" data-i18n="close">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="applicant-form-modal">
+    <form class="modal" id="applicant-form" onsubmit="submitApplicant(event)">
+      <h2 id="applicant-form-title" data-i18n="addApplicant">Add applicant</h2>
+      <div class="form-grid">
+        <label class="field-label"><span data-i18n="fullNameVi">Vietnamese name</span><input class="search-input" name="name_vi" required></label>
+        <label class="field-label"><span data-i18n="fullNameEn">English name</span><input class="search-input" name="name_en"></label>
+        <label class="field-label"><span data-i18n="passport">Passport</span><input class="search-input" name="passport_number"></label>
+        <label class="field-label"><span data-i18n="idCard">ID card</span><input class="search-input" name="cccd_id"></label>
+        <label class="field-label"><span data-i18n="phone">Phone</span><input class="search-input" name="phone"></label>
+        <label class="field-label"><span>Email</span><input class="search-input" name="email" type="email"></label>
+        <label class="field-label"><span data-i18n="group">Group</span><input class="search-input" name="group_id" required></label>
+        <label class="field-label"><span data-i18n="entryDate">Entry date</span><input class="search-input" name="entry_date" type="date"></label>
+        <label class="field-label"><span data-i18n="departureDate">Departure date</span><input class="search-input" name="departure_date" type="date"></label>
+        <label class="field-label"><span data-i18n="hotel">Hotel</span><input class="search-input" name="hotel"></label>
+        <label class="field-label"><span data-i18n="gender">Gender</span><select class="select-input" name="gender"><option value=""></option><option value="M">M</option><option value="F">F</option></select></label>
+        <label class="field-label"><span data-i18n="totalDocuments">Total documents</span><input class="search-input" name="total_documents" type="number" min="1" value="7"></label>
+      </div>
+      <div class="modal-actions">
+        <button class="button primary" type="submit" data-i18n="save">Save</button>
+        <button class="button ghost" type="button" onclick="closeApplicantForm()" data-i18n="close">Close</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="modal-backdrop" id="group-detail-modal">
+    <div class="modal wide">
+      <div class="panel-header">
+        <div>
+          <h2 id="group-detail-title">Group detail</h2>
+          <p class="hero-text" id="group-detail-subtitle"></p>
+        </div>
+        <button class="button ghost" onclick="closeGroupDetail()" data-i18n="close">Close</button>
+      </div>
+      <div class="tabs">
+        <button class="tab active" data-group-tab="overview" onclick="switchGroupTab('overview')" data-i18n="overview">Overview</button>
+        <button class="tab" data-group-tab="applicants" onclick="switchGroupTab('applicants')" data-i18n="applicants">Applicants</button>
+        <button class="tab" data-group-tab="validation" onclick="switchGroupTab('validation')" data-i18n="validation">Validation</button>
+        <button class="tab" data-group-tab="chat" onclick="switchGroupTab('chat')" data-i18n="geminiChat">Gemini chat</button>
+        <button class="tab" data-group-tab="package" onclick="switchGroupTab('package')" data-i18n="finalPackage">Final package</button>
+      </div>
+
+      <div class="group-detail-layout">
+        <section class="group-panel" data-group-panel="overview">
+          <div class="detail-grid" id="group-overview-grid"></div>
+          <div class="modal-actions">
+            <button class="button primary" onclick="openApplicantForm(currentGroupId)"><span>＋</span><span data-i18n="addApplicant">Add applicant</span></button>
+            <button class="button secondary" onclick="normalizeGroupFiles(this)"><span>⇄</span><span data-i18n="normalizeFiles">Normalize files</span></button>
+            <button class="button ghost" onclick="syncDriveGroupById(currentGroupId, this)"><span>↻</span><span data-i18n="syncSelectedGroup">Mirror group Drive</span></button>
+          </div>
+        </section>
+
+        <section class="group-panel" data-group-panel="applicants" hidden>
+          <div class="applicant-grid" id="group-applicants-grid"></div>
+        </section>
+
+        <section class="group-panel" data-group-panel="validation" hidden>
+          <div class="modal-actions">
+            <button class="button primary" onclick="validateGroupDocs(this)" data-i18n="runValidation">Run validation</button>
+          </div>
+          <div class="detail-grid" id="group-validation-grid"></div>
+        </section>
+
+        <section class="group-panel" data-group-panel="chat" hidden>
+          <div class="chat-box" id="chatMessages"></div>
+          <div class="chat-compose">
+            <input class="search-input" id="chat-input" data-i18n-placeholder="chatPlaceholder" placeholder="Ask Gemini about this group">
+            <button class="button primary" onclick="sendMessage(this)" data-i18n="send">Send</button>
+          </div>
+          <div class="modal-actions" style="margin-top:10px">
+            <button class="button secondary" onclick="runGroupAnalysis(this)" data-i18n="runGeminiAnalysis">Run Gemini analysis</button>
+          </div>
+        </section>
+
+        <section class="group-panel" data-group-panel="package" hidden>
+          <div class="modal-actions">
+            <button class="button primary" onclick="downloadFinalPackage(this)">🗃️ <span data-i18n="finalPackage">Final package</span></button>
+            <button class="button secondary" onclick="batchExcelById(currentGroupId, this)">📊 <span data-i18n="groupExcel">Group Excel</span></button>
+            <button class="button secondary" onclick="batchPdfById(currentGroupId, this)">📄 <span data-i18n="groupPdf">Group PDF</span></button>
+            <button class="button ghost" onclick="uploadGeneratedById(currentGroupId, this)">📦 <span data-i18n="uploadGenerated">Upload generated docs</span></button>
+          </div>
+          <div class="detail-grid" id="group-package-grid"></div>
+        </section>
       </div>
     </div>
   </div>
@@ -1342,7 +1501,36 @@
         driveNoWrite: 'Drive đang chỉ đọc. Hãy chia sẻ thư mục cho service account với quyền Editor.',
         noGroups: 'Chưa có nhóm. Hãy tạo thư mục nhóm hoặc đồng bộ Drive.',
         noEntryGroups: 'Chưa có nhóm theo ngày nhập cảnh.',
-        unassignedEntry: 'Chưa có ngày nhập cảnh'
+        unassignedEntry: 'Chưa có ngày nhập cảnh',
+        addApplicant: 'Thêm ứng viên',
+        editApplicant: 'Sửa ứng viên',
+        deleteApplicant: 'Xóa ứng viên',
+        documentUpload: 'Tải tài liệu',
+        fullNameVi: 'Tên tiếng Việt',
+        fullNameEn: 'Tên tiếng Anh',
+        departureDate: 'Ngày rời Hàn',
+        gender: 'Giới tính',
+        totalDocuments: 'Tổng tài liệu',
+        save: 'Lưu',
+        upload: 'Tải lên',
+        remove: 'Xóa',
+        overview: 'Tổng quan',
+        validation: 'Kiểm tra',
+        geminiChat: 'Chat Gemini',
+        normalizeFiles: 'Chuẩn hóa tên file',
+        normalizeDone: 'Đã chuẩn hóa file nhóm.',
+        runValidation: 'Kiểm tra hồ sơ',
+        runGeminiAnalysis: 'Phân tích Gemini',
+        chatPlaceholder: 'Hỏi Gemini về nhóm này',
+        send: 'Gửi',
+        noChat: 'Chưa có hội thoại trong nhóm này.',
+        applicantSaved: 'Ứng viên đã lưu.',
+        applicantDeleted: 'Ứng viên đã xóa.',
+        documentUploaded: 'Tài liệu đã tải lên và OCR đã chạy.',
+        documentDeleted: 'Tài liệu đã xóa.',
+        validationDone: 'Kiểm tra nhóm đã xong.',
+        analysisDone: 'Phân tích Gemini đã xong.',
+        packageReady: 'Gói hồ sơ sẵn sàng tải xuống.'
       },
       en: {
         brandTitle: 'BT TOUR Visa System',
@@ -1443,7 +1631,36 @@
         driveNoWrite: 'Drive is read-only. Share the folder with the service account as Editor.',
         noGroups: 'No groups yet. Create a group folder or sync Drive.',
         noEntryGroups: 'No entry-date groups yet.',
-        unassignedEntry: 'No entry date'
+        unassignedEntry: 'No entry date',
+        addApplicant: 'Add applicant',
+        editApplicant: 'Edit applicant',
+        deleteApplicant: 'Delete applicant',
+        documentUpload: 'Document upload',
+        fullNameVi: 'Vietnamese name',
+        fullNameEn: 'English name',
+        departureDate: 'Departure date',
+        gender: 'Gender',
+        totalDocuments: 'Total documents',
+        save: 'Save',
+        upload: 'Upload',
+        remove: 'Remove',
+        overview: 'Overview',
+        validation: 'Validation',
+        geminiChat: 'Gemini chat',
+        normalizeFiles: 'Normalize files',
+        normalizeDone: 'Group files normalized.',
+        runValidation: 'Run validation',
+        runGeminiAnalysis: 'Run Gemini analysis',
+        chatPlaceholder: 'Ask Gemini about this group',
+        send: 'Send',
+        noChat: 'No chat history for this group yet.',
+        applicantSaved: 'Applicant saved.',
+        applicantDeleted: 'Applicant deleted.',
+        documentUploaded: 'Document uploaded and OCR completed.',
+        documentDeleted: 'Document deleted.',
+        validationDone: 'Group validation completed.',
+        analysisDone: 'Gemini analysis completed.',
+        packageReady: 'Package is ready to download.'
       },
       ko: {
         brandTitle: 'BT TOUR 비자 시스템',
@@ -1544,13 +1761,42 @@
         driveNoWrite: 'Drive가 읽기 전용입니다. 서비스 계정에 Editor 권한으로 폴더를 공유해야 합니다.',
         noGroups: '아직 그룹이 없습니다. 그룹 폴더를 만들거나 Drive를 동기화하세요.',
         noEntryGroups: '아직 입국일별 그룹이 없습니다.',
-        unassignedEntry: '입국일 미지정'
+        unassignedEntry: '입국일 미지정',
+        addApplicant: '신청자 추가',
+        editApplicant: '신청자 수정',
+        deleteApplicant: '신청자 삭제',
+        documentUpload: '서류 업로드',
+        fullNameVi: '베트남어 이름',
+        fullNameEn: '영문 이름',
+        departureDate: '출국일',
+        gender: '성별',
+        totalDocuments: '필요 서류 수',
+        save: '저장',
+        upload: '업로드',
+        remove: '삭제',
+        overview: '개요',
+        validation: '검증',
+        geminiChat: 'Gemini 채팅',
+        normalizeFiles: '파일명 정리',
+        normalizeDone: '그룹 파일명을 정리했습니다.',
+        runValidation: '그룹 검증',
+        runGeminiAnalysis: 'Gemini 분석',
+        chatPlaceholder: '이 그룹에 대해 Gemini에게 질문',
+        send: '전송',
+        noChat: '이 그룹의 대화 기록이 아직 없습니다.',
+        applicantSaved: '신청자를 저장했습니다.',
+        applicantDeleted: '신청자를 삭제했습니다.',
+        documentUploaded: '서류 업로드와 OCR 저장이 완료되었습니다.',
+        documentDeleted: '서류를 삭제했습니다.',
+        validationDone: '그룹 검증이 완료되었습니다.',
+        analysisDone: 'Gemini 분석이 완료되었습니다.',
+        packageReady: '패키지 다운로드가 준비되었습니다.'
       }
     };
 
     const docTypes = [
       ['passport', 'passport', '🛂'],
-      ['idCard', 'id_card', '🪪'],
+      ['idCard', 'cccd', '🪪'],
       ['photo', 'photo', '🖼️'],
       ['hotel', 'hotel', '🏨'],
       ['flight', 'flight', '✈️'],
@@ -1572,6 +1818,11 @@
     let driveConfig = null;
     let currentDriveGroup = '';
     let currentEntryDate = 'all';
+    let currentApplicantId = '';
+    let currentGroupId = '';
+    let currentGroupApplicants = [];
+    let currentGroupAnalysis = null;
+    let groupValidation = null;
     let timeline = [];
 
     const $ = (selector) => document.querySelector(selector);
@@ -1617,6 +1868,9 @@
       currentLanguage = lang;
       localStorage.setItem('bttourVisaLanguage', lang);
       document.documentElement.lang = lang;
+      $$('[data-language-select]').forEach((select) => {
+        select.value = lang;
+      });
       $$('[data-lang-button]').forEach((button) => button.classList.toggle('active', button.dataset.langButton === lang));
       $$('[data-i18n]').forEach((node) => node.textContent = t(node.dataset.i18n));
       $$('[data-i18n-placeholder]').forEach((node) => node.placeholder = t(node.dataset.i18nPlaceholder));
@@ -1632,6 +1886,7 @@
       renderSelectedDriveFiles();
       renderEntryDateButtons();
       renderEntrySchedule();
+      renderGroupDetail();
       updateApiPanel();
     }
 
@@ -1883,10 +2138,10 @@
       $('#stat-pending').textContent = counts.pending;
       $('#stat-processing').textContent = counts.processing;
       $('#stat-completed').textContent = counts.completed;
-      $('#badge-all').textContent = counts.total;
-      $('#badge-pending').textContent = counts.pending;
-      $('#badge-processing').textContent = counts.processing;
-      $('#badge-completed').textContent = counts.completed;
+      if ($('#badge-all')) $('#badge-all').textContent = counts.total;
+      if ($('#badge-pending')) $('#badge-pending').textContent = counts.pending;
+      if ($('#badge-processing')) $('#badge-processing').textContent = counts.processing;
+      if ($('#badge-completed')) $('#badge-completed').textContent = counts.completed;
     }
 
     function renderTimeline() {
@@ -2107,8 +2362,10 @@
             <div>${t('lastMirrored')}: ${escapeHtml(formatDate(group.last_mirrored_at))}</div>
           </div>
           <div class="card-actions">
+            <button class="button primary" onclick="openGroupDetail('${escapeJs(id)}')">${t('details')}</button>
             <button class="button ghost" onclick="selectDriveGroup('${escapeJs(id)}')">${t('selectGroup')}</button>
             <button class="button primary" onclick="generateFinalPackageById('${escapeJs(id)}', this)">🗃️ ${t('finalPackage')}</button>
+            <button class="button secondary" onclick="normalizeGroupFilesById('${escapeJs(id)}', this)">⇄ ${t('normalizeFiles')}</button>
             <button class="button primary" onclick="batchPdfById('${escapeJs(id)}', this)">📄 ${t('groupPdf')}</button>
             <button class="button secondary" onclick="batchExcelById('${escapeJs(id)}', this)">📊 ${t('groupExcel')}</button>
             <button class="button secondary" onclick="syncDriveGroupById('${escapeJs(id)}', this)">↻ ${t('syncSelectedGroup')}</button>
@@ -2322,6 +2579,240 @@
       }
     }
 
+    async function downloadFinalPackage(button) {
+      if (!currentGroupId) return toast(t('promptGroup'));
+      await generateFinalPackageById(currentGroupId, button);
+      renderGroupDetail();
+    }
+
+    async function normalizeGroupFiles(button) {
+      if (!currentGroupId) return toast(t('promptGroup'));
+      await normalizeGroupFilesById(currentGroupId, button);
+    }
+
+    async function normalizeGroupFilesById(groupId, button) {
+      if (demoMode || !apiBaseUrl) return toast(t('actionNeedsApi'));
+      setButtonLoading(button, true);
+      try {
+        const result = await api(`/api/drive/normalize/${encodeURIComponent(groupId)}`, {
+          method: 'POST',
+          timeoutMs: 180000
+        });
+        toast(`${t('normalizeDone')} ${result.data?.renamed_count ?? 0}`);
+        await refreshAll();
+        if (currentGroupId === groupId) await loadGroupDetailData(groupId);
+      } catch (error) {
+        toast(error.message);
+      } finally {
+        setButtonLoading(button, false);
+      }
+    }
+
+    async function openGroupDetail(groupId) {
+      currentGroupId = groupId;
+      currentDriveGroup = groupId;
+      const chatBox = $('#chatMessages');
+      if (chatBox) chatBox.innerHTML = '';
+      $('#group-detail-modal').classList.add('show');
+      switchGroupTab('overview');
+      await loadGroupDetailData(groupId);
+      await loadChatHistory(groupId);
+    }
+
+    function closeGroupDetail() {
+      $('#group-detail-modal').classList.remove('show');
+    }
+
+    function switchGroupTab(tab) {
+      $$('[data-group-tab]').forEach((button) => button.classList.toggle('active', button.dataset.groupTab === tab));
+      $$('[data-group-panel]').forEach((panel) => {
+        panel.hidden = panel.dataset.groupPanel !== tab;
+      });
+    }
+
+    async function loadGroupDetailData(groupId) {
+      currentGroupId = groupId;
+      const group = mergeGroupSources().find((item) => (item.group_id || item.id) === groupId) || { group_id: groupId, name: groupId };
+      currentGroupApplicants = allApplicants.filter((applicant) => (applicant.group_id || 'UNGROUPED') === groupId);
+      if (!demoMode && apiBaseUrl) {
+        try {
+          await loadDriveFilesForGroup(groupId, true);
+        } catch (_error) {
+          selectedDriveFiles = [];
+        }
+      }
+      $('#group-detail-title').textContent = group.name || group.name_vi || groupId;
+      $('#group-detail-subtitle').textContent = `${groupId} · ${t('entryDate')}: ${group.entry_date || t('unassignedEntry')}`;
+      renderGroupDetail();
+    }
+
+    function renderGroupDetail() {
+      if (!currentGroupId) return;
+      const group = mergeGroupSources().find((item) => (item.group_id || item.id) === currentGroupId) || { group_id: currentGroupId, name: currentGroupId };
+      const progress = Number(group.progress_percent || 0);
+      const fileCount = Number(group.mirrored_file_count ?? group.drive_file_count ?? group.file_count ?? selectedDriveFiles.length ?? 0);
+      const applicantsCount = currentGroupApplicants.length || Number(group.applicant_count || 0);
+      const overview = [
+        [t('group'), currentGroupId],
+        [t('entryDate'), group.entry_date || t('unassignedEntry')],
+        [t('progress'), `${Math.round(progress)}%`],
+        [t('applicants'), applicantsCount],
+        [t('driveFiles'), fileCount],
+        [t('lastMirrored'), formatDate(group.last_mirrored_at)]
+      ];
+      $('#group-overview-grid').innerHTML = overview.map(([label, value]) => `
+        <div class="detail-item">
+          <div class="detail-label">${escapeHtml(label)}</div>
+          <div class="detail-value">${escapeHtml(value || '-')}</div>
+        </div>
+      `).join('');
+      $('#group-applicants-grid').innerHTML = currentGroupApplicants.length
+        ? currentGroupApplicants.map(renderApplicantCard).join('')
+        : `<div class="empty-state">${t('noApplicants')}</div>`;
+      renderValidationResult();
+      renderPackagePanel();
+    }
+
+    async function validateGroupDocs(button) {
+      if (!currentGroupId) return toast(t('promptGroup'));
+      if (demoMode || !apiBaseUrl) return toast(t('actionNeedsApi'));
+      setButtonLoading(button, true);
+      try {
+        const result = await api(`/api/validate/group/${encodeURIComponent(currentGroupId)}`);
+        groupValidation = result.data || result.validation || null;
+        toast(t('validationDone'));
+        renderValidationResult();
+      } catch (error) {
+        groupValidation = { error: error.message };
+        renderValidationResult();
+        toast(error.message);
+      } finally {
+        setButtonLoading(button, false);
+      }
+    }
+
+    function renderValidationResult() {
+      const target = $('#group-validation-grid');
+      if (!target) return;
+      if (!groupValidation) {
+        target.innerHTML = `<div class="empty-state">${t('runValidation')}</div>`;
+        return;
+      }
+      if (groupValidation.error) {
+        target.innerHTML = `<div class="empty-state">${escapeHtml(groupValidation.error)}</div>`;
+        return;
+      }
+      const rows = [
+        [t('applicants'), groupValidation.total_applicants ?? '-'],
+        [t('completed'), groupValidation.ready_count ?? '-'],
+        [t('progress'), `${groupValidation.ready_rate ?? 0}%`],
+        [t('statusFilter'), groupValidation.group_status || '-']
+      ];
+      target.innerHTML = rows.map(([label, value]) => `
+        <div class="detail-item">
+          <div class="detail-label">${escapeHtml(label)}</div>
+          <div class="detail-value">${escapeHtml(value)}</div>
+        </div>
+      `).join('');
+    }
+
+    function renderPackagePanel() {
+      const target = $('#group-package-grid');
+      if (!target) return;
+      const rows = [
+        [t('group'), currentGroupId],
+        [t('finalPackage'), 'POST /api/generate/final-package/' + currentGroupId],
+        [t('groupExcel'), 'POST /api/batch/excel/' + currentGroupId],
+        [t('groupPdf'), 'POST /api/batch/pdf/' + currentGroupId]
+      ];
+      target.innerHTML = rows.map(([label, value]) => `
+        <div class="detail-item">
+          <div class="detail-label">${escapeHtml(label)}</div>
+          <div class="detail-value">${escapeHtml(value)}</div>
+        </div>
+      `).join('');
+    }
+
+    async function loadChatHistory(groupId) {
+      currentGroupId = groupId;
+      const target = $('#chatMessages');
+      if (target) target.innerHTML = '';
+      if (demoMode || !apiBaseUrl) {
+        renderChatMessages([]);
+        return;
+      }
+      try {
+        const result = await api(`/api/chat/group/${encodeURIComponent(groupId)}/history`);
+        renderChatMessages(result.data || result.messages || []);
+      } catch (error) {
+        renderChatMessages([]);
+        toast(error.message);
+      }
+    }
+
+    function renderChatMessages(messages) {
+      const target = $('#chatMessages');
+      if (!target) return;
+      if (!messages.length) {
+        target.innerHTML = `<div class="empty-state">${t('noChat')}</div>`;
+        return;
+      }
+      target.innerHTML = messages.map((message) => `
+        <div class="chat-message ${escapeHtml(message.role || 'assistant')}">
+          <div>${escapeHtml(message.message || '')}</div>
+          <div class="chat-meta">${escapeHtml(formatDate(message.created_at))}</div>
+        </div>
+      `).join('');
+      target.scrollTop = target.scrollHeight;
+    }
+
+    async function sendMessage(button) {
+      if (!currentGroupId) return toast(t('promptGroup'));
+      if (demoMode || !apiBaseUrl) return toast(t('actionNeedsApi'));
+      const input = $('#chat-input');
+      const message = (input.value || '').trim();
+      if (!message) return;
+      setButtonLoading(button, true);
+      try {
+        const result = await api(`/api/chat/group/${encodeURIComponent(currentGroupId)}/message`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message }),
+          timeoutMs: 180000
+        });
+        input.value = '';
+        renderChatMessages(result.messages || result.data?.history || []);
+      } catch (error) {
+        toast(error.message);
+      } finally {
+        setButtonLoading(button, false);
+      }
+    }
+
+    async function runGroupAnalysis(button) {
+      if (!currentGroupId) return toast(t('promptGroup'));
+      if (demoMode || !apiBaseUrl) return toast(t('actionNeedsApi'));
+      setButtonLoading(button, true);
+      try {
+        const result = await api(`/api/analyze/group/${encodeURIComponent(currentGroupId)}`, {
+          method: 'POST',
+          timeoutMs: 180000
+        });
+        currentGroupAnalysis = result.analysis || result.data?.analysis || result.data;
+        toast(t('analysisDone'));
+        const synthetic = [{
+          role: 'assistant',
+          message: JSON.stringify(currentGroupAnalysis, null, 2),
+          created_at: new Date().toISOString()
+        }];
+        renderChatMessages(synthetic);
+      } catch (error) {
+        toast(error.message);
+      } finally {
+        setButtonLoading(button, false);
+      }
+    }
+
     function formatDate(value) {
       if (!value) return '-';
       return String(value).replace('T', ' ').replace(/\.\d+Z?$/, '');
@@ -2331,9 +2822,74 @@
       return `<div class="empty-state">${t('noApplicants')}</div>`;
     }
 
-    function openDetails(applicantId) {
+    function openApplicantForm(target = '') {
+      const form = $('#applicant-form');
+      form.reset();
+      currentApplicantId = '';
+      $('#applicant-form-title').textContent = t('addApplicant');
+      const byId = allApplicants.find((item) => item.id === target);
+      if (byId) {
+        currentApplicantId = byId.id;
+        $('#applicant-form-title').textContent = t('editApplicant');
+        Object.entries(byId).forEach(([key, value]) => {
+          const input = form.elements[key];
+          if (input) input.value = value || '';
+        });
+      } else {
+        const groupId = target || currentGroupId || currentDriveGroup || ($('#drive-group-id')?.value || '');
+        form.elements.group_id.value = groupId;
+        form.elements.entry_date.value = $('#drive-entry-date')?.value || '';
+        form.elements.total_documents.value = 7;
+      }
+      $('#applicant-form-modal').classList.add('show');
+      setTimeout(() => form.elements.name_vi?.focus(), 0);
+    }
+
+    function closeApplicantForm() {
+      $('#applicant-form-modal').classList.remove('show');
+    }
+
+    async function submitApplicant(event) {
+      event.preventDefault();
+      if (demoMode || !apiBaseUrl) return toast(t('actionNeedsApi'));
+      const form = event.currentTarget;
+      const data = Object.fromEntries(new FormData(form).entries());
+      const endpoint = currentApplicantId ? `/api/applicants/${encodeURIComponent(currentApplicantId)}` : '/api/applicants';
+      const method = currentApplicantId ? 'PUT' : 'POST';
+      try {
+        await api(endpoint, {
+          method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        toast(t('applicantSaved'));
+        closeApplicantForm();
+        currentDriveGroup = data.group_id || currentDriveGroup;
+        await refreshAll();
+        if (currentGroupId) await loadGroupDetailData(currentGroupId);
+      } catch (error) {
+        toast(error.message);
+      }
+    }
+
+    async function deleteApplicant(applicantId) {
+      if (!applicantId) return;
+      if (demoMode || !apiBaseUrl) return toast(t('actionNeedsApi'));
+      try {
+        await api(`/api/applicants/${encodeURIComponent(applicantId)}`, { method: 'DELETE' });
+        toast(t('applicantDeleted'));
+        closeModal();
+        await refreshAll();
+        if (currentGroupId) await loadGroupDetailData(currentGroupId);
+      } catch (error) {
+        toast(error.message);
+      }
+    }
+
+    async function openDetails(applicantId) {
       const applicant = allApplicants.find((item) => item.id === applicantId);
       if (!applicant) return;
+      currentApplicantId = applicantId;
       $('#modal-title').textContent = getApplicantName(applicant);
       $('#modal-subtitle').textContent = `${t('passport')}: ${applicant.passport_number || '-'} · ${getStatusLabel(applicant.status || 'pending')}`;
       const details = [
@@ -2350,7 +2906,73 @@
           <div class="detail-value">${escapeHtml(value || '-')}</div>
         </div>
       `).join('');
+      renderDocumentSlots(applicantId, []);
       $('#detail-modal').classList.add('show');
+      if (!demoMode && apiBaseUrl) {
+        try {
+          const result = await api(`/api/applicants/${encodeURIComponent(applicantId)}`);
+          renderDocumentSlots(applicantId, result.documents || []);
+        } catch (error) {
+          toast(error.message);
+        }
+      }
+    }
+
+    function renderDocumentSlots(applicantId, documents) {
+      const target = $('#modal-documents');
+      if (!target) return;
+      const byType = new Map((documents || []).map((document) => [document.doc_type, document]));
+      target.innerHTML = docTypes.map(([labelKey, type, icon]) => {
+        const document = byType.get(type);
+        return `
+          <div class="document-slot">
+            <div class="document-slot-title">${icon} ${t(labelKey)}</div>
+            <div class="document-slot-meta">${document ? escapeHtml(document.original_name || document.file_path || document.id) : t('pending')}</div>
+            <input class="file-input" id="doc-upload-${escapeHtml(type)}" type="file">
+            <div class="modal-actions">
+              <button class="button primary" onclick="uploadDocument('${escapeJs(applicantId)}', '${escapeJs(type)}', this)">${t('upload')}</button>
+              ${document ? `<button class="button ghost" onclick="deleteDocument('${escapeJs(document.id)}', this)">${t('remove')}</button>` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function uploadDocument(applicantId, docType, button) {
+      if (demoMode || !apiBaseUrl) return toast(t('actionNeedsApi'));
+      const input = $(`#doc-upload-${docType}`);
+      if (!input?.files?.length) return toast(t('documentUpload'));
+      const form = new FormData();
+      form.append('file', input.files[0]);
+      form.append('doc_type', docType);
+      setButtonLoading(button, true);
+      try {
+        await apiForm(`/api/applicants/${encodeURIComponent(applicantId)}/documents`, form);
+        toast(t('documentUploaded'));
+        await refreshAll();
+        await openDetails(applicantId);
+        if (currentGroupId) await loadGroupDetailData(currentGroupId);
+      } catch (error) {
+        toast(error.message);
+      } finally {
+        setButtonLoading(button, false);
+      }
+    }
+
+    async function deleteDocument(docId, button) {
+      if (demoMode || !apiBaseUrl) return toast(t('actionNeedsApi'));
+      setButtonLoading(button, true);
+      try {
+        await api(`/api/documents/${encodeURIComponent(docId)}`, { method: 'DELETE' });
+        toast(t('documentDeleted'));
+        await refreshAll();
+        if (currentApplicantId) await openDetails(currentApplicantId);
+        if (currentGroupId) await loadGroupDetailData(currentGroupId);
+      } catch (error) {
+        toast(error.message);
+      } finally {
+        setButtonLoading(button, false);
+      }
     }
 
     function closeModal() {
@@ -2489,6 +3111,12 @@
 
     $('#detail-modal').addEventListener('click', (event) => {
       if (event.target.id === 'detail-modal') closeModal();
+    });
+    $('#applicant-form-modal').addEventListener('click', (event) => {
+      if (event.target.id === 'applicant-form-modal') closeApplicantForm();
+    });
+    $('#group-detail-modal').addEventListener('click', (event) => {
+      if (event.target.id === 'group-detail-modal') closeGroupDetail();
     });
   </script>
 </body>
