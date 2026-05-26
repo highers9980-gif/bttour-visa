@@ -52,6 +52,19 @@
       cursor: pointer;
     }
 
+    [hidden],
+    .is-hidden {
+      display: none !important;
+    }
+
+    body.is-authenticated #login-screen {
+      display: none !important;
+    }
+
+    body:not(.is-authenticated) #app-shell {
+      display: none !important;
+    }
+
     .app-shell {
       min-height: 100vh;
     }
@@ -1567,8 +1580,17 @@
 
     function applyAuthState() {
       const loggedIn = sessionStorage.getItem('bttourVisaLoggedIn') === '1';
-      $('#login-screen').hidden = loggedIn;
-      $('#app-shell').hidden = !loggedIn;
+      const loginScreen = $('#login-screen');
+      const appShell = $('#app-shell');
+      document.body.classList.toggle('is-authenticated', loggedIn);
+      loginScreen.hidden = loggedIn;
+      loginScreen.classList.toggle('is-hidden', loggedIn);
+      loginScreen.setAttribute('aria-hidden', loggedIn ? 'true' : 'false');
+      loginScreen.style.display = loggedIn ? 'none' : 'grid';
+      appShell.hidden = !loggedIn;
+      appShell.classList.toggle('is-hidden', !loggedIn);
+      appShell.setAttribute('aria-hidden', loggedIn ? 'false' : 'true');
+      appShell.style.display = loggedIn ? '' : 'none';
       if (!loggedIn) {
         setTimeout(() => $('#login-password')?.focus(), 0);
       }
