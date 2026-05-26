@@ -724,9 +724,38 @@
       border-radius: var(--radius);
       display: grid;
       gap: 10px;
-      grid-template-columns: minmax(220px, 1fr) auto auto;
+      grid-template-columns: minmax(220px, 1fr) auto;
       margin-bottom: 12px;
       padding: 10px;
+    }
+
+    .group-upload-panel {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      display: grid;
+      gap: 10px;
+      margin-bottom: 12px;
+      padding: 12px;
+    }
+
+    .group-upload-header {
+      align-items: center;
+      display: flex;
+      gap: 10px;
+      justify-content: space-between;
+    }
+
+    .group-upload-title {
+      font-size: 15px;
+      font-weight: 820;
+      margin: 0;
+    }
+
+    .group-upload-row {
+      display: grid;
+      gap: 10px;
+      grid-template-columns: minmax(0, 1fr) 220px auto;
     }
 
     .advanced-actions {
@@ -1111,6 +1140,7 @@
       .form-grid,
       .chat-compose,
       .selected-group-bar,
+      .group-upload-row,
       .group-toolbar,
       .search-row {
         grid-template-columns: 1fr;
@@ -1246,7 +1276,6 @@
               <div class="panel-header">
                 <h2 class="panel-title" data-i18n="applicantManagement">Applicant management</h2>
                 <div class="content-actions">
-                  <button class="button primary" onclick="openApplicantForm()"><span>＋</span><span data-i18n="addApplicant">Add applicant</span></button>
                   <button class="button primary" onclick="refreshAll()"><span>↻</span><span data-i18n="refresh">Refresh</span></button>
                 </div>
               </div>
@@ -1291,29 +1320,32 @@
                   <option value="" data-i18n="selectGroup">Select group</option>
                 </select>
                 <button class="button primary" onclick="openSelectedGroupDetail(this)"><span>→</span><span data-i18n="openWorkspace">Open workspace</span></button>
-                <button class="button secondary" onclick="openApplicantForm(currentDriveGroup || document.getElementById('drive-group-filter').value)"><span>＋</span><span data-i18n="addApplicant">Add applicant</span></button>
+              </div>
+
+              <div class="group-toolbar">
+                <input class="search-input" id="drive-group-id" data-i18n-placeholder="groupIdPlaceholder" placeholder="Group ID">
+                <input class="search-input" id="drive-entry-date" type="date" aria-label="Entry date">
+                <input class="search-input" id="drive-group-name" data-i18n-placeholder="groupNamePlaceholder" placeholder="Group name">
+                <button class="button primary" onclick="createDriveGroup(this)"><span>＋</span><span data-i18n="createGroupFolder">Create folder</span></button>
+                <button class="button ghost" onclick="updateDriveGroup(this)"><span>✎</span><span data-i18n="updateGroupFolder">Update</span></button>
+              </div>
+
+              <div class="group-upload-panel">
+                <div class="group-upload-header">
+                  <h3 class="group-upload-title" data-i18n="groupFileUpload">Group file upload</h3>
+                  <button class="button secondary" onclick="syncSelectedDriveGroup(this)"><span>↻</span><span data-i18n="syncSelectedGroup">Sync selected group</span></button>
+                </div>
+                <div class="group-upload-row">
+                  <input class="file-input" id="drive-files" type="file" multiple>
+                  <input class="search-input" id="drive-upload-folder" data-i18n-placeholder="uploadFolderPlaceholder" placeholder="Optional subfolder">
+                  <button class="button primary" onclick="uploadDriveFiles(this)"><span>⬆</span><span data-i18n="uploadGroupFiles">Upload files to group</span></button>
+                </div>
               </div>
 
               <details class="advanced-actions">
                 <summary data-i18n="advancedTools">Advanced tools</summary>
                 <div class="advanced-actions-body">
-                  <div class="group-toolbar">
-                    <input class="search-input" id="drive-group-id" data-i18n-placeholder="groupIdPlaceholder" placeholder="Group ID">
-                    <input class="search-input" id="drive-entry-date" type="date" aria-label="Entry date">
-                    <input class="search-input" id="drive-group-name" data-i18n-placeholder="groupNamePlaceholder" placeholder="Group name">
-                    <button class="button primary" onclick="createDriveGroup(this)"><span>＋</span><span data-i18n="createGroupFolder">Create folder</span></button>
-                    <button class="button ghost" onclick="updateDriveGroup(this)"><span>✎</span><span data-i18n="updateGroupFolder">Update</span></button>
-                    <button class="button secondary" onclick="openApplicantForm(currentDriveGroup || document.getElementById('drive-group-id').value)"><span>＋</span><span data-i18n="addApplicant">Add applicant</span></button>
-                  </div>
-
-                  <div class="search-row">
-                    <input class="search-input" id="drive-upload-folder" data-i18n-placeholder="uploadFolderPlaceholder" placeholder="Optional subfolder">
-                    <button class="button secondary" onclick="syncSelectedDriveGroup(this)"><span>↻</span><span data-i18n="syncSelectedGroup">Sync selected group</span></button>
-                  </div>
-
-                  <input class="file-input" id="drive-files" type="file" multiple>
                   <div class="drive-actions">
-                    <button class="button primary" onclick="uploadDriveFiles(this)"><span>⬆</span><span data-i18n="uploadGroupFiles">Upload files to group</span></button>
                     <button class="button primary" onclick="generateFinalPackage(this)"><span>🗃️</span><span data-i18n="finalPackage">Final package</span></button>
                     <button class="button ghost" onclick="uploadGeneratedDrive(this)"><span>📦</span><span data-i18n="uploadGenerated">Upload generated docs</span></button>
                   </div>
@@ -1410,7 +1442,6 @@
         <section class="group-panel" data-group-panel="overview">
           <div class="detail-grid" id="group-overview-grid"></div>
           <div class="modal-actions">
-            <button class="button primary" onclick="openApplicantForm(currentGroupId)"><span>＋</span><span data-i18n="addApplicant">Add applicant</span></button>
             <button class="button secondary" onclick="normalizeGroupFiles(this)"><span>⇄</span><span data-i18n="normalizeFiles">Normalize files</span></button>
             <button class="button ghost" onclick="syncDriveGroupById(currentGroupId, this)"><span>↻</span><span data-i18n="syncSelectedGroup">Mirror group Drive</span></button>
           </div>
@@ -1550,6 +1581,7 @@
         selectGroup: 'Chọn nhóm',
         openWorkspace: 'Mở nhóm',
         advancedTools: 'Công cụ nâng cao',
+        groupFileUpload: 'Tải file theo nhóm',
         uploadFolderPlaceholder: 'Thư mục con tùy chọn',
         uploadGroupFiles: 'Tải nhiều file lên nhóm',
         syncSelectedGroup: 'Đồng bộ Drive nhóm',
@@ -1682,6 +1714,7 @@
         selectGroup: 'Select group',
         openWorkspace: 'Open workspace',
         advancedTools: 'Advanced tools',
+        groupFileUpload: 'Group file upload',
         uploadFolderPlaceholder: 'Optional subfolder',
         uploadGroupFiles: 'Upload files to group',
         syncSelectedGroup: 'Mirror group Drive',
@@ -1814,6 +1847,7 @@
         selectGroup: '그룹 선택',
         openWorkspace: '작업공간 열기',
         advancedTools: '고급 도구',
+        groupFileUpload: '그룹 파일 일괄 업로드',
         uploadFolderPlaceholder: '선택 서브폴더',
         uploadGroupFiles: '그룹에 파일 일괄 업로드',
         syncSelectedGroup: 'Drive 미러링',
