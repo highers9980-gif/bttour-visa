@@ -343,18 +343,18 @@
 
     .hero-strip {
       align-items: center;
-      background: linear-gradient(135deg, #e8f8f0 0%, #e4f7fb 100%);
+      background: var(--surface);
       border: 1px solid var(--line);
       border-radius: var(--radius);
       display: flex;
       gap: 18px;
       justify-content: space-between;
-      margin-bottom: 18px;
-      padding: 18px;
+      margin-bottom: 12px;
+      padding: 14px 16px;
     }
 
     .hero-title {
-      font-size: 24px;
+      font-size: 20px;
       font-weight: 800;
       margin: 0 0 4px;
     }
@@ -411,18 +411,17 @@
 
     .stats-grid {
       display: grid;
-      gap: 12px;
+      gap: 8px;
       grid-template-columns: repeat(4, minmax(0, 1fr));
-      margin-bottom: 18px;
+      margin-bottom: 12px;
     }
 
     .stat-card {
       background: var(--surface);
       border: 1px solid var(--line);
       border-radius: var(--radius);
-      min-height: 118px;
-      padding: 16px;
-      box-shadow: var(--shadow);
+      min-height: 74px;
+      padding: 10px 12px;
     }
 
     .stat-kicker {
@@ -434,7 +433,7 @@
     }
 
     .stat-value {
-      font-size: 34px;
+      font-size: 24px;
       font-weight: 840;
       line-height: 1;
     }
@@ -443,12 +442,15 @@
       color: var(--muted);
       font-size: 13px;
       margin-top: 8px;
+      display: none;
     }
 
     .workspace-grid {
-      display: grid;
-      gap: 18px;
-      grid-template-columns: minmax(0, 1fr) 360px;
+      display: block;
+    }
+
+    .workspace-grid > aside {
+      display: none;
     }
 
     .panel {
@@ -711,8 +713,56 @@
     .group-toolbar {
       display: grid;
       gap: 10px;
-      grid-template-columns: 150px 150px minmax(0, 1fr) auto auto;
+      grid-template-columns: 150px 150px minmax(0, 1fr) auto auto auto;
       margin-bottom: 14px;
+    }
+
+    .selected-group-bar {
+      align-items: center;
+      background: var(--surface-alt);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      display: grid;
+      gap: 10px;
+      grid-template-columns: minmax(220px, 1fr) auto auto;
+      margin-bottom: 12px;
+      padding: 10px;
+    }
+
+    .advanced-actions {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      margin-bottom: 12px;
+      padding: 0;
+    }
+
+    .advanced-actions > summary {
+      color: var(--muted);
+      cursor: pointer;
+      font-weight: 780;
+      list-style: none;
+      padding: 10px 12px;
+    }
+
+    .advanced-actions > summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .advanced-actions > summary::after {
+      content: '⌄';
+      float: right;
+    }
+
+    .advanced-actions[open] > summary {
+      border-bottom: 1px solid var(--line);
+    }
+
+    .advanced-actions[open] > summary::after {
+      content: '⌃';
+    }
+
+    .advanced-actions-body {
+      padding: 12px;
     }
 
     .drive-actions {
@@ -743,6 +793,7 @@
       border: 1px solid var(--line);
       border-radius: var(--radius);
       padding: 14px;
+      min-height: 230px;
     }
 
     .group-card.selected {
@@ -759,10 +810,18 @@
 
     .group-meta {
       color: var(--muted);
-      display: grid;
+      display: flex;
+      flex-wrap: wrap;
       font-size: 12px;
-      gap: 4px;
+      gap: 6px;
       margin: 8px 0 10px;
+    }
+
+    .group-meta div {
+      background: var(--surface-alt);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 4px 8px;
     }
 
     .drive-link {
@@ -1051,6 +1110,7 @@
       .detail-grid,
       .form-grid,
       .chat-compose,
+      .selected-group-bar,
       .group-toolbar,
       .search-row {
         grid-template-columns: 1fr;
@@ -1139,14 +1199,10 @@
       <main class="main">
         <section class="hero-strip">
           <div>
-            <h1 class="hero-title" data-i18n="heroTitle">Visa operations dashboard</h1>
-            <p class="hero-text" data-i18n="heroText">Monitor applicants, documents, progress, and generated visa packets from one workspace.</p>
+            <h1 class="hero-title" data-i18n="heroTitle">Entry-date group workspace</h1>
+            <p class="hero-text" data-i18n="heroText">Choose a group, open its workspace, then upload, validate, chat, and generate packages inside that group.</p>
           </div>
           <div class="hero-actions">
-            <button class="button primary" onclick="switchView('drive')"><span>🗂️</span><span data-i18n="groupDrive">Group Drive</span></button>
-            <button class="button primary" onclick="generateFinalPackage(this)"><span>🗃️</span><span data-i18n="finalPackage">Final package</span></button>
-            <button class="button secondary" onclick="batchPdf(this)"><span>📄</span><span data-i18n="groupPdf">Group PDF</span></button>
-            <button class="button ghost" onclick="batchExcel(this)"><span>📊</span><span data-i18n="groupExcel">Group Excel</span></button>
             <button class="button ghost" onclick="refreshAll()"><span>↻</span><span data-i18n="refresh">Refresh</span></button>
           </div>
         </section>
@@ -1230,36 +1286,46 @@
                 </div>
               </div>
 
-              <div class="group-toolbar">
-                <input class="search-input" id="drive-group-id" data-i18n-placeholder="groupIdPlaceholder" placeholder="Group ID">
-                <input class="search-input" id="drive-entry-date" type="date" aria-label="Entry date">
-                <input class="search-input" id="drive-group-name" data-i18n-placeholder="groupNamePlaceholder" placeholder="Group name">
-                <button class="button primary" onclick="createDriveGroup(this)"><span>＋</span><span data-i18n="createGroupFolder">Create folder</span></button>
-                <button class="button ghost" onclick="updateDriveGroup(this)"><span>✎</span><span data-i18n="updateGroupFolder">Update</span></button>
-                <button class="button secondary" onclick="openApplicantForm(currentDriveGroup || document.getElementById('drive-group-id').value)"><span>＋</span><span data-i18n="addApplicant">Add applicant</span></button>
-              </div>
-
-              <div class="search-row">
+              <div class="selected-group-bar">
                 <select class="select-input" id="drive-group-filter" onchange="selectDriveGroup(this.value)">
                   <option value="" data-i18n="selectGroup">Select group</option>
                 </select>
-                <input class="search-input" id="drive-upload-folder" data-i18n-placeholder="uploadFolderPlaceholder" placeholder="Optional subfolder">
+                <button class="button primary" onclick="openSelectedGroupDetail(this)"><span>→</span><span data-i18n="openWorkspace">Open workspace</span></button>
+                <button class="button secondary" onclick="openApplicantForm(currentDriveGroup || document.getElementById('drive-group-filter').value)"><span>＋</span><span data-i18n="addApplicant">Add applicant</span></button>
               </div>
 
-              <input class="file-input" id="drive-files" type="file" multiple>
-              <div class="drive-actions">
-                <button class="button primary" onclick="uploadDriveFiles(this)"><span>⬆</span><span data-i18n="uploadGroupFiles">Upload files to group</span></button>
-                <button class="button secondary" onclick="syncSelectedDriveGroup(this)"><span>↻</span><span data-i18n="syncSelectedGroup">Sync selected group</span></button>
-                <button class="button primary" onclick="generateFinalPackage(this)"><span>🗃️</span><span data-i18n="finalPackage">Final package</span></button>
-                <button class="button ghost" onclick="uploadGeneratedDrive(this)"><span>📦</span><span data-i18n="uploadGenerated">Upload generated docs</span></button>
-              </div>
+              <details class="advanced-actions">
+                <summary data-i18n="advancedTools">Advanced tools</summary>
+                <div class="advanced-actions-body">
+                  <div class="group-toolbar">
+                    <input class="search-input" id="drive-group-id" data-i18n-placeholder="groupIdPlaceholder" placeholder="Group ID">
+                    <input class="search-input" id="drive-entry-date" type="date" aria-label="Entry date">
+                    <input class="search-input" id="drive-group-name" data-i18n-placeholder="groupNamePlaceholder" placeholder="Group name">
+                    <button class="button primary" onclick="createDriveGroup(this)"><span>＋</span><span data-i18n="createGroupFolder">Create folder</span></button>
+                    <button class="button ghost" onclick="updateDriveGroup(this)"><span>✎</span><span data-i18n="updateGroupFolder">Update</span></button>
+                    <button class="button secondary" onclick="openApplicantForm(currentDriveGroup || document.getElementById('drive-group-id').value)"><span>＋</span><span data-i18n="addApplicant">Add applicant</span></button>
+                  </div>
 
-              <div class="api-panel" id="drive-root-panel">
-                <div class="api-state" id="drive-root-state"><span class="spinner"></span><span data-i18n="checking">Checking</span></div>
-                <div class="api-url" id="drive-root-url">Google Drive</div>
-              </div>
+                  <div class="search-row">
+                    <input class="search-input" id="drive-upload-folder" data-i18n-placeholder="uploadFolderPlaceholder" placeholder="Optional subfolder">
+                    <button class="button secondary" onclick="syncSelectedDriveGroup(this)"><span>↻</span><span data-i18n="syncSelectedGroup">Sync selected group</span></button>
+                  </div>
 
-              <div class="drive-file-list" id="selected-drive-files"></div>
+                  <input class="file-input" id="drive-files" type="file" multiple>
+                  <div class="drive-actions">
+                    <button class="button primary" onclick="uploadDriveFiles(this)"><span>⬆</span><span data-i18n="uploadGroupFiles">Upload files to group</span></button>
+                    <button class="button primary" onclick="generateFinalPackage(this)"><span>🗃️</span><span data-i18n="finalPackage">Final package</span></button>
+                    <button class="button ghost" onclick="uploadGeneratedDrive(this)"><span>📦</span><span data-i18n="uploadGenerated">Upload generated docs</span></button>
+                  </div>
+
+                  <div class="api-panel" id="drive-root-panel">
+                    <div class="api-state" id="drive-root-state"><span class="spinner"></span><span data-i18n="checking">Checking</span></div>
+                    <div class="api-url" id="drive-root-url">Google Drive</div>
+                  </div>
+
+                  <div class="drive-file-list" id="selected-drive-files"></div>
+                </div>
+              </details>
               <div class="group-grid" id="drive-groups-grid"></div>
             </div>
           </section>
@@ -1421,8 +1487,8 @@
         loginError: 'Mật khẩu không đúng.',
         apiStatus: 'Trạng thái API',
         checking: 'Đang kiểm tra',
-        heroTitle: 'Bảng điều khiển vận hành visa',
-        heroText: 'Theo dõi ứng viên, tài liệu, tiến độ và bộ hồ sơ visa trong một màn hình làm việc.',
+        heroTitle: 'Không gian nhóm nhập cảnh',
+        heroText: 'Chọn nhóm theo ngày nhập cảnh, mở không gian nhóm, rồi xử lý tải lên, kiểm tra, chat và hồ sơ cuối cùng trong nhóm đó.',
         refresh: 'Làm mới',
         batchPdf: 'PDF hàng loạt',
         batchExcel: 'Excel hàng loạt',
@@ -1482,6 +1548,8 @@
         createGroupFolder: 'Tạo thư mục',
         updateGroupFolder: 'Sửa tên',
         selectGroup: 'Chọn nhóm',
+        openWorkspace: 'Mở nhóm',
+        advancedTools: 'Công cụ nâng cao',
         uploadFolderPlaceholder: 'Thư mục con tùy chọn',
         uploadGroupFiles: 'Tải nhiều file lên nhóm',
         syncSelectedGroup: 'Đồng bộ Drive nhóm',
@@ -1551,8 +1619,8 @@
         loginError: 'Incorrect password.',
         apiStatus: 'API Status',
         checking: 'Checking',
-        heroTitle: 'Visa operations dashboard',
-        heroText: 'Monitor applicants, documents, progress, and generated visa packets from one workspace.',
+        heroTitle: 'Entry-date group workspace',
+        heroText: 'Choose an entry-date group, open its workspace, then upload, validate, chat, and generate packages inside that group.',
         refresh: 'Refresh',
         batchPdf: 'Batch PDF',
         batchExcel: 'Batch Excel',
@@ -1612,6 +1680,8 @@
         createGroupFolder: 'Create folder',
         updateGroupFolder: 'Update',
         selectGroup: 'Select group',
+        openWorkspace: 'Open workspace',
+        advancedTools: 'Advanced tools',
         uploadFolderPlaceholder: 'Optional subfolder',
         uploadGroupFiles: 'Upload files to group',
         syncSelectedGroup: 'Mirror group Drive',
@@ -1681,8 +1751,8 @@
         loginError: '비밀번호가 맞지 않습니다.',
         apiStatus: 'API 상태',
         checking: '확인 중',
-        heroTitle: '비자 운영 대시보드',
-        heroText: '신청자, 서류, 진행률, 생성된 비자 접수 문서를 한 화면에서 관리합니다.',
+        heroTitle: '입국일별 그룹 작업공간',
+        heroText: '입국일별 그룹을 선택하고, 그룹 작업공간에서 업로드, 검증, 채팅, 최종 패키지를 처리합니다.',
         refresh: '새로고침',
         batchPdf: '일괄 PDF',
         batchExcel: '일괄 Excel',
@@ -1742,6 +1812,8 @@
         createGroupFolder: '폴더 생성',
         updateGroupFolder: '수정',
         selectGroup: '그룹 선택',
+        openWorkspace: '작업공간 열기',
+        advancedTools: '고급 도구',
         uploadFolderPlaceholder: '선택 서브폴더',
         uploadGroupFiles: '그룹에 파일 일괄 업로드',
         syncSelectedGroup: 'Drive 미러링',
@@ -2364,15 +2436,21 @@
           <div class="card-actions">
             <button class="button primary" onclick="openGroupDetail('${escapeJs(id)}')">${t('details')}</button>
             <button class="button ghost" onclick="selectDriveGroup('${escapeJs(id)}')">${t('selectGroup')}</button>
-            <button class="button primary" onclick="generateFinalPackageById('${escapeJs(id)}', this)">🗃️ ${t('finalPackage')}</button>
-            <button class="button secondary" onclick="normalizeGroupFilesById('${escapeJs(id)}', this)">⇄ ${t('normalizeFiles')}</button>
-            <button class="button primary" onclick="batchPdfById('${escapeJs(id)}', this)">📄 ${t('groupPdf')}</button>
-            <button class="button secondary" onclick="batchExcelById('${escapeJs(id)}', this)">📊 ${t('groupExcel')}</button>
-            <button class="button secondary" onclick="syncDriveGroupById('${escapeJs(id)}', this)">↻ ${t('syncSelectedGroup')}</button>
-            <button class="button ghost" onclick="uploadGeneratedById('${escapeJs(id)}', this)">📦 ${t('uploadGenerated')}</button>
+            ${group.web_view_link || group.drive_link ? `<a class="button ghost" href="${escapeHtml(group.web_view_link || group.drive_link)}" target="_blank" rel="noopener">${t('openDrive')}</a>` : ''}
           </div>
         </article>
       `;
+    }
+
+    async function openSelectedGroupDetail(button) {
+      const groupId = currentDriveGroup || $('#drive-group-filter')?.value || chooseGroup();
+      if (!groupId) return toast(t('promptGroup'));
+      setButtonLoading(button, true);
+      try {
+        await openGroupDetail(groupId);
+      } finally {
+        setButtonLoading(button, false);
+      }
     }
 
     function selectDriveGroup(groupId) {
