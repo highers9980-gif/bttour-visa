@@ -1,0 +1,1116 @@
+<!-- BT TOUR 비자 시스템 베트남어 한국어 운영 매뉴얼 HTML 문서 -->
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BT TOUR Visa System Manual - Vietnamese and Korean</title>
+  <style>
+    :root {
+      --ink: #172033;
+      --muted: #5f6b7a;
+      --line: #dce3ea;
+      --panel: #ffffff;
+      --soft: #f4f7fa;
+      --blue: #2563eb;
+      --green: #16885a;
+      --amber: #b7791f;
+      --red: #c24132;
+      --navy: #10213f;
+      --shadow: 0 16px 42px rgba(20, 35, 60, 0.12);
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      background: #eef3f8;
+      color: var(--ink);
+      font-family: Arial, "Noto Sans", "Noto Sans KR", sans-serif;
+      line-height: 1.62;
+    }
+
+    a { color: var(--blue); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .shell {
+      max-width: 1160px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: rgba(238, 243, 248, 0.94);
+      border-bottom: 1px solid rgba(220, 227, 234, 0.85);
+      backdrop-filter: blur(12px);
+    }
+
+    .topbar-inner {
+      max-width: 1160px;
+      margin: 0 auto;
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .logo {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      background: var(--navy);
+      color: #fff;
+      font-weight: 800;
+      letter-spacing: 0;
+      flex: 0 0 auto;
+    }
+
+    .brand-title {
+      font-size: 16px;
+      font-weight: 800;
+      line-height: 1.2;
+    }
+
+    .brand-subtitle {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.3;
+    }
+
+    .actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .button {
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--ink);
+      border-radius: 8px;
+      min-height: 38px;
+      padding: 9px 12px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      white-space: nowrap;
+    }
+
+    .button.primary {
+      background: var(--blue);
+      border-color: var(--blue);
+      color: #fff;
+    }
+
+    .button.active {
+      background: var(--navy);
+      border-color: var(--navy);
+      color: #fff;
+    }
+
+    .hero {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      margin-top: 24px;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      min-height: 420px;
+    }
+
+    .hero-copy {
+      padding: 42px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 18px;
+    }
+
+    .eyebrow {
+      margin: 0;
+      color: var(--blue);
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 38px;
+      line-height: 1.15;
+      letter-spacing: 0;
+    }
+
+    .lead {
+      margin: 0;
+      color: var(--muted);
+      font-size: 17px;
+      max-width: 680px;
+    }
+
+    .hero-panel {
+      background: #10213f;
+      padding: 30px;
+      display: grid;
+      align-items: center;
+    }
+
+    .hero-panel svg {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .notice {
+      border: 1px solid #b9d2ff;
+      background: #eef5ff;
+      color: #15376f;
+      padding: 14px 16px;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+
+    .manual {
+      display: none;
+      margin-top: 24px;
+    }
+
+    .manual.active { display: block; }
+
+    .section {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 28px;
+      margin: 18px 0;
+      box-shadow: 0 8px 22px rgba(20, 35, 60, 0.05);
+    }
+
+    .section h2 {
+      margin: 0 0 14px;
+      font-size: 24px;
+      line-height: 1.25;
+      letter-spacing: 0;
+    }
+
+    .section h3 {
+      margin: 24px 0 10px;
+      font-size: 18px;
+      line-height: 1.35;
+      letter-spacing: 0;
+    }
+
+    .section p {
+      margin: 8px 0;
+      color: #263244;
+    }
+
+    .toc {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .toc a {
+      border: 1px solid var(--line);
+      background: var(--soft);
+      border-radius: 8px;
+      padding: 12px;
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 700;
+      min-height: 60px;
+      display: flex;
+      align-items: center;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 16px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .card {
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: 8px;
+      padding: 16px;
+    }
+
+    .card h3,
+    .card h4 {
+      margin: 0 0 8px;
+      font-size: 16px;
+      line-height: 1.3;
+    }
+
+    .card p,
+    .card li {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 4px 9px;
+      font-size: 12px;
+      font-weight: 800;
+      border: 1px solid transparent;
+    }
+
+    .status.required { background: #e8f5ef; color: var(--green); border-color: #cce7db; }
+    .status.generated { background: #fff6df; color: var(--amber); border-color: #efd89d; }
+    .status.optional { background: #eef2ff; color: var(--blue); border-color: #ced8ff; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      overflow: hidden;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: #fff;
+      margin: 14px 0;
+      font-size: 14px;
+    }
+
+    th,
+    td {
+      padding: 12px;
+      text-align: left;
+      vertical-align: top;
+      border-bottom: 1px solid var(--line);
+    }
+
+    th {
+      background: #f6f8fb;
+      color: #233047;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    tr:last-child td { border-bottom: 0; }
+
+    ol,
+    ul {
+      padding-left: 22px;
+      margin: 10px 0;
+    }
+
+    li { margin: 6px 0; }
+
+    .figure {
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: 8px;
+      overflow: hidden;
+      margin: 16px 0;
+    }
+
+    .figure svg {
+      width: 100%;
+      height: auto;
+      display: block;
+      background: #f7f9fc;
+    }
+
+    .caption {
+      padding: 10px 12px;
+      color: var(--muted);
+      font-size: 13px;
+      border-top: 1px solid var(--line);
+      background: #fff;
+    }
+
+    .step {
+      display: grid;
+      grid-template-columns: 52px minmax(0, 1fr);
+      gap: 14px;
+      padding: 16px 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .step:first-child { border-top: 0; }
+
+    .step-number {
+      width: 42px;
+      height: 42px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      background: var(--navy);
+      color: #fff;
+      font-weight: 800;
+      font-size: 16px;
+    }
+
+    .step-title {
+      font-size: 17px;
+      font-weight: 800;
+      margin: 0 0 4px;
+    }
+
+    .step-text {
+      color: var(--muted);
+      margin: 0;
+      font-size: 14px;
+    }
+
+    .callout {
+      border-left: 4px solid var(--blue);
+      background: #f3f7ff;
+      border-radius: 8px;
+      padding: 14px 16px;
+      margin: 14px 0;
+    }
+
+    .danger {
+      border-left-color: var(--red);
+      background: #fff4f2;
+    }
+
+    .footer {
+      color: var(--muted);
+      font-size: 12px;
+      text-align: center;
+      padding: 26px;
+    }
+
+    .print-only { display: none; }
+
+    @media (max-width: 860px) {
+      .shell { padding: 16px; }
+      .topbar-inner { padding: 10px 16px; align-items: flex-start; flex-direction: column; }
+      .actions { justify-content: flex-start; }
+      .hero-grid,
+      .grid-2,
+      .grid-3,
+      .toc { grid-template-columns: 1fr; }
+      .hero-copy { padding: 26px; }
+      .hero-panel { padding: 20px; }
+      h1 { font-size: 30px; }
+      .section { padding: 20px; }
+      table { font-size: 13px; }
+      th, td { padding: 10px; }
+    }
+
+    @media print {
+      body { background: #fff; }
+      .topbar, .no-print { display: none !important; }
+      .shell { max-width: none; padding: 0; }
+      .hero, .section, .figure { box-shadow: none; break-inside: avoid; }
+      .manual { display: block !important; }
+      .print-only { display: block; }
+      .button { display: none; }
+      a { color: #000; text-decoration: none; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar no-print">
+    <div class="topbar-inner">
+      <div class="brand">
+        <div class="logo">BT</div>
+        <div>
+          <div class="brand-title">BT TOUR Visa System Manual</div>
+          <div class="brand-subtitle">Vietnamese and Korean operation guide</div>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="button active" data-lang-button="vi" type="button">Tiếng Việt</button>
+        <button class="button" data-lang-button="ko" type="button">한국어</button>
+        <a class="button" href="manual.html" download="BTTOUR_Visa_Manual_VI_KO.html">Download HTML</a>
+        <button class="button primary" type="button" onclick="window.print()">Print or PDF</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="shell">
+    <section class="hero">
+      <div class="hero-grid">
+        <div class="hero-copy">
+          <p class="eyebrow">BT TOUR Visa System</p>
+          <h1>Group e-visa operation manual</h1>
+          <p class="lead">This single HTML file includes Vietnamese and Korean instructions, built-in visual examples, file rules, Google Drive workflow, Gemini analysis, and final package generation.</p>
+          <div class="notice">Open this file in any browser. No external image, font, or network file is required for the manual itself.</div>
+        </div>
+        <div class="hero-panel" aria-label="BT TOUR operation flow image">
+          <svg viewBox="0 0 720 560" role="img" aria-labelledby="hero-title hero-desc">
+            <title id="hero-title">BT TOUR visa workflow diagram</title>
+            <desc id="hero-desc">Entry date groups flow through Drive upload, validation, Gemini analysis, package generation, and Drive archive.</desc>
+            <rect width="720" height="560" rx="24" fill="#10213f"/>
+            <rect x="54" y="50" width="612" height="82" rx="16" fill="#ffffff"/>
+            <text x="82" y="92" font-family="Arial" font-size="24" font-weight="700" fill="#10213f">BT TOUR Visa System</text>
+            <text x="82" y="116" font-family="Arial" font-size="15" fill="#5f6b7a">Entry date based group management</text>
+            <g fill="#ffffff" stroke="#b9d2ff" stroke-width="2">
+              <rect x="54" y="180" width="170" height="88" rx="14"/>
+              <rect x="274" y="180" width="170" height="88" rx="14"/>
+              <rect x="494" y="180" width="170" height="88" rx="14"/>
+              <rect x="54" y="342" width="170" height="88" rx="14"/>
+              <rect x="274" y="342" width="170" height="88" rx="14"/>
+              <rect x="494" y="342" width="170" height="88" rx="14"/>
+            </g>
+            <g font-family="Arial" font-size="16" font-weight="700" fill="#10213f">
+              <text x="78" y="216">1. Group</text>
+              <text x="78" y="238">by entry date</text>
+              <text x="298" y="216">2. Upload</text>
+              <text x="298" y="238">passport files</text>
+              <text x="518" y="216">3. Mirror</text>
+              <text x="518" y="238">Google Drive</text>
+              <text x="78" y="378">4. Validate</text>
+              <text x="78" y="400">C-3-2 rules</text>
+              <text x="298" y="378">5. Analyze</text>
+              <text x="298" y="400">with Gemini</text>
+              <text x="518" y="378">6. Package</text>
+              <text x="518" y="400">Excel + PDF</text>
+            </g>
+            <g stroke="#89a7ff" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M224 224 H274"/>
+              <path d="M444 224 H494"/>
+              <path d="M579 268 V318"/>
+              <path d="M494 386 H444"/>
+              <path d="M274 386 H224"/>
+            </g>
+            <g fill="#89a7ff">
+              <path d="M270 224 l-12 -8 v16z"/>
+              <path d="M490 224 l-12 -8 v16z"/>
+              <path d="M579 330 l-8 -12 h16z"/>
+              <path d="M448 386 l12 -8 v16z"/>
+              <path d="M228 386 l12 -8 v16z"/>
+            </g>
+          </svg>
+        </div>
+      </div>
+    </section>
+
+    <section id="manual-vi" class="manual active" lang="vi">
+      <section class="section">
+        <h2>Mục lục vận hành</h2>
+        <p>Tài liệu này dành cho nhân viên BT TOUR xử lý hồ sơ e-visa đoàn C-3-2 theo nhóm ngày nhập cảnh. Quy trình ưu tiên nhóm, không ưu tiên nhập từng cá nhân riêng lẻ.</p>
+        <div class="toc">
+          <a href="#vi-standard">1. Tiêu chuẩn hồ sơ đoàn</a>
+          <a href="#vi-flow">2. Quy trình xử lý</a>
+          <a href="#vi-drive">3. Google Drive và tải file</a>
+          <a href="#vi-ai">4. Gemini phân tích và chat</a>
+          <a href="#vi-package">5. Tạo gói cuối</a>
+          <a href="#vi-trouble">6. Lỗi thường gặp</a>
+          <a href="#vi-checklist">7. Checklist cuối ngày</a>
+          <a href="#vi-images">8. Hình minh họa màn hình</a>
+        </div>
+      </section>
+
+      <section id="vi-standard" class="section">
+        <h2>1. Tiêu chuẩn hồ sơ đoàn C-3-2</h2>
+        <div class="grid-3">
+          <div class="card">
+            <span class="status required">Bắt buộc</span>
+            <h3>Scan hộ chiếu</h3>
+            <p>Đây là file quan trọng nhất để tạo dữ liệu khách, trích xuất ảnh, đọc số hộ chiếu và kiểm tra ngày sinh.</p>
+          </div>
+          <div class="card">
+            <span class="status generated">Tạo hoặc trích xuất</span>
+            <h3>Ảnh, lịch trình, khách sạn, vé máy bay</h3>
+            <p>Ảnh có thể trích từ hộ chiếu. Vé máy bay, khách sạn và lịch trình có thể nhập hoặc tạo sau theo nhóm.</p>
+          </div>
+          <div class="card">
+            <span class="status optional">Vận hành</span>
+            <h3>Danh sách đoàn, ghi chú, file bổ sung</h3>
+            <p>Các file này giúp quản lý nhóm nhưng không được tính là thiếu hồ sơ bắt buộc của từng khách.</p>
+          </div>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Loại file</th>
+              <th>Cách đặt tên khuyến nghị</th>
+              <th>Hệ thống xử lý</th>
+              <th>Ghi chú</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Hộ chiếu</td>
+              <td>passport_NguyenVanA_S0123.pdf</td>
+              <td>OCR, trích ảnh, kiểm tra dữ liệu</td>
+              <td>File quan trọng nhất.</td>
+            </tr>
+            <tr>
+              <td>Vé máy bay</td>
+              <td>flight_2026-06-15_group.pdf</td>
+              <td>Phân loại thành file vận hành nhóm</td>
+              <td>Có thể bổ sung sau.</td>
+            </tr>
+            <tr>
+              <td>Khách sạn</td>
+              <td>hotel_2026-06-15.xlsx</td>
+              <td>Phân loại theo nhóm ngày nhập cảnh</td>
+              <td>Không tính là thiếu hồ sơ cá nhân.</td>
+            </tr>
+            <tr>
+              <td>Lịch trình</td>
+              <td>itinerary_2026-06-15.docx</td>
+              <td>Lưu và phân loại trong Drive</td>
+              <td>Có thể tạo trong giai đoạn cuối.</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="vi-flow" class="section">
+        <h2>2. Quy trình xử lý chuẩn</h2>
+        <div class="step">
+          <div class="step-number">1</div>
+          <div>
+            <p class="step-title">Đăng nhập hệ thống.</p>
+            <p class="step-text">Mở website BT TOUR Visa, nhập mật khẩu nội bộ, chọn ngôn ngữ ở góc phải phía trên.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-number">2</div>
+          <div>
+            <p class="step-title">Tạo nhóm theo ngày nhập cảnh.</p>
+            <p class="step-text">Ví dụ nhóm ngày 2026-06-15 nên có mã rõ ràng như JUN_2026_0615 hoặc tên đoàn cụ thể.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-number">3</div>
+          <div>
+            <p class="step-title">Tải file hàng loạt vào nhóm.</p>
+            <p class="step-text">Chọn nhiều file một lần. Không cần sắp xếp hoàn hảo trước khi tải, vì hệ thống sẽ phân loại hộ chiếu, vé máy bay, khách sạn, lịch trình, danh sách và ghi chú.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-number">4</div>
+          <div>
+            <p class="step-title">Đồng bộ Google Drive.</p>
+            <p class="step-text">Sau khi tải file, bấm đồng bộ hoặc mirror để hệ thống cập nhật trạng thái nhóm và file Drive.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-number">5</div>
+          <div>
+            <p class="step-title">Chạy kiểm tra và Gemini phân tích.</p>
+            <p class="step-text">Gemini trả lời theo đúng ngôn ngữ website đang chọn. Nếu đang chọn Tiếng Việt, phân tích và chat chỉ dùng Tiếng Việt.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-number">6</div>
+          <div>
+            <p class="step-title">Tạo gói hồ sơ cuối.</p>
+            <p class="step-text">Gói cuối gồm Excel nhóm, Excel chi tiết từng khách, PDF tiếp nhận và báo cáo kiểm tra hồ sơ.</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="vi-drive" class="section">
+        <h2>3. Google Drive và tải file hàng loạt</h2>
+        <div class="callout">
+          <strong>Nguyên tắc chính.</strong> Mỗi nhóm ngày nhập cảnh phải có một thư mục Drive riêng. Tất cả file của nhóm đó được đưa vào cùng nhóm để tránh lẫn với nhóm khác.
+        </div>
+        <ol>
+          <li>Chọn nhóm trong danh sách bên trái hoặc bộ lọc nhóm.</li>
+          <li>Bấm tạo thư mục nếu nhóm chưa có thư mục Google Drive.</li>
+          <li>Chọn nhiều file cùng lúc trong phần tải file nhóm.</li>
+          <li>Chọn loại thư mục con nếu cần, ví dụ passport, flight, hotel, itinerary.</li>
+          <li>Bấm upload và chờ kết quả thành công.</li>
+          <li>Bấm sync hoặc mirror để làm mới số file, tiến độ và danh sách Drive.</li>
+        </ol>
+        <p>Nếu tên file chưa chuẩn, vẫn có thể tải lên. Hệ thống sẽ cố gắng tự phân loại. Tuy nhiên, tên file rõ ràng giúp OCR và kiểm tra nhanh hơn.</p>
+      </section>
+
+      <section id="vi-ai" class="section">
+        <h2>4. Gemini phân tích và chat theo nhóm</h2>
+        <p>Chat AI luôn gắn với nhóm đang chọn. Câu hỏi của nhóm A không được trộn với nhóm B.</p>
+        <ul>
+          <li>Bấm Gemini analysis để kiểm tra tình trạng nhóm.</li>
+          <li>Hỏi trực tiếp trong ô chat nếu cần biết thiếu gì hoặc bước tiếp theo.</li>
+          <li>Khi website đang ở Tiếng Việt, câu trả lời phân tích, chat và nội dung file tạo ra dùng Tiếng Việt.</li>
+          <li>Không dùng Gemini để thay thế kiểm tra vận hành cuối cùng. Nhân viên vẫn cần xem lại file trước khi gửi.</li>
+        </ul>
+        <div class="danger callout">
+          <strong>Lưu ý.</strong> Nếu thấy câu trả lời dạng JSON, mã code hoặc trộn nhiều ngôn ngữ, hãy chạy lại phân tích sau khi chọn đúng ngôn ngữ. Phiên bản hiện tại đã chặn kiểu hiển thị này.
+        </div>
+      </section>
+
+      <section id="vi-package" class="section">
+        <h2>5. Tạo gói hồ sơ cuối</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>File trong gói</th>
+              <th>Tên tiếng Việt mẫu</th>
+              <th>Mục đích</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>ZIP gói cuối</td>
+              <td>SITE_FLOW_TEST_20260615_bo_ho_so_cuoi.zip</td>
+              <td>Gửi hoặc lưu toàn bộ hồ sơ nhóm.</td>
+            </tr>
+            <tr>
+              <td>Excel nhóm</td>
+              <td>SITE_FLOW_TEST_20260615_ho_so_evisa_doan.xlsx</td>
+              <td>Danh sách và checklist e-visa đoàn.</td>
+            </tr>
+            <tr>
+              <td>PDF tiếp nhận</td>
+              <td>app_..._ho_so_tiep_nhan.pdf</td>
+              <td>Hồ sơ tiếp nhận từng khách.</td>
+            </tr>
+            <tr>
+              <td>Báo cáo kiểm tra</td>
+              <td>bao_cao_kiem_tra_ho_so.txt</td>
+              <td>Tóm tắt sẵn sàng, thiếu sót và ghi chú vận hành.</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="vi-images" class="section">
+        <h2>8. Hình minh họa màn hình</h2>
+        <figure class="figure">
+          <svg viewBox="0 0 920 520" role="img" aria-label="Màn hình đăng nhập">
+            <rect width="920" height="520" fill="#eef3f8"/>
+            <rect x="270" y="78" width="380" height="360" rx="18" fill="#ffffff" stroke="#dce3ea"/>
+            <rect x="418" y="118" width="84" height="84" rx="18" fill="#10213f"/>
+            <text x="460" y="170" text-anchor="middle" font-family="Arial" font-size="28" font-weight="700" fill="#ffffff">BT</text>
+            <text x="460" y="226" text-anchor="middle" font-family="Arial" font-size="24" font-weight="700" fill="#172033">Đăng nhập</text>
+            <text x="460" y="254" text-anchor="middle" font-family="Arial" font-size="14" fill="#5f6b7a">BT TOUR Visa System</text>
+            <rect x="326" y="286" width="268" height="44" rx="8" fill="#f7f9fc" stroke="#dce3ea"/>
+            <text x="344" y="314" font-family="Arial" font-size="14" fill="#5f6b7a">Mật khẩu nội bộ</text>
+            <rect x="326" y="348" width="268" height="44" rx="8" fill="#2563eb"/>
+            <text x="460" y="376" text-anchor="middle" font-family="Arial" font-size="15" font-weight="700" fill="#ffffff">Vào hệ thống</text>
+          </svg>
+          <figcaption class="caption">Màn hình đăng nhập chỉ yêu cầu mật khẩu nội bộ. Ngôn ngữ chọn ở topbar sau khi vào hệ thống.</figcaption>
+        </figure>
+
+        <figure class="figure">
+          <svg viewBox="0 0 920 520" role="img" aria-label="Màn hình quản lý nhóm">
+            <rect width="920" height="520" fill="#eef3f8"/>
+            <rect x="20" y="20" width="190" height="480" rx="14" fill="#10213f"/>
+            <text x="48" y="62" font-family="Arial" font-size="22" font-weight="700" fill="#ffffff">BT TOUR</text>
+            <rect x="44" y="104" width="140" height="38" rx="8" fill="#2563eb"/>
+            <text x="62" y="128" font-family="Arial" font-size="13" font-weight="700" fill="#ffffff">Drive Groups</text>
+            <rect x="44" y="156" width="140" height="38" rx="8" fill="#233a63"/>
+            <text x="62" y="180" font-family="Arial" font-size="13" fill="#dbeafe">Applicants</text>
+            <rect x="236" y="28" width="656" height="64" rx="12" fill="#ffffff" stroke="#dce3ea"/>
+            <text x="260" y="66" font-family="Arial" font-size="20" font-weight="700" fill="#172033">Nhóm theo ngày nhập cảnh</text>
+            <rect x="236" y="116" width="302" height="158" rx="12" fill="#ffffff" stroke="#dce3ea"/>
+            <text x="260" y="152" font-family="Arial" font-size="18" font-weight="700" fill="#172033">SITE_FLOW_TEST_20260615</text>
+            <text x="260" y="184" font-family="Arial" font-size="14" fill="#5f6b7a">Ngày nhập cảnh: 2026-06-15</text>
+            <text x="260" y="214" font-family="Arial" font-size="14" fill="#5f6b7a">Khách: 2 · Drive file: 1</text>
+            <rect x="260" y="238" width="238" height="12" rx="6" fill="#e8eef7"/>
+            <rect x="260" y="238" width="238" height="12" rx="6" fill="#16885a"/>
+            <text x="506" y="250" font-family="Arial" font-size="13" font-weight="700" fill="#16885a">100%</text>
+            <rect x="564" y="116" width="328" height="330" rx="12" fill="#ffffff" stroke="#dce3ea"/>
+            <text x="590" y="152" font-family="Arial" font-size="18" font-weight="700" fill="#172033">Workspace nhóm</text>
+            <rect x="590" y="178" width="126" height="36" rx="8" fill="#2563eb"/>
+            <text x="653" y="201" text-anchor="middle" font-family="Arial" font-size="13" font-weight="700" fill="#ffffff">Gemini analysis</text>
+            <rect x="730" y="178" width="126" height="36" rx="8" fill="#f7f9fc" stroke="#dce3ea"/>
+            <text x="793" y="201" text-anchor="middle" font-family="Arial" font-size="13" font-weight="700" fill="#172033">Final package</text>
+            <rect x="590" y="238" width="266" height="150" rx="10" fill="#f7f9fc" stroke="#dce3ea"/>
+            <text x="610" y="270" font-family="Arial" font-size="14" font-weight="700" fill="#172033">Chat AI theo nhóm</text>
+            <text x="610" y="302" font-family="Arial" font-size="13" fill="#5f6b7a">Nhóm đã sẵn sàng 100%.</text>
+            <text x="610" y="326" font-family="Arial" font-size="13" fill="#5f6b7a">Không thiếu hồ sơ bắt buộc.</text>
+          </svg>
+          <figcaption class="caption">Màn hình chính ưu tiên nhóm theo ngày nhập cảnh. Chat luôn theo nhóm đang chọn.</figcaption>
+        </figure>
+      </section>
+
+      <section id="vi-trouble" class="section">
+        <h2>6. Lỗi thường gặp</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Hiện tượng</th>
+              <th>Nguyên nhân thường gặp</th>
+              <th>Cách xử lý</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Không thấy file Drive trên website</td>
+              <td>Chưa sync nhóm hoặc file nằm ở thư mục Drive khác.</td>
+              <td>Bấm sync nhóm, kiểm tra đúng nhóm ngày nhập cảnh, sau đó normalize nếu cần.</td>
+            </tr>
+            <tr>
+              <td>Upload file chậm</td>
+              <td>File lớn hoặc nhiều file cùng lúc.</td>
+              <td>Chờ hoàn tất, không tải lại trang khi đang upload.</td>
+            </tr>
+            <tr>
+              <td>Gemini trả lời sai ngôn ngữ</td>
+              <td>Ngôn ngữ website chưa chọn đúng trước khi bấm phân tích.</td>
+              <td>Chọn lại Tiếng Việt ở topbar rồi chạy lại Gemini analysis.</td>
+            </tr>
+            <tr>
+              <td>Không tạo được gói cuối</td>
+              <td>Nhóm chưa có khách hoặc thiếu file hộ chiếu.</td>
+              <td>Kiểm tra danh sách khách, upload hộ chiếu, chạy validate trước khi tạo gói.</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="vi-checklist" class="section">
+        <h2>7. Checklist cuối ngày</h2>
+        <ul>
+          <li>Mỗi ngày nhập cảnh có đúng một nhóm chính trong hệ thống.</li>
+          <li>Thư mục Google Drive của nhóm đã được tạo và có quyền ghi.</li>
+          <li>File hộ chiếu của từng khách đã upload và hệ thống nhận diện.</li>
+          <li>Tiến độ nhóm đạt 100% hoặc ghi rõ lý do chưa đạt.</li>
+          <li>Gemini analysis đã chạy theo đúng ngôn ngữ cần dùng.</li>
+          <li>Gói cuối đã tạo, tải xuống, mở kiểm tra Excel, PDF và báo cáo TXT.</li>
+          <li>Gói cuối đã upload lại vào Google Drive nếu cần lưu trữ tập trung.</li>
+        </ul>
+      </section>
+    </section>
+
+    <section id="manual-ko" class="manual" lang="ko">
+      <section class="section">
+        <h2>운영 목차</h2>
+        <p>이 문서는 BT TOUR 직원이 C-3-2 단체전자사증을 입국일별 그룹 기준으로 처리하기 위한 매뉴얼입니다. 시스템 운영은 개인 단건 입력보다 그룹 흐름을 우선합니다.</p>
+        <div class="toc">
+          <a href="#ko-standard">1. 단체전자사증 기준</a>
+          <a href="#ko-flow">2. 표준 처리 흐름</a>
+          <a href="#ko-drive">3. Google Drive와 일괄 업로드</a>
+          <a href="#ko-ai">4. Gemini 분석과 채팅</a>
+          <a href="#ko-package">5. 최종 패키지 생성</a>
+          <a href="#ko-trouble">6. 자주 나는 문제</a>
+          <a href="#ko-checklist">7. 마감 체크리스트</a>
+          <a href="#ko-images">8. 화면 예시 이미지</a>
+        </div>
+      </section>
+
+      <section id="ko-standard" class="section">
+        <h2>1. C-3-2 단체전자사증 기준</h2>
+        <div class="grid-3">
+          <div class="card">
+            <span class="status required">필수</span>
+            <h3>여권 스캔</h3>
+            <p>여권 스캔은 신청자 데이터 생성, 사진 추출, 여권번호 확인, 생년월일 확인의 핵심 파일입니다.</p>
+          </div>
+          <div class="card">
+            <span class="status generated">생성 또는 추출</span>
+            <h3>사진, 일정표, 숙박, 항공</h3>
+            <p>사진은 여권에서 추출할 수 있습니다. 항공, 숙박, 일정표는 그룹 운영 중 입력하거나 최종 단계에서 만들 수 있습니다.</p>
+          </div>
+          <div class="card">
+            <span class="status optional">운영자료</span>
+            <h3>명단, 메모, 보조 파일</h3>
+            <p>이 파일들은 그룹 관리에는 중요하지만, 개인별 필수 누락 서류로 계산하지 않습니다.</p>
+          </div>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>파일 종류</th>
+              <th>권장 파일명</th>
+              <th>시스템 처리</th>
+              <th>비고</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>여권</td>
+              <td>passport_NguyenVanA_S0123.pdf</td>
+              <td>OCR, 사진 추출, 데이터 검증</td>
+              <td>가장 중요한 필수 파일입니다.</td>
+            </tr>
+            <tr>
+              <td>항공</td>
+              <td>flight_2026-06-15_group.pdf</td>
+              <td>그룹 운영자료로 분류</td>
+              <td>나중에 보충할 수 있습니다.</td>
+            </tr>
+            <tr>
+              <td>숙박</td>
+              <td>hotel_2026-06-15.xlsx</td>
+              <td>입국일별 그룹 자료로 분류</td>
+              <td>개인 필수서류 누락으로 보지 않습니다.</td>
+            </tr>
+            <tr>
+              <td>일정표</td>
+              <td>itinerary_2026-06-15.docx</td>
+              <td>Drive에 저장하고 자동 분류</td>
+              <td>최종 단계에서 생성할 수 있습니다.</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="ko-flow" class="section">
+        <h2>2. 표준 처리 흐름</h2>
+        <div class="step">
+          <div class="step-number">1</div>
+          <div>
+            <p class="step-title">시스템에 로그인합니다.</p>
+            <p class="step-text">BT TOUR Visa 사이트를 열고 내부 비밀번호로 로그인한 뒤, 우측 상단에서 사용할 언어를 선택합니다.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-number">2</div>
+          <div>
+            <p class="step-title">입국일별 그룹을 생성합니다.</p>
+            <p class="step-text">예를 들어 2026-06-15 입국 그룹은 JUN_2026_0615 또는 실제 행사명으로 구분되게 만듭니다.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-number">3</div>
+          <div>
+            <p class="step-title">그룹에 파일을 한 번에 업로드합니다.</p>
+            <p class="step-text">여러 파일을 동시에 선택합니다. 파일이 조금 섞여 있어도 시스템이 여권, 항공, 숙박, 일정표, 명단, 메모로 자동 분류합니다.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-number">4</div>
+          <div>
+            <p class="step-title">Google Drive를 동기화합니다.</p>
+            <p class="step-text">업로드 후 sync 또는 mirror를 눌러 그룹 파일 수, 진행률, Drive 목록을 최신으로 만듭니다.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-number">5</div>
+          <div>
+            <p class="step-title">검증과 Gemini 분석을 실행합니다.</p>
+            <p class="step-text">Gemini는 현재 사이트 언어로만 응답합니다. 한국어 사이트이면 분석과 채팅도 한국어로 나옵니다.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-number">6</div>
+          <div>
+            <p class="step-title">최종 신청서류 패키지를 생성합니다.</p>
+            <p class="step-text">최종 패키지에는 그룹 Excel, 신청자별 상세 Excel, 접수서류 PDF, 검증 보고서가 포함됩니다.</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="ko-drive" class="section">
+        <h2>3. Google Drive와 그룹 일괄 업로드</h2>
+        <div class="callout">
+          <strong>핵심 원칙.</strong> 입국일별 그룹마다 Google Drive 폴더를 하나씩 만들고, 해당 그룹 파일은 그 폴더 안에서 관리합니다.
+        </div>
+        <ol>
+          <li>좌측 목록 또는 그룹 필터에서 작업할 그룹을 선택합니다.</li>
+          <li>Drive 폴더가 없으면 그룹 폴더 생성 버튼을 누릅니다.</li>
+          <li>그룹 업로드 영역에서 여러 파일을 한 번에 선택합니다.</li>
+          <li>필요하면 passport, flight, hotel, itinerary 같은 하위 분류를 선택합니다.</li>
+          <li>업로드 버튼을 누르고 성공 결과가 나올 때까지 기다립니다.</li>
+          <li>sync 또는 mirror를 눌러 사이트 표시와 Drive 상태를 맞춥니다.</li>
+        </ol>
+        <p>파일명이 완벽하지 않아도 업로드할 수 있습니다. 다만 파일명이 명확하면 OCR과 자동 분류가 더 안정적으로 작동합니다.</p>
+      </section>
+
+      <section id="ko-ai" class="section">
+        <h2>4. Gemini 분석과 그룹 채팅</h2>
+        <p>AI 채팅은 선택된 그룹에 묶여 있습니다. A그룹 대화가 B그룹으로 섞이지 않아야 합니다.</p>
+        <ul>
+          <li>Gemini analysis 버튼을 눌러 그룹 상태를 요약합니다.</li>
+          <li>채팅창에서 누락 항목, 다음 작업, 진행률을 질문할 수 있습니다.</li>
+          <li>사이트 언어가 한국어이면 분석, 채팅, 생성파일 내용이 한국어로 나옵니다.</li>
+          <li>Gemini는 운영 보조 도구입니다. 제출 전에는 담당자가 최종 파일을 직접 확인해야 합니다.</li>
+        </ul>
+        <div class="danger callout">
+          <strong>주의.</strong> JSON, 코드형 응답, 여러 언어가 섞인 응답이 보이면 우측 상단 언어를 다시 선택하고 Gemini analysis를 다시 실행합니다.
+        </div>
+      </section>
+
+      <section id="ko-package" class="section">
+        <h2>5. 최종 패키지 생성</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>패키지 내부 파일</th>
+              <th>한국어 파일명 예시</th>
+              <th>목적</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>최종 ZIP</td>
+              <td>SITE_FLOW_TEST_20260615_최종_신청서류.zip</td>
+              <td>그룹 전체 신청서류 보관과 전달.</td>
+            </tr>
+            <tr>
+              <td>그룹 Excel</td>
+              <td>SITE_FLOW_TEST_20260615_전자사증신청서.xlsx</td>
+              <td>단체전자사증 명단과 체크리스트.</td>
+            </tr>
+            <tr>
+              <td>접수서류 PDF</td>
+              <td>app_..._접수서류.pdf</td>
+              <td>신청자별 접수서류.</td>
+            </tr>
+            <tr>
+              <td>검증 보고서</td>
+              <td>신청서류_검증_보고서.txt</td>
+              <td>준비도, 누락 여부, 운영 메모 확인.</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="ko-images" class="section">
+        <h2>8. 화면 예시 이미지</h2>
+        <figure class="figure">
+          <svg viewBox="0 0 920 520" role="img" aria-label="로그인 화면">
+            <rect width="920" height="520" fill="#eef3f8"/>
+            <rect x="270" y="78" width="380" height="360" rx="18" fill="#ffffff" stroke="#dce3ea"/>
+            <rect x="418" y="118" width="84" height="84" rx="18" fill="#10213f"/>
+            <text x="460" y="170" text-anchor="middle" font-family="Arial" font-size="28" font-weight="700" fill="#ffffff">BT</text>
+            <text x="460" y="226" text-anchor="middle" font-family="Arial" font-size="24" font-weight="700" fill="#172033">로그인</text>
+            <text x="460" y="254" text-anchor="middle" font-family="Arial" font-size="14" fill="#5f6b7a">BT TOUR Visa System</text>
+            <rect x="326" y="286" width="268" height="44" rx="8" fill="#f7f9fc" stroke="#dce3ea"/>
+            <text x="344" y="314" font-family="Arial" font-size="14" fill="#5f6b7a">내부 비밀번호</text>
+            <rect x="326" y="348" width="268" height="44" rx="8" fill="#2563eb"/>
+            <text x="460" y="376" text-anchor="middle" font-family="Arial" font-size="15" font-weight="700" fill="#ffffff">시스템 들어가기</text>
+          </svg>
+          <figcaption class="caption">로그인 화면은 내부 비밀번호만 사용합니다. 언어 선택은 로그인 후 우측 상단에서 진행합니다.</figcaption>
+        </figure>
+
+        <figure class="figure">
+          <svg viewBox="0 0 920 520" role="img" aria-label="그룹 관리 화면">
+            <rect width="920" height="520" fill="#eef3f8"/>
+            <rect x="20" y="20" width="190" height="480" rx="14" fill="#10213f"/>
+            <text x="48" y="62" font-family="Arial" font-size="22" font-weight="700" fill="#ffffff">BT TOUR</text>
+            <rect x="44" y="104" width="140" height="38" rx="8" fill="#2563eb"/>
+            <text x="62" y="128" font-family="Arial" font-size="13" font-weight="700" fill="#ffffff">Drive 그룹</text>
+            <rect x="44" y="156" width="140" height="38" rx="8" fill="#233a63"/>
+            <text x="62" y="180" font-family="Arial" font-size="13" fill="#dbeafe">신청자</text>
+            <rect x="236" y="28" width="656" height="64" rx="12" fill="#ffffff" stroke="#dce3ea"/>
+            <text x="260" y="66" font-family="Arial" font-size="20" font-weight="700" fill="#172033">입국일별 그룹</text>
+            <rect x="236" y="116" width="302" height="158" rx="12" fill="#ffffff" stroke="#dce3ea"/>
+            <text x="260" y="152" font-family="Arial" font-size="18" font-weight="700" fill="#172033">SITE_FLOW_TEST_20260615</text>
+            <text x="260" y="184" font-family="Arial" font-size="14" fill="#5f6b7a">입국일: 2026-06-15</text>
+            <text x="260" y="214" font-family="Arial" font-size="14" fill="#5f6b7a">신청자: 2 · Drive 파일: 1</text>
+            <rect x="260" y="238" width="238" height="12" rx="6" fill="#e8eef7"/>
+            <rect x="260" y="238" width="238" height="12" rx="6" fill="#16885a"/>
+            <text x="506" y="250" font-family="Arial" font-size="13" font-weight="700" fill="#16885a">100%</text>
+            <rect x="564" y="116" width="328" height="330" rx="12" fill="#ffffff" stroke="#dce3ea"/>
+            <text x="590" y="152" font-family="Arial" font-size="18" font-weight="700" fill="#172033">그룹 작업공간</text>
+            <rect x="590" y="178" width="126" height="36" rx="8" fill="#2563eb"/>
+            <text x="653" y="201" text-anchor="middle" font-family="Arial" font-size="13" font-weight="700" fill="#ffffff">Gemini 분석</text>
+            <rect x="730" y="178" width="126" height="36" rx="8" fill="#f7f9fc" stroke="#dce3ea"/>
+            <text x="793" y="201" text-anchor="middle" font-family="Arial" font-size="13" font-weight="700" fill="#172033">최종 패키지</text>
+            <rect x="590" y="238" width="266" height="150" rx="10" fill="#f7f9fc" stroke="#dce3ea"/>
+            <text x="610" y="270" font-family="Arial" font-size="14" font-weight="700" fill="#172033">그룹 AI 채팅</text>
+            <text x="610" y="302" font-family="Arial" font-size="13" fill="#5f6b7a">그룹 준비도는 100%입니다.</text>
+            <text x="610" y="326" font-family="Arial" font-size="13" fill="#5f6b7a">필수 업로드 누락은 없습니다.</text>
+          </svg>
+          <figcaption class="caption">메인 화면은 입국일별 그룹 중심입니다. 채팅창은 현재 선택한 그룹에 연결됩니다.</figcaption>
+        </figure>
+      </section>
+
+      <section id="ko-trouble" class="section">
+        <h2>6. 자주 나는 문제</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>증상</th>
+              <th>가능한 원인</th>
+              <th>처리 방법</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Drive 파일이 사이트에 안 보임</td>
+              <td>그룹 sync가 안 됐거나 파일이 다른 Drive 폴더에 있음.</td>
+              <td>그룹 sync를 누르고, 입국일 그룹이 맞는지 확인한 뒤 필요하면 normalize를 실행합니다.</td>
+            </tr>
+            <tr>
+              <td>파일 업로드가 느림</td>
+              <td>파일이 크거나 한 번에 너무 많은 파일을 올림.</td>
+              <td>업로드 중에는 새로고침하지 말고 완료 메시지를 기다립니다.</td>
+            </tr>
+            <tr>
+              <td>Gemini가 다른 언어로 답함</td>
+              <td>분석 실행 전에 사이트 언어가 다르게 선택됨.</td>
+              <td>우측 상단에서 한국어를 선택하고 Gemini analysis를 다시 실행합니다.</td>
+            </tr>
+            <tr>
+              <td>최종 패키지가 생성되지 않음</td>
+              <td>그룹에 신청자가 없거나 여권 파일이 없음.</td>
+              <td>신청자 목록, 여권 업로드, validate 결과를 먼저 확인합니다.</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="ko-checklist" class="section">
+        <h2>7. 마감 체크리스트</h2>
+        <ul>
+          <li>각 입국일마다 대표 그룹이 하나씩 정확히 만들어져 있습니다.</li>
+          <li>그룹 Google Drive 폴더가 생성되어 있고 쓰기 권한이 있습니다.</li>
+          <li>각 신청자의 여권 파일이 업로드되어 시스템에 반영되어 있습니다.</li>
+          <li>그룹 진행률이 100%이거나 미완료 사유가 기록되어 있습니다.</li>
+          <li>Gemini analysis가 필요한 언어 기준으로 실행되어 있습니다.</li>
+          <li>최종 패키지를 생성하고 Excel, PDF, TXT 보고서를 열어 확인했습니다.</li>
+          <li>필요하면 최종 패키지를 Google Drive에 다시 업로드해 중앙 보관합니다.</li>
+        </ul>
+      </section>
+    </section>
+
+    <p class="footer">BT TOUR Visa System Manual. Last updated 2026-05-27. This file is self-contained for offline browser use.</p>
+  </main>
+
+  <script>
+    const buttons = Array.from(document.querySelectorAll('[data-lang-button]'));
+    const manuals = {
+      vi: document.getElementById('manual-vi'),
+      ko: document.getElementById('manual-ko')
+    };
+
+    function setManualLanguage(lang) {
+      document.documentElement.lang = lang;
+      Object.entries(manuals).forEach(([key, node]) => node.classList.toggle('active', key === lang));
+      buttons.forEach((button) => button.classList.toggle('active', button.dataset.langButton === lang));
+      localStorage.setItem('bttourManualLanguage', lang);
+    }
+
+    buttons.forEach((button) => {
+      button.addEventListener('click', () => setManualLanguage(button.dataset.langButton));
+    });
+
+    setManualLanguage(localStorage.getItem('bttourManualLanguage') || 'vi');
+  </script>
+</body>
+</html>
