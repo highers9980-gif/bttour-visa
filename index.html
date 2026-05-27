@@ -118,14 +118,6 @@
       min-height: 20px;
     }
 
-    .login-language {
-      position: fixed;
-      right: 18px;
-      top: 18px;
-      width: 132px;
-      z-index: 2;
-    }
-
     .topbar {
       align-items: center;
       background: rgba(255, 255, 255, 0.94);
@@ -171,15 +163,6 @@
       font-size: 17px;
       font-weight: 760;
       line-height: 1.2;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .brand-subtitle {
-      color: var(--muted);
-      font-size: 12px;
-      margin-top: 2px;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -1154,10 +1137,6 @@
         gap: 8px;
       }
 
-      .brand-subtitle {
-        display: none;
-      }
-
       .api-compact {
         display: none;
       }
@@ -1188,11 +1167,6 @@
 </head>
 <body>
   <div class="login-screen" id="login-screen">
-    <select class="language-select login-language" data-language-select onchange="setLanguage(this.value)" aria-label="Language">
-      <option value="vi">Tiếng Việt</option>
-      <option value="en">English</option>
-      <option value="ko">한국어</option>
-    </select>
     <form class="login-card" onsubmit="handleLogin(event)">
       <div class="login-head">
         <div class="brand-mark">BT</div>
@@ -1215,7 +1189,6 @@
         <div class="brand-mark">BT</div>
         <div class="brand-copy">
           <div class="brand-title" data-i18n="brandTitle">BT TOUR Visa System</div>
-          <div class="brand-subtitle">Tiếng Việt / English / 한국어</div>
         </div>
       </div>
       <div class="topbar-actions">
@@ -2041,7 +2014,6 @@
       $$('[data-language-select]').forEach((select) => {
         select.value = lang;
       });
-      $$('[data-lang-button]').forEach((button) => button.classList.toggle('active', button.dataset.langButton === lang));
       $$('[data-i18n]').forEach((node) => node.textContent = t(node.dataset.i18n));
       $$('[data-i18n-placeholder]').forEach((node) => node.placeholder = t(node.dataset.i18nPlaceholder));
       renderStatusTabs();
