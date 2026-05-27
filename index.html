@@ -741,6 +741,24 @@
       grid-template-columns: minmax(0, 1fr) 220px auto;
     }
 
+    .upload-standards {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .upload-standard-chip {
+      background: #eef8f4;
+      border: 1px solid #cfe8dc;
+      border-radius: 999px;
+      color: #0f5132;
+      font-size: 12px;
+      font-weight: 760;
+      line-height: 1.4;
+      padding: 6px 10px;
+      white-space: normal;
+    }
+
     .advanced-actions {
       border: 1px solid var(--line);
       border-radius: var(--radius);
@@ -1342,6 +1360,12 @@
                   <input class="search-input" id="drive-upload-folder" data-i18n-placeholder="uploadFolderPlaceholder" placeholder="Optional subfolder">
                   <button class="button primary" onclick="uploadDriveFiles(this)"><span>⬆</span><span data-i18n="uploadGroupFiles">Upload files to group</span></button>
                 </div>
+                <div class="upload-standards">
+                  <span class="upload-standard-chip" data-i18n="c32RequiredUpload">Required upload: passport scan</span>
+                  <span class="upload-standard-chip" data-i18n="c32ExtractedItems">Extract: photo and text from passport</span>
+                  <span class="upload-standard-chip" data-i18n="c32GeneratedItems">Generated: flight, hotel, itinerary</span>
+                  <span class="upload-standard-chip" data-i18n="c32AutoSort">Mixed files are auto-sorted by AI rules</span>
+                </div>
               </div>
 
               <details class="advanced-actions">
@@ -1611,8 +1635,12 @@
         groupChat: 'Chat nhóm',
         advancedTools: 'Công cụ nâng cao',
         groupFileUpload: 'Tải file theo nhóm',
-        uploadFolderPlaceholder: 'Thư mục con tùy chọn',
+        uploadFolderPlaceholder: 'Tự phân loại hoặc thư mục con',
         uploadGroupFiles: 'Tải nhiều file lên nhóm',
+        c32RequiredUpload: 'Bắt buộc tải lên: bản scan hộ chiếu',
+        c32ExtractedItems: 'Trích xuất: ảnh và dữ liệu từ hộ chiếu',
+        c32GeneratedItems: 'Tạo sau: chuyến bay, khách sạn, lịch trình',
+        c32AutoSort: 'File lộn xộn sẽ được tự động phân loại',
         syncSelectedGroup: 'Đồng bộ Drive nhóm',
         uploadGenerated: 'Tải hồ sơ đã tạo',
         groupProgress: 'Tiến độ nhóm',
@@ -1748,8 +1776,12 @@
         groupChat: 'Group chat',
         advancedTools: 'Advanced tools',
         groupFileUpload: 'Group file upload',
-        uploadFolderPlaceholder: 'Optional subfolder',
+        uploadFolderPlaceholder: 'Auto-sort or subfolder',
         uploadGroupFiles: 'Upload files to group',
+        c32RequiredUpload: 'Required upload: passport scan',
+        c32ExtractedItems: 'Extract: photo and text from passport',
+        c32GeneratedItems: 'Generated later: flight, hotel, itinerary',
+        c32AutoSort: 'Mixed files are auto-sorted',
         syncSelectedGroup: 'Mirror group Drive',
         uploadGenerated: 'Upload generated docs',
         groupProgress: 'Group progress',
@@ -1885,8 +1917,12 @@
         groupChat: '그룹 채팅',
         advancedTools: '고급 도구',
         groupFileUpload: '그룹 파일 일괄 업로드',
-        uploadFolderPlaceholder: '선택 서브폴더',
+        uploadFolderPlaceholder: '자동분류 또는 서브폴더',
         uploadGroupFiles: '그룹에 파일 일괄 업로드',
+        c32RequiredUpload: '필수 업로드: 여권 스캔',
+        c32ExtractedItems: '추출: 여권에서 사진과 텍스트',
+        c32GeneratedItems: '생성자료: 항공, 숙박, 일정표',
+        c32AutoSort: '뒤섞인 파일은 자동분류',
         syncSelectedGroup: 'Drive 미러링',
         uploadGenerated: '생성 서류 업로드',
         groupProgress: '그룹 진행률',
