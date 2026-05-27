@@ -1477,7 +1477,7 @@
         <label class="field-label"><span data-i18n="departureDate">Departure date</span><input class="search-input" name="departure_date" type="date"></label>
         <label class="field-label"><span data-i18n="hotel">Hotel</span><input class="search-input" name="hotel"></label>
         <label class="field-label"><span data-i18n="gender">Gender</span><select class="select-input" name="gender"><option value=""></option><option value="M">M</option><option value="F">F</option></select></label>
-        <label class="field-label"><span data-i18n="totalDocuments">Total documents</span><input class="search-input" name="total_documents" type="number" min="1" value="7"></label>
+        <label class="field-label"><span data-i18n="totalDocuments">Required uploads</span><input class="search-input" name="total_documents" type="number" min="1" value="1"></label>
       </div>
       <div class="modal-actions">
         <button class="button primary" type="submit" data-i18n="save">Save</button>
@@ -1671,7 +1671,7 @@
         fullNameEn: 'Tên tiếng Anh',
         departureDate: 'Ngày rời Hàn',
         gender: 'Giới tính',
-        totalDocuments: 'Tổng tài liệu',
+        totalDocuments: 'Số file bắt buộc',
         save: 'Lưu',
         upload: 'Tải lên',
         remove: 'Xóa',
@@ -1812,7 +1812,7 @@
         fullNameEn: 'English name',
         departureDate: 'Departure date',
         gender: 'Gender',
-        totalDocuments: 'Total documents',
+        totalDocuments: 'Required uploads',
         save: 'Save',
         upload: 'Upload',
         remove: 'Remove',
@@ -1953,7 +1953,7 @@
         fullNameEn: '영문 이름',
         departureDate: '출국일',
         gender: '성별',
-        totalDocuments: '필요 서류 수',
+        totalDocuments: '필수 업로드 수',
         save: '저장',
         upload: '업로드',
         remove: '삭제',
@@ -2011,6 +2011,29 @@
     const $ = (selector) => document.querySelector(selector);
     const $$ = (selector) => Array.from(document.querySelectorAll(selector));
     const t = (key) => (i18n[currentLanguage] && i18n[currentLanguage][key]) || i18n.en[key] || key;
+    const languageBody = (extra = {}) => JSON.stringify({ ...extra, language: currentLanguage });
+
+    function localizedDownloadName(kind, id) {
+      const safeId = String(id || 'BTTOUR').replace(/[\\/:*?"<>|]+/g, '_').replace(/\s+/g, '_');
+      const names = {
+        package: {
+          vi: `${safeId}_bo_ho_so_cuoi.zip`,
+          en: `${safeId}_final_package.zip`,
+          ko: `${safeId}_최종_신청서류.zip`
+        },
+        pdf: {
+          vi: `${safeId}_ho_so_tiep_nhan.pdf`,
+          en: `${safeId}_visa_packet.pdf`,
+          ko: `${safeId}_접수서류.pdf`
+        },
+        excel: {
+          vi: `${safeId}_danh_sach_doan.xlsx`,
+          en: `${safeId}_name_list.xlsx`,
+          ko: `${safeId}_명단.xlsx`
+        }
+      };
+      return names[kind]?.[currentLanguage] || names[kind]?.en || `${safeId}.${kind}`;
+    }
 
     function applyAuthState() {
       const loggedIn = sessionStorage.getItem('bttourVisaLoggedIn') === '1';
@@ -2821,9 +2844,11 @@
       try {
         const result = await api(`/api/generate/final-package/${encodeURIComponent(groupId)}`, {
           method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: languageBody(),
           timeoutMs: 180000
         });
-        if (result.zip_path) download(`${apiBaseUrl}${result.zip_path}`, `${groupId}_complete_package.zip`);
+        if (result.zip_path) download(`${apiBaseUrl}${result.zip_path}`, result.download_name || localizedDownloadName('package', groupId));
         toast(t('finalPackageDone'));
         await refreshAll();
       } catch (error) {
@@ -3025,41 +3050,64 @@
         try {
           return formatAnalysisMessage(JSON.parse(text));
         } catch (_error) {
-          return [
-            '한국어',
-            '이전 분석 메시지가 코드 형식으로 저장되어 있습니다. Gemini 분석을 다시 실행하면 정리된 형식으로 표시됩니다.',
-            '',
-            'Tiếng Việt',
-            'Tin nhắn phân tích cũ đang được lưu ở dạng mã. Hãy chạy lại Gemini để hiển thị gọn gàng.'
-          ].join('\n');
+          return currentLanguage === 'vi'
+            ? 'Tin nhắn phân tích cũ đang được lưu ở dạng mã. Hãy chạy lại Gemini để hiển thị gọn gàng.'
+            : currentLanguage === 'en'
+              ? 'The old analysis message is stored as code. Run Gemini analysis again to display it cleanly.'
+              : '이전 분석 메시지가 코드 형식으로 저장되어 있습니다. Gemini 분석을 다시 실행하면 정리된 형식으로 표시됩니다.';
         }
       }
-      return text.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```$/i, '').trim();
+      return extractLanguageSection(text.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```$/i, '').trim());
+    }
+
+    function extractLanguageSection(text) {
+      const labels = [
+        ['ko', '한국어'],
+        ['vi', 'Tiếng Việt'],
+        ['en', 'English']
+      ];
+      const label = labels.find(([lang]) => lang === currentLanguage)?.[1];
+      if (!label || !text.includes(label)) return text;
+      const start = text.indexOf(label) + label.length;
+      const nextIndexes = labels
+        .map(([, otherLabel]) => text.indexOf(otherLabel, start))
+        .filter((index) => index >= 0);
+      const end = nextIndexes.length ? Math.min(...nextIndexes) : text.length;
+      return text.slice(start, end).trim();
     }
 
     function formatAnalysisMessage(analysis = {}) {
-      if (analysis.display_message) return analysis.display_message;
+      if (analysis.display_message) return extractLanguageSection(analysis.display_message);
       const readiness = Math.round(Number(analysis.readiness_percent ?? analysis.ready_rate ?? 0));
       const missingCount = Array.isArray(analysis.missing_documents) ? analysis.missing_documents.length : 0;
       const groupId = analysis.group_id || currentGroupId || currentDriveGroup || '-';
-      const koMissing = missingCount
-        ? `${missingCount}개의 필수 여권 또는 텍스트 항목을 확인해야 합니다.`
-        : '필수 업로드 누락은 없습니다.';
-      const viMissing = missingCount
-        ? `Cần kiểm tra ${missingCount} mục hộ chiếu hoặc thông tin chữ bắt buộc.`
-        : 'Không thiếu hồ sơ tải lên bắt buộc.';
+      if (currentLanguage === 'vi') {
+        return [
+          `Nhóm: ${groupId}`,
+          `Mức sẵn sàng: ${readiness}%`,
+          missingCount
+            ? `Cần kiểm tra ${missingCount} mục hộ chiếu hoặc thông tin chữ bắt buộc.`
+            : 'Không thiếu hồ sơ tải lên bắt buộc.',
+          'Ảnh được trích xuất từ hộ chiếu. Vé máy bay, khách sạn và lịch trình là tài liệu tạo sau hoặc tài liệu vận hành.'
+        ].join('\n');
+      }
+      if (currentLanguage === 'en') {
+        return [
+          `Group: ${groupId}`,
+          `Readiness: ${readiness}%`,
+          missingCount
+            ? `${missingCount} passport or text item(s) need review.`
+            : 'No required upload is missing.',
+          'Photo is extracted from the passport. Flight, hotel, and itinerary are generated or operational files.'
+        ].join('\n');
+      }
       return [
-        '한국어',
         `그룹: ${groupId}`,
         `준비도: ${readiness}%`,
-        koMissing,
-        '사진은 여권에서 추출하고, 항공/숙박/일정표는 생성 또는 운영자료로 처리합니다.',
-        '',
-        'Tiếng Việt',
-        `Nhóm: ${groupId}`,
-        `Mức sẵn sàng: ${readiness}%`,
-        viMissing,
-        'Ảnh được trích xuất từ hộ chiếu. Vé máy bay, khách sạn và lịch trình là tài liệu tạo sau hoặc tài liệu vận hành.'
+        missingCount
+          ? `${missingCount}개의 필수 여권 또는 텍스트 항목을 확인해야 합니다.`
+          : '필수 업로드 누락은 없습니다.',
+        '사진은 여권에서 추출하고, 항공/숙박/일정표는 생성 또는 운영자료로 처리합니다.'
       ].join('\n');
     }
 
@@ -3074,7 +3122,7 @@
         const result = await api(`/api/chat/group/${encodeURIComponent(currentGroupId)}/message`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message }),
+          body: languageBody({ message }),
           timeoutMs: 180000
         });
         input.value = '';
@@ -3093,6 +3141,8 @@
       try {
         const result = await api(`/api/analyze/group/${encodeURIComponent(currentGroupId)}`, {
           method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: languageBody(),
           timeoutMs: 180000
         });
         currentGroupAnalysis = result.analysis || result.data?.analysis || result.data;
@@ -3280,8 +3330,12 @@
       if (demoMode || !apiBaseUrl) return toast(t('actionNeedsApi'));
       setButtonLoading(button, true);
       try {
-        const result = await api(`/api/generate/pdf/${encodeURIComponent(applicantId)}`, { method: 'POST' });
-        download(`${apiBaseUrl}${result.pdf_path}`, `${applicantId}_visa_packet.pdf`);
+        const result = await api(`/api/generate/pdf/${encodeURIComponent(applicantId)}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: languageBody()
+        });
+        download(`${apiBaseUrl}${result.pdf_path}`, result.download_name || localizedDownloadName('pdf', applicantId));
         toast(t('pdfDone'));
       } catch (error) {
         toast(error.message);
@@ -3300,7 +3354,11 @@
       if (demoMode || !apiBaseUrl) return toast(t('actionNeedsApi'));
       setButtonLoading(button, true);
       try {
-        await api(`/api/batch/pdf/${encodeURIComponent(groupId)}`, { method: 'POST' });
+        await api(`/api/batch/pdf/${encodeURIComponent(groupId)}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: languageBody()
+        });
         toast(t('batchPdfDone'));
       } catch (error) {
         toast(error.message);
@@ -3319,8 +3377,12 @@
       if (demoMode || !apiBaseUrl) return toast(t('actionNeedsApi'));
       setButtonLoading(button, true);
       try {
-        const result = await api(`/api/batch/excel/${encodeURIComponent(groupId)}`, { method: 'POST' });
-        download(`${apiBaseUrl}${result.excel_path}`, `${groupId}_NAME_LIST.xlsx`);
+        const result = await api(`/api/batch/excel/${encodeURIComponent(groupId)}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: languageBody()
+        });
+        download(`${apiBaseUrl}${result.excel_path}`, result.download_name || localizedDownloadName('excel', groupId));
         toast(t('batchExcelDone'));
       } catch (error) {
         toast(error.message);
