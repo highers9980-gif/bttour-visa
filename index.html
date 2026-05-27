@@ -1052,6 +1052,10 @@
       overflow-wrap: anywhere;
     }
 
+    .chat-message-text {
+      white-space: pre-line;
+    }
+
     .chat-message.user {
       background: var(--primary);
       color: #ffffff;
@@ -3007,11 +3011,56 @@
       }
       target.innerHTML = messages.map((message) => `
         <div class="chat-message ${escapeHtml(message.role || 'assistant')}">
-          <div>${escapeHtml(message.message || '')}</div>
+          <div class="chat-message-text">${escapeHtml(formatChatMessage(message.message || ''))}</div>
           <div class="chat-meta">${escapeHtml(formatDate(message.created_at))}</div>
         </div>
       `).join('');
       target.scrollTop = target.scrollHeight;
+    }
+
+    function formatChatMessage(value) {
+      const text = String(value || '').trim();
+      if (!text) return '';
+      if ((text.startsWith('{') || text.startsWith('[')) && text.includes('group_id')) {
+        try {
+          return formatAnalysisMessage(JSON.parse(text));
+        } catch (_error) {
+          return [
+            '한국어',
+            '이전 분석 메시지가 코드 형식으로 저장되어 있습니다. Gemini 분석을 다시 실행하면 정리된 형식으로 표시됩니다.',
+            '',
+            'Tiếng Việt',
+            'Tin nhắn phân tích cũ đang được lưu ở dạng mã. Hãy chạy lại Gemini để hiển thị gọn gàng.'
+          ].join('\n');
+        }
+      }
+      return text.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```$/i, '').trim();
+    }
+
+    function formatAnalysisMessage(analysis = {}) {
+      if (analysis.display_message) return analysis.display_message;
+      const readiness = Math.round(Number(analysis.readiness_percent ?? analysis.ready_rate ?? 0));
+      const missingCount = Array.isArray(analysis.missing_documents) ? analysis.missing_documents.length : 0;
+      const groupId = analysis.group_id || currentGroupId || currentDriveGroup || '-';
+      const koMissing = missingCount
+        ? `${missingCount}개의 필수 여권 또는 텍스트 항목을 확인해야 합니다.`
+        : '필수 업로드 누락은 없습니다.';
+      const viMissing = missingCount
+        ? `Cần kiểm tra ${missingCount} mục hộ chiếu hoặc thông tin chữ bắt buộc.`
+        : 'Không thiếu hồ sơ tải lên bắt buộc.';
+      return [
+        '한국어',
+        `그룹: ${groupId}`,
+        `준비도: ${readiness}%`,
+        koMissing,
+        '사진은 여권에서 추출하고, 항공/숙박/일정표는 생성 또는 운영자료로 처리합니다.',
+        '',
+        'Tiếng Việt',
+        `Nhóm: ${groupId}`,
+        `Mức sẵn sàng: ${readiness}%`,
+        viMissing,
+        'Ảnh được trích xuất từ hộ chiếu. Vé máy bay, khách sạn và lịch trình là tài liệu tạo sau hoặc tài liệu vận hành.'
+      ].join('\n');
     }
 
     async function sendMessage(button) {
@@ -3050,7 +3099,7 @@
         toast(t('analysisDone'));
         const synthetic = [{
           role: 'assistant',
-          message: JSON.stringify(currentGroupAnalysis, null, 2),
+          message: formatAnalysisMessage(currentGroupAnalysis),
           created_at: new Date().toISOString()
         }];
         renderChatMessages(synthetic);
