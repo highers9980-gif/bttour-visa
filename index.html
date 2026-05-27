@@ -1369,6 +1369,8 @@
                   <span class="upload-standard-chip" data-i18n="c32RequiredUpload">Required upload: passport scan</span>
                   <span class="upload-standard-chip" data-i18n="c32ExtractedItems">Extract: photo and text from passport</span>
                   <span class="upload-standard-chip" data-i18n="c32GeneratedItems">Generated: flight, hotel, itinerary</span>
+                  <span class="upload-standard-chip" data-i18n="c32SupportingItems">Support: financial, insurance, ID, family, employment</span>
+                  <span class="upload-standard-chip" data-i18n="c32QualityReview">Review: photo quality, stamp, signature, forgery risk</span>
                   <span class="upload-standard-chip" data-i18n="c32AutoSort">Mixed files are auto-sorted by AI rules</span>
                 </div>
               </div>
@@ -1608,12 +1610,16 @@
         flight: 'Chuyến bay',
         itinerary: 'Lịch trình',
         financial: 'Tài chính',
+        insurance: 'Bảo hiểm',
         group: 'Nhóm',
         phone: 'Điện thoại',
         nationality: 'Quốc tịch',
         period: 'Thời gian',
         documents: 'Tài liệu',
         progress: 'Tiến độ',
+        supportingDocs: 'Hồ sơ bổ trợ',
+        photoQuality: 'Chất lượng ảnh',
+        documentDefects: 'Lỗi hồ sơ',
         copied: 'Đã cập nhật',
         promptGroup: 'Nhập Group ID',
         actionNeedsApi: 'Chức năng này cần API thật trên cổng 3510.',
@@ -1646,6 +1652,8 @@
         c32RequiredUpload: 'Bắt buộc tải lên: bản scan hộ chiếu',
         c32ExtractedItems: 'Trích xuất: ảnh và dữ liệu từ hộ chiếu',
         c32GeneratedItems: 'Tạo sau: chuyến bay, khách sạn, lịch trình',
+        c32SupportingItems: 'Bổ trợ: tài chính, bảo hiểm, CCCD, gia đình, công việc',
+        c32QualityReview: 'Kiểm tra: chất lượng ảnh, dấu mộc, chữ ký, nghi ngờ giả mạo',
         c32AutoSort: 'File lộn xộn sẽ được tự động phân loại',
         syncSelectedGroup: 'Đồng bộ Drive nhóm',
         uploadGenerated: 'Tải hồ sơ đã tạo',
@@ -1750,12 +1758,16 @@
         flight: 'Flight',
         itinerary: 'Itinerary',
         financial: 'Financial',
+        insurance: 'Insurance',
         group: 'Group',
         phone: 'Phone',
         nationality: 'Nationality',
         period: 'Period',
         documents: 'Documents',
         progress: 'Progress',
+        supportingDocs: 'Supporting docs',
+        photoQuality: 'Photo quality',
+        documentDefects: 'Document defects',
         copied: 'Updated',
         promptGroup: 'Enter Group ID',
         actionNeedsApi: 'This action needs the live API on port 3510.',
@@ -1788,6 +1800,8 @@
         c32RequiredUpload: 'Required upload: passport scan',
         c32ExtractedItems: 'Extract: photo and text from passport',
         c32GeneratedItems: 'Generated later: flight, hotel, itinerary',
+        c32SupportingItems: 'Support: financial, insurance, ID, family, employment',
+        c32QualityReview: 'Review: photo quality, stamp, signature, forgery risk',
         c32AutoSort: 'Mixed files are auto-sorted',
         syncSelectedGroup: 'Mirror group Drive',
         uploadGenerated: 'Upload generated docs',
@@ -1892,12 +1906,16 @@
         flight: '항공권',
         itinerary: '일정표',
         financial: '재정서류',
+        insurance: '보험',
         group: '그룹',
         phone: '연락처',
         nationality: '국적',
         period: '기간',
         documents: '서류',
         progress: '진행률',
+        supportingDocs: '보조서류',
+        photoQuality: '사진 품질',
+        documentDefects: '서류 하자',
         copied: '업데이트 완료',
         promptGroup: 'Group ID를 입력하세요',
         actionNeedsApi: '이 기능은 3510 포트의 실제 API 연결이 필요합니다.',
@@ -1930,6 +1948,8 @@
         c32RequiredUpload: '필수 업로드: 여권 스캔',
         c32ExtractedItems: '추출: 여권에서 사진과 텍스트',
         c32GeneratedItems: '생성자료: 항공, 숙박, 일정표',
+        c32SupportingItems: '보조서류: 재정, 보험, 신분증, 가족관계, 재직',
+        c32QualityReview: '검수: 사진 품질, 직인, 서명, 위변조 의심',
         c32AutoSort: '뒤섞인 파일은 자동분류',
         syncSelectedGroup: 'Drive 미러링',
         uploadGenerated: '생성 서류 업로드',
@@ -1988,7 +2008,8 @@
       ['hotel', 'hotel', '🏨'],
       ['flight', 'flight', '✈️'],
       ['itinerary', 'itinerary', '🗓️'],
-      ['financial', 'financial', '💳']
+      ['financial', 'financial', '💳'],
+      ['insurance', 'insurance', '🛡️']
     ];
 
     const LOGIN_PASSWORD = 'bt2026';
@@ -2986,7 +3007,10 @@
         [t('applicants'), groupValidation.total_applicants ?? '-'],
         [t('completed'), groupValidation.ready_count ?? '-'],
         [t('progress'), `${groupValidation.ready_rate ?? 0}%`],
-        [t('statusFilter'), groupValidation.group_status || '-']
+        [t('statusFilter'), groupValidation.group_status || '-'],
+        [t('supportingDocs'), formatSupportingSummary(groupValidation.supporting_summary)],
+        [t('photoQuality'), formatPhotoQualitySummary(groupValidation.photo_quality_summary)],
+        [t('documentDefects'), formatDefectSummary(groupValidation.defect_summary)]
       ];
       html = rows.map(([label, value]) => `
         <div class="detail-item">
@@ -2995,6 +3019,36 @@
         </div>
       `).join('');
       targets.forEach((target) => target.innerHTML = html);
+    }
+
+    function formatSupportingSummary(summary = {}) {
+      const parts = [
+        `${t('financial')} ${summary.financial_count || 0}`,
+        `${t('insurance')} ${summary.insurance_count || 0}`,
+        `${t('idCard')} ${summary.identity_count || 0}`
+      ];
+      return parts.join(' · ');
+    }
+
+    function formatPhotoQualitySummary(summary = {}) {
+      const correction = summary.needs_correction || 0;
+      const resubmit = summary.needs_resubmit || 0;
+      const good = summary.good || 0;
+      return currentLanguage === 'vi'
+        ? `Dùng được ${good} · Cần chỉnh ${correction} · Gửi lại ${resubmit}`
+        : currentLanguage === 'en'
+          ? `Good ${good} · Correct ${correction} · Resubmit ${resubmit}`
+          : `사용 가능 ${good} · 보정 ${correction} · 재요청 ${resubmit}`;
+    }
+
+    function formatDefectSummary(summary = {}) {
+      const defect = summary.defect_applicant_count || 0;
+      const fraud = summary.fraud_suspected_count || 0;
+      return currentLanguage === 'vi'
+        ? `Lỗi ${defect} · Nghi giả ${fraud}`
+        : currentLanguage === 'en'
+          ? `Defects ${defect} · Suspicion ${fraud}`
+          : `하자 ${defect} · 위변조 의심 ${fraud}`;
     }
 
     function renderPackagePanel() {

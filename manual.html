@@ -546,12 +546,12 @@
           <div class="card">
             <span class="status generated">Tạo hoặc trích xuất</span>
             <h3>Ảnh, lịch trình, khách sạn, vé máy bay</h3>
-            <p>Ảnh có thể trích từ hộ chiếu. Vé máy bay, khách sạn và lịch trình có thể nhập hoặc tạo sau theo nhóm.</p>
+            <p>Ảnh có thể trích từ hộ chiếu, sau đó phải kiểm tra độ rõ, độ sáng, vùng mặt, cắt mép và tình trạng cần chỉnh hoặc gửi lại. Vé máy bay, khách sạn và lịch trình có thể nhập hoặc tạo sau theo nhóm.</p>
           </div>
           <div class="card">
             <span class="status optional">Vận hành</span>
-            <h3>Danh sách đoàn, ghi chú, file bổ sung</h3>
-            <p>Các file này giúp quản lý nhóm nhưng không được tính là thiếu hồ sơ bắt buộc của từng khách.</p>
+            <h3>Danh sách đoàn, tài chính, bảo hiểm, file bổ sung</h3>
+            <p>Các file này giúp quản lý nhóm hoặc xử lý trường hợp có điều kiện. Khi có file, cần kiểm tra dấu mộc, chữ ký, ngày hiệu lực, tên, số hộ chiếu và nghi ngờ giả mạo.</p>
           </div>
         </div>
 
@@ -582,6 +582,18 @@
               <td>hotel_2026-06-15.xlsx</td>
               <td>Phân loại theo nhóm ngày nhập cảnh</td>
               <td>Không tính là thiếu hồ sơ cá nhân.</td>
+            </tr>
+            <tr>
+              <td>Tài chính</td>
+              <td>bank_statement_NguyenVanA.pdf</td>
+              <td>Phân tích số dư, ngày sao kê, chủ tài khoản, dấu mộc và nghi ngờ giả mạo</td>
+              <td>Hồ sơ bổ trợ hoặc có điều kiện.</td>
+            </tr>
+            <tr>
+              <td>Bảo hiểm</td>
+              <td>insurance_2026-06-15_group.pdf</td>
+              <td>Phân tích số hợp đồng, thời hạn, số tiền bảo hiểm, tên người được bảo hiểm</td>
+              <td>Kiểm tra hiệu lực theo ngày đi.</td>
             </tr>
             <tr>
               <td>Lịch trình</td>
@@ -662,6 +674,7 @@
           <li>Bấm Gemini analysis để kiểm tra tình trạng nhóm.</li>
           <li>Hỏi trực tiếp trong ô chat nếu cần biết thiếu gì hoặc bước tiếp theo.</li>
           <li>Khi website đang ở Tiếng Việt, câu trả lời phân tích, chat và nội dung file tạo ra dùng Tiếng Việt.</li>
+          <li>Gemini hỗ trợ kiểm tra lỗi hồ sơ như thiếu dấu mộc, thiếu chữ ký, ngày hết hạn, thông tin không khớp, ảnh mờ và nghi ngờ giả mạo.</li>
           <li>Không dùng Gemini để thay thế kiểm tra vận hành cuối cùng. Nhân viên vẫn cần xem lại file trước khi gửi.</li>
         </ul>
         <div class="danger callout">
@@ -831,12 +844,12 @@
           <div class="card">
             <span class="status generated">생성 또는 추출</span>
             <h3>사진, 일정표, 숙박, 항공</h3>
-            <p>사진은 여권에서 추출할 수 있습니다. 항공, 숙박, 일정표는 그룹 운영 중 입력하거나 최종 단계에서 만들 수 있습니다.</p>
+            <p>사진은 여권에서 추출할 수 있고, 추출 후 선명도, 밝기, 얼굴 영역, 잘림 여부를 확인해 보정 또는 재요청 상태를 나눕니다. 항공, 숙박, 일정표는 그룹 운영 중 입력하거나 최종 단계에서 만들 수 있습니다.</p>
           </div>
           <div class="card">
             <span class="status optional">운영자료</span>
-            <h3>명단, 메모, 보조 파일</h3>
-            <p>이 파일들은 그룹 관리에는 중요하지만, 개인별 필수 누락 서류로 계산하지 않습니다.</p>
+            <h3>명단, 재정, 보험, 보조 파일</h3>
+            <p>이 파일들은 그룹 관리 또는 조건부 검토에 사용합니다. 파일이 있으면 직인, 서명, 유효기간, 이름, 여권번호, 위변조 의심 여부를 확인합니다.</p>
           </div>
         </div>
 
@@ -867,6 +880,18 @@
               <td>hotel_2026-06-15.xlsx</td>
               <td>입국일별 그룹 자료로 분류</td>
               <td>개인 필수서류 누락으로 보지 않습니다.</td>
+            </tr>
+            <tr>
+              <td>재정서류</td>
+              <td>bank_statement_NguyenVanA.pdf</td>
+              <td>잔고, 발급일, 예금주, 직인, 위변조 의심 분석</td>
+              <td>보조 또는 조건부 서류입니다.</td>
+            </tr>
+            <tr>
+              <td>보험</td>
+              <td>insurance_2026-06-15_group.pdf</td>
+              <td>보험사, 증권번호, 보장기간, 보장금액, 피보험자 분석</td>
+              <td>여행 기간과 유효기간을 확인합니다.</td>
             </tr>
             <tr>
               <td>일정표</td>
@@ -947,6 +972,7 @@
           <li>Gemini analysis 버튼을 눌러 그룹 상태를 요약합니다.</li>
           <li>채팅창에서 누락 항목, 다음 작업, 진행률을 질문할 수 있습니다.</li>
           <li>사이트 언어가 한국어이면 분석, 채팅, 생성파일 내용이 한국어로 나옵니다.</li>
+          <li>Gemini는 직인 누락, 서명 누락, 만료일, 정보 불일치, 사진 흐림, 위변조 의심 같은 서류 하자를 검토합니다.</li>
           <li>Gemini는 운영 보조 도구입니다. 제출 전에는 담당자가 최종 파일을 직접 확인해야 합니다.</li>
         </ul>
         <div class="danger callout">
