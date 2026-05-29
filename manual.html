@@ -524,8 +524,10 @@
         <h2>Mục lục vận hành</h2>
         <p>Tài liệu này dành cho nhân viên BT TOUR xử lý hồ sơ e-visa đoàn C-3-2 theo nhóm ngày nhập cảnh. Quy trình ưu tiên nhóm, không ưu tiên nhập từng cá nhân riêng lẻ.</p>
         <div class="toc">
+          <a href="#vi-start">0. Trước khi bắt đầu (người mới)</a>
           <a href="#vi-standard">1. Tiêu chuẩn hồ sơ đoàn</a>
-          <a href="#vi-flow">2. Quy trình xử lý</a>
+          <a href="#vi-flow">2. Quy trình xử lý (thứ tự bấm)</a>
+          <a href="#vi-auto">Thông tin được điền tự động</a>
           <a href="#vi-drive">3. Google Drive và tải file</a>
           <a href="#vi-ai">4. Gemini phân tích và chat</a>
           <a href="#vi-package">5. Tạo gói cuối</a>
@@ -605,49 +607,119 @@
         </table>
       </section>
 
+      <section id="vi-start" class="section">
+        <h2>0. Trước khi bắt đầu (bắt buộc cho người mới)</h2>
+        <div class="callout">
+          <strong>Hệ thống này làm gì.</strong> Bạn tải file hộ chiếu và vé máy bay của đoàn khách Việt Nam lên Google Drive, hệ thống sẽ tự đọc chữ (OCR) và tự tạo file Excel, PDF xin visa Hàn Quốc. Bạn không cần gõ tay tên, số hộ chiếu hay ngày nhập cảnh.
+        </div>
+        <h3>Ba thứ cần chuẩn bị</h3>
+        <ol>
+          <li><strong>Địa chỉ truy cập</strong> — Nhập địa chỉ website BT TOUR Visa (do công ty cấp) vào trình duyệt (nên dùng Chrome).</li>
+          <li><strong>Mật khẩu đăng nhập</strong> — Mật khẩu nội bộ do người phụ trách cấp. (Vì lý do bảo mật, tài liệu này không ghi mật khẩu.)</li>
+          <li><strong>File của khách</strong> — Scan hộ chiếu (bắt buộc), vé máy bay đoàn (nên có), xác nhận khách sạn và tài chính (nếu có thì tải cùng).</li>
+        </ol>
+        <h3>Bố cục màn hình</h3>
+        <ul>
+          <li><strong>Menu dọc bên trái</strong>: Drive theo nhóm · Nhóm theo ngày nhập cảnh · Dashboard · Ứng viên · Loại tài liệu. Làm việc chủ yếu ở <strong>Drive theo nhóm</strong>.</li>
+          <li><strong>Góc phải phía trên</strong>: chọn ngôn ngữ (Tiếng Việt/한국어). Ngôn ngữ chọn ở đây quyết định <strong>ngôn ngữ của câu trả lời chat và file được tạo ra.</strong></li>
+        </ul>
+      </section>
+
       <section id="vi-flow" class="section">
-        <h2>2. Quy trình xử lý chuẩn</h2>
+        <h2>2. Quy trình xử lý (đúng theo thứ tự bấm nút)</h2>
+        <p>Chỉ cần bấm theo đúng thứ tự dưới đây. Phần in đậm là tên nút thật trên màn hình.</p>
         <div class="step">
           <div class="step-number">1</div>
           <div>
-            <p class="step-title">Đăng nhập hệ thống.</p>
-            <p class="step-text">Mở website BT TOUR Visa, nhập mật khẩu nội bộ, chọn ngôn ngữ ở góc phải phía trên.</p>
+            <p class="step-title">Đăng nhập và chọn ngôn ngữ.</p>
+            <p class="step-text">Mở website, nhập mật khẩu và bấm <strong>Đăng nhập</strong>. Sau đó ở <strong>góc phải phía trên</strong> chọn Tiếng Việt hoặc 한국어. Ngôn ngữ này quyết định ngôn ngữ file kết quả, nên hãy chọn trước.</p>
           </div>
         </div>
         <div class="step">
           <div class="step-number">2</div>
           <div>
-            <p class="step-title">Tạo nhóm theo ngày nhập cảnh.</p>
-            <p class="step-text">Ví dụ nhóm ngày 2026-06-15 nên có mã rõ ràng như JUN_2026_0615 hoặc tên đoàn cụ thể.</p>
+            <p class="step-title">Bấm [Drive theo nhóm] ở menu bên trái.</p>
+            <p class="step-text">Mọi thao tác đoàn đều làm ở màn hình này. Khách có cùng ngày nhập cảnh được gom vào một "nhóm" để quản lý.</p>
           </div>
         </div>
         <div class="step">
           <div class="step-number">3</div>
           <div>
-            <p class="step-title">Tải file hàng loạt vào nhóm.</p>
-            <p class="step-text">Chọn nhiều file một lần. Không cần sắp xếp hoàn hảo trước khi tải, vì hệ thống sẽ phân loại hộ chiếu, vé máy bay, khách sạn, lịch trình, danh sách và ghi chú.</p>
+            <p class="step-title">Tạo nhóm (thư mục) mới.</p>
+            <p class="step-text">Nhập <strong>mã nhóm</strong> (ví dụ DOAN_DUC_DMC hoặc JUN_2026_0615), <strong>ngày nhập cảnh</strong>, <strong>tên</strong> vào ô giữa màn hình rồi bấm <strong>[Tạo thư mục]</strong>. Nếu nhóm đã có, chọn ở <strong>ô chọn nhóm</strong> phía trên rồi bấm <strong>[Mở không gian làm việc]</strong>.</p>
           </div>
         </div>
         <div class="step">
           <div class="step-number">4</div>
           <div>
-            <p class="step-title">Đồng bộ Google Drive.</p>
-            <p class="step-text">Sau khi tải file, bấm đồng bộ hoặc mirror để hệ thống cập nhật trạng thái nhóm và file Drive.</p>
+            <p class="step-title">Tải tất cả file một lần.</p>
+            <p class="step-text">Bấm <strong>[Chọn file]</strong> để chọn nhiều file cùng lúc (scan hộ chiếu, vé máy bay đoàn...) rồi bấm <strong>[Tải file lên nhóm]</strong>. Tên file chưa gọn cũng không sao, hệ thống tự phân biệt hộ chiếu, vé, khách sạn, danh sách.</p>
           </div>
         </div>
         <div class="step">
           <div class="step-number">5</div>
           <div>
-            <p class="step-title">Chạy kiểm tra và Gemini phân tích.</p>
-            <p class="step-text">Gemini trả lời theo đúng ngôn ngữ website đang chọn. Nếu đang chọn Tiếng Việt, phân tích và chat chỉ dùng Tiếng Việt.</p>
+            <p class="step-title">Bấm [Đồng bộ Drive] để hệ thống đọc file.</p>
+            <p class="step-text">Khi bấm nút này, hệ thống lấy file về và <strong>tự đọc chữ (OCR)</strong> để điền thông tin khách. Nhiều file có thể mất 30 giây đến 2 phút, hãy đợi xong. Sau đó số khách và mức độ hoàn thành của nhóm sẽ tăng lên.</p>
           </div>
         </div>
         <div class="step">
           <div class="step-number">6</div>
           <div>
-            <p class="step-title">Tạo gói hồ sơ cuối.</p>
-            <p class="step-text">Gói cuối gồm Excel nhóm, Excel chi tiết từng khách, PDF tiếp nhận và báo cáo kiểm tra hồ sơ.</p>
+            <p class="step-title">Bấm [Kiểm tra hồ sơ] để xem còn thiếu gì.</p>
+            <p class="step-text">Bấm <strong>[Kiểm tra hồ sơ]</strong> trong khu công cụ nhóm, hệ thống liệt kê từng khách đã có gì và thiếu gì (ví dụ thiếu số hộ chiếu, trẻ vị thành niên cần đồng ý của người giám hộ).</p>
           </div>
+        </div>
+        <div class="step">
+          <div class="step-number">7</div>
+          <div>
+            <p class="step-title">Bấm [Phân tích Gemini] để nhận tóm tắt.</p>
+            <p class="step-text">Bấm <strong>[Phân tích Gemini]</strong> ở khu <strong>Chat Gemini</strong> bên phải để nhận bản tóm tắt tình trạng nhóm. Có thể gõ câu hỏi vào ô bên dưới và bấm <strong>[Gửi]</strong>. Chat chỉ thuộc về nhóm đang mở, không lẫn với nhóm khác.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-number">8</div>
+          <div>
+            <p class="step-title">Bấm [Hồ sơ cuối cùng] để tải bản hoàn chỉnh.</p>
+            <p class="step-text">Bấm <strong>[Hồ sơ cuối cùng]</strong> để tạo file ZIP gồm Excel nhóm + Excel chi tiết từng khách + PDF tiếp nhận + báo cáo kiểm tra. Tên file và nội dung được tạo đúng theo <strong>ngôn ngữ đã chọn ở góc phải trên</strong> (Tiếng Việt thì ra Tiếng Việt).</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="vi-auto" class="section">
+        <h2>Thông tin được điền tự động (không cần gõ tay)</h2>
+        <p>Chỉ cần tải file lên và bấm <strong>[Đồng bộ Drive]</strong>, hệ thống sẽ đọc chữ và tự điền các mục dưới đây. Nếu còn ô trống nghĩa là chưa có file chứa thông tin đó — hãy tải file tương ứng rồi bấm lại <strong>[Đồng bộ Drive]</strong>.</p>
+        <table>
+          <thead>
+            <tr>
+              <th>Khi tải file này</th>
+              <th>Sẽ tự điền các mục</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Scan hộ chiếu</strong></td>
+              <td>Tên tiếng Anh, số hộ chiếu, ngày sinh, giới tính, quốc tịch (đọc cả vùng MRZ ở cuối hộ chiếu)</td>
+            </tr>
+            <tr>
+              <td><strong>Vé máy bay đoàn / e-ticket</strong></td>
+              <td>Ngày nhập cảnh, ngày xuất cảnh, hãng bay, số chuyến đến, số chuyến về — áp dụng <strong>cho cả nhóm cùng lúc</strong></td>
+            </tr>
+            <tr>
+              <td><strong>Xác nhận khách sạn</strong></td>
+              <td>Tên khách sạn, địa chỉ khách sạn</td>
+            </tr>
+            <tr>
+              <td><strong>CCCD / tài chính / việc làm</strong></td>
+              <td>Số CCCD, thu nhập, tên công ty... (trong phạm vi nhìn thấy trên giấy tờ)</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="callout">
+          <strong>Mẹo.</strong> Vé máy bay dù đặt tên dễ nhầm như "VISA_application" cũng không sao. Hệ thống tự mở file ra xem và nhận ra "đây là vé máy bay" để điền ngày nhập cảnh.
+        </div>
+        <div class="danger callout">
+          <strong>Những mục không tự điền.</strong> Email, số điện thoại, nghề nghiệp của khách không có trên giấy tờ nào thì không tự điền được. Hãy mở khách trong menu <strong>[Ứng viên]</strong> bên trái và nhập tay.
         </div>
       </section>
 
@@ -822,8 +894,10 @@
         <h2>운영 목차</h2>
         <p>이 문서는 BT TOUR 직원이 C-3-2 단체전자사증을 입국일별 그룹 기준으로 처리하기 위한 매뉴얼입니다. 시스템 운영은 개인 단건 입력보다 그룹 흐름을 우선합니다.</p>
         <div class="toc">
+          <a href="#ko-start">0. 시작하기 전에 (처음 사용자)</a>
           <a href="#ko-standard">1. 단체전자사증 기준</a>
-          <a href="#ko-flow">2. 표준 처리 흐름</a>
+          <a href="#ko-flow">2. 표준 처리 흐름 (클릭 순서)</a>
+          <a href="#ko-auto">자동으로 채워지는 정보</a>
           <a href="#ko-drive">3. Google Drive와 일괄 업로드</a>
           <a href="#ko-ai">4. Gemini 분석과 채팅</a>
           <a href="#ko-package">5. 최종 패키지 생성</a>
@@ -903,49 +977,119 @@
         </table>
       </section>
 
+      <section id="ko-start" class="section">
+        <h2>0. 시작하기 전에 (처음 사용자 필수)</h2>
+        <div class="callout">
+          <strong>이 시스템이 하는 일.</strong> 베트남 단체 손님의 여권·항공권 파일을 Google Drive에 올리면, 시스템이 글자를 자동으로 읽어서(OCR) 한국 비자 신청용 Excel과 PDF를 자동으로 만들어 줍니다. 손으로 이름·여권번호·입국일을 타이핑하지 않아도 됩니다.
+        </div>
+        <h3>준비물 3가지</h3>
+        <ol>
+          <li><strong>접속 주소</strong> — 회사에서 받은 BT TOUR Visa 사이트 주소를 인터넷 브라우저(크롬 권장) 주소창에 입력합니다.</li>
+          <li><strong>로그인 비밀번호</strong> — 담당자에게 받은 내부 비밀번호. (보안을 위해 이 매뉴얼에는 적지 않습니다.)</li>
+          <li><strong>손님 파일</strong> — 여권 스캔(필수), 단체 항공권(있으면 좋음), 호텔 예약서·재정서류 등(있으면 함께).</li>
+        </ol>
+        <h3>화면 구성 한눈에 보기</h3>
+        <ul>
+          <li><strong>왼쪽 세로 메뉴</strong>: 그룹 Drive · 입국일별 그룹 · 대시보드 · 신청자 · 문서 타입. 작업은 주로 <strong>그룹 Drive</strong>에서 합니다.</li>
+          <li><strong>오른쪽 위</strong>: 언어 선택(한국어/Tiếng Việt). 여기서 고른 언어로 <strong>채팅 답변과 생성 파일이 만들어집니다.</strong></li>
+        </ul>
+      </section>
+
       <section id="ko-flow" class="section">
-        <h2>2. 표준 처리 흐름</h2>
+        <h2>2. 표준 처리 흐름 (버튼을 누르는 순서 그대로)</h2>
+        <p>아래 순서대로만 누르면 됩니다. 굵게 표시된 것이 실제 화면 버튼 이름입니다.</p>
         <div class="step">
           <div class="step-number">1</div>
           <div>
-            <p class="step-title">시스템에 로그인합니다.</p>
-            <p class="step-text">BT TOUR Visa 사이트를 열고 내부 비밀번호로 로그인한 뒤, 우측 상단에서 사용할 언어를 선택합니다.</p>
+            <p class="step-title">로그인하고 언어를 고릅니다.</p>
+            <p class="step-text">사이트를 열어 비밀번호를 입력하고 <strong>로그인</strong>을 누릅니다. 그다음 <strong>오른쪽 위 언어 선택</strong>에서 한국어 또는 Tiếng Việt를 고릅니다. 여기서 고른 언어로 결과 파일이 만들어지니 먼저 정하세요.</p>
           </div>
         </div>
         <div class="step">
           <div class="step-number">2</div>
           <div>
-            <p class="step-title">입국일별 그룹을 생성합니다.</p>
-            <p class="step-text">예를 들어 2026-06-15 입국 그룹은 JUN_2026_0615 또는 실제 행사명으로 구분되게 만듭니다.</p>
+            <p class="step-title">왼쪽 메뉴에서 [그룹 Drive]를 누릅니다.</p>
+            <p class="step-text">단체 작업은 모두 이 화면에서 합니다. 입국일이 같은 손님끼리 한 "그룹"으로 묶어서 관리합니다.</p>
           </div>
         </div>
         <div class="step">
           <div class="step-number">3</div>
           <div>
-            <p class="step-title">그룹에 파일을 한 번에 업로드합니다.</p>
-            <p class="step-text">여러 파일을 동시에 선택합니다. 파일이 조금 섞여 있어도 시스템이 여권, 항공, 숙박, 일정표, 명단, 메모로 자동 분류합니다.</p>
+            <p class="step-title">새 그룹(폴더)을 만듭니다.</p>
+            <p class="step-text">화면 가운데 입력 칸에 <strong>그룹 코드</strong>(예: DOAN_DUC_DMC 또는 JUN_2026_0615), <strong>입국일</strong>, <strong>이름</strong>을 넣고 <strong>[+ 폴더 생성]</strong>을 누릅니다. 이미 있는 그룹이면 위쪽 <strong>그룹 선택 드롭다운</strong>에서 고른 뒤 <strong>[작업공간 열기]</strong>를 누릅니다.</p>
           </div>
         </div>
         <div class="step">
           <div class="step-number">4</div>
           <div>
-            <p class="step-title">Google Drive를 동기화합니다.</p>
-            <p class="step-text">업로드 후 sync 또는 mirror를 눌러 그룹 파일 수, 진행률, Drive 목록을 최신으로 만듭니다.</p>
+            <p class="step-title">파일을 한꺼번에 올립니다.</p>
+            <p class="step-text"><strong>[파일 선택]</strong>을 눌러 여권 스캔, 단체 항공권 등 여러 파일을 한 번에 고른 뒤 <strong>[그룹에 파일 일괄 업로드]</strong>를 누릅니다. 파일 이름이 정리돼 있지 않아도 됩니다. 시스템이 여권·항공·호텔·명단을 알아서 구분합니다.</p>
           </div>
         </div>
         <div class="step">
           <div class="step-number">5</div>
           <div>
-            <p class="step-title">검증과 Gemini 분석을 실행합니다.</p>
-            <p class="step-text">Gemini는 현재 사이트 언어로만 응답합니다. 한국어 사이트이면 분석과 채팅도 한국어로 나옵니다.</p>
+            <p class="step-title">[Drive 미러링]을 눌러 읽어들입니다.</p>
+            <p class="step-text">이 버튼을 누르면 올린 파일을 시스템이 가져와 <strong>글자를 자동으로 읽고(OCR)</strong> 손님 정보를 채웁니다. 파일이 많으면 30초~2분 걸릴 수 있으니 끝날 때까지 기다리세요. 끝나면 그룹 카드의 신청자 수와 진행률이 올라갑니다.</p>
           </div>
         </div>
         <div class="step">
           <div class="step-number">6</div>
           <div>
-            <p class="step-title">최종 신청서류 패키지를 생성합니다.</p>
-            <p class="step-text">최종 패키지에는 그룹 Excel, 신청자별 상세 Excel, 접수서류 PDF, 검증 보고서가 포함됩니다.</p>
+            <p class="step-title">[그룹 검증]으로 부족한 서류를 확인합니다.</p>
+            <p class="step-text">그룹 작업 칸의 <strong>[그룹 검증]</strong>을 누르면 손님별로 무엇이 채워졌고 무엇이 빠졌는지(예: 여권번호 없음, 미성년자 보호자 동의 필요) 목록으로 보여줍니다.</p>
           </div>
+        </div>
+        <div class="step">
+          <div class="step-number">7</div>
+          <div>
+            <p class="step-title">[Gemini 분석]으로 상태를 요약받습니다.</p>
+            <p class="step-text">오른쪽 <strong>그룹 채팅</strong>의 <strong>[Gemini 분석]</strong>을 누르면 그룹 준비 상태를 글로 요약해 줍니다. 궁금한 점은 아래 입력창에 적고 <strong>[전송]</strong>으로 물어볼 수 있습니다. 채팅은 지금 열어 둔 그룹에만 해당하며 다른 그룹과 섞이지 않습니다.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-number">8</div>
+          <div>
+            <p class="step-title">[최종 신청서류]로 완성본을 내려받습니다.</p>
+            <p class="step-text"><strong>[최종 신청서류]</strong>를 누르면 그룹 Excel + 손님별 상세 Excel + 접수서류 PDF + 검증 보고서가 들어간 ZIP 파일이 만들어집니다. <strong>오른쪽 위에서 고른 언어</strong> 그대로(한국어면 한국어, 베트남어면 베트남어) 파일 이름과 내용이 만들어집니다.</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="ko-auto" class="section">
+        <h2>자동으로 채워지는 정보 (손으로 안 쳐도 됩니다)</h2>
+        <p>파일만 올리고 <strong>[Drive 미러링]</strong>을 누르면, 시스템이 글자를 읽어 아래 항목을 자동으로 채웁니다. 빈칸이 있으면 그 정보가 담긴 파일이 없다는 뜻이니 해당 파일을 올린 뒤 다시 <strong>[Drive 미러링]</strong>을 누르면 됩니다.</p>
+        <table>
+          <thead>
+            <tr>
+              <th>이 파일을 올리면</th>
+              <th>자동으로 채워지는 항목</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>여권 스캔</strong></td>
+              <td>영문 이름, 여권번호, 생년월일, 성별, 국적 (여권 하단 기계판독영역 MRZ까지 읽음)</td>
+            </tr>
+            <tr>
+              <td><strong>단체 항공권 / 이티켓</strong></td>
+              <td>입국일, 출국일, 항공사, 입국편명, 출국편명 — <strong>그룹 손님 전원에게 한 번에</strong> 적용</td>
+            </tr>
+            <tr>
+              <td><strong>호텔 예약서</strong></td>
+              <td>숙박지 이름, 숙박지 주소</td>
+            </tr>
+            <tr>
+              <td><strong>신분증(CCCD) / 재정 / 재직 서류</strong></td>
+              <td>신분증 번호, 월소득, 회사명 등 (서류에 보이는 범위)</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="callout">
+          <strong>팁.</strong> 항공권 파일 이름이 "VISA_application" 처럼 헷갈리게 돼 있어도 괜찮습니다. 시스템이 파일을 직접 열어 보고 "이건 항공권"이라고 판단해서 입국일을 채웁니다.
+        </div>
+        <div class="danger callout">
+          <strong>자동으로 안 되는 것.</strong> 손님 이메일·전화번호·직업처럼 어떤 서류에도 없는 정보는 자동으로 채워지지 않습니다. 이런 항목은 <strong>왼쪽 메뉴 [신청자]</strong>에서 손님을 열어 직접 입력하세요.
         </div>
       </section>
 
