@@ -1185,6 +1185,19 @@
         flex-direction: column;
       }
     }
+    /* 신청자 카드: 사진 썸네일 + 여권/항공 정보 + 검증 배지 */
+    .applicant-card { display: flex; gap: 14px; align-items: flex-start; }
+    .applicant-photo { width: 60px; height: 76px; border-radius: 8px; overflow: hidden; background: #eef2f7; flex: 0 0 auto; display: grid; place-items: center; border: 1px solid #dce3ea; }
+    .applicant-photo img { width: 100%; height: 100%; object-fit: cover; }
+    .photo-fallback { font-size: 26px; font-weight: 800; color: #94a3b8; }
+    .applicant-body { flex: 1; min-width: 0; }
+    .badge-row { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+    .badge { display: inline-block; padding: 3px 9px; border-radius: 999px; font-size: 12px; font-weight: 700; }
+    .badge-ok { background: #e8f5ef; color: #16885a; }
+    .badge-warn { background: #fff4e5; color: #b7791f; }
+    .btn-sm { padding: 5px 11px; font-size: 13px; }
+    .section-sub { font-size: 15px; margin: 18px 0 10px; }
+    #workspace-applicant-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
   </style>
 </head>
 <body>
@@ -1404,12 +1417,15 @@
                     <h3 class="panel-title" data-i18n="groupActions">Group actions</h3>
                     <div class="detail-grid" id="workspace-overview-grid"></div>
                     <div class="workspace-actions">
-                      <button class="button secondary" onclick="normalizeGroupFiles(this)"><span>⇄</span><span data-i18n="normalizeFiles">Normalize files</span></button>
+                      <button class="button primary" onclick="validateGroupDocs(this)">✅ <span data-i18n="runValidation">Validate</span></button>
                       <button class="button primary" onclick="downloadFinalPackage(this)">🗃️ <span data-i18n="finalPackage">Final package</span></button>
-                      <button class="button secondary" onclick="batchExcelById(currentGroupId, this)">📊 <span data-i18n="groupExcel">Group Excel</span></button>
-                      <button class="button secondary" onclick="batchPdfById(currentGroupId, this)">📄 <span data-i18n="groupPdf">Group PDF</span></button>
-                      <button class="button ghost" onclick="uploadGeneratedById(currentGroupId, this)">📦 <span data-i18n="uploadGenerated">Upload generated docs</span></button>
+                      <button class="button ghost btn-sm" onclick="normalizeGroupFiles(this)">⇄ <span data-i18n="normalizeFiles">Normalize</span></button>
+                      <button class="button ghost btn-sm" onclick="batchExcelById(currentGroupId, this)">📊 <span data-i18n="groupExcel">Excel</span></button>
+                      <button class="button ghost btn-sm" onclick="batchPdfById(currentGroupId, this)">📄 <span data-i18n="groupPdf">PDF</span></button>
+                      <button class="button ghost btn-sm" onclick="uploadGeneratedById(currentGroupId, this)">📦 <span data-i18n="uploadGenerated">Upload</span></button>
                     </div>
+                    <h3 class="panel-title section-sub"><span data-i18n="applicants">Applicants</span> <span id="workspace-applicant-count" class="hero-text"></span></h3>
+                    <div class="applicant-grid" id="workspace-applicant-cards"></div>
                     <div class="detail-grid" id="workspace-validation-grid"></div>
                   </div>
                   <div class="group-panel">
@@ -2540,29 +2556,43 @@
       $('#recent-grid').innerHTML = allApplicants.length ? allApplicants.slice(0, 6).map(renderApplicantCard).join('') : emptyState();
     }
 
-    function renderApplicantCard(applicant) {
-      const status = applicant.status || 'pending';
-      const progress = getProgress(applicant);
+    function applicantPhotoUrl(applicant) {
+      if (!applicant.has_photo || !apiBaseUrl) return '';
+      const auth = sessionStorage.getItem('bttourVisaAuth') || '';
+      return `${apiBaseUrl}/api/applicants/${encodeURIComponent(applicant.id)}/photo${auth ? `?auth=${encodeURIComponent(auth)}` : ''}`;
+    }
+
+    function renderApplicantCard(applicant, validation) {
+      const issues = (validation && Array.isArray(validation.issues)) ? validation.issues : null;
+      const photoUrl = applicantPhotoUrl(applicant);
+      const initial = escapeHtml((getApplicantName(applicant) || '?').trim().charAt(0).toUpperCase() || '?');
+      const flightLine = applicant.entry_date
+        ? `<div>🛬 ${escapeHtml(applicant.entry_date)}${applicant.flight_number ? ' · ' + escapeHtml(applicant.flight_number) : ''}</div>`
+        : '';
+      let badges;
+      if (issues === null) {
+        badges = `<span class="status-pill status-${applicant.status || 'pending'}">${getStatusLabel(applicant.status || 'pending')}</span>`;
+      } else if (issues.length === 0) {
+        badges = `<span class="badge badge-ok">✓ ${t('ready')}</span>`;
+      } else {
+        badges = issues.map((issue) => `<span class="badge badge-warn">${escapeHtml(issue)}</span>`).join('');
+      }
       return `
         <article class="applicant-card">
-          <div class="card-top">
-            <div>
-              <div class="applicant-name">${escapeHtml(getApplicantName(applicant))}</div>
-              <div class="applicant-sub">${escapeHtml(applicant.id || '')}</div>
+          <div class="applicant-photo">
+            ${photoUrl
+              ? `<img src="${photoUrl}" alt="photo" loading="lazy" onerror="this.parentElement.innerHTML='<span class=&quot;photo-fallback&quot;>${initial}</span>'">`
+              : `<span class="photo-fallback">${initial}</span>`}
+          </div>
+          <div class="applicant-body">
+            <div class="applicant-name">${escapeHtml(getApplicantName(applicant))}</div>
+            <div class="info-list">
+              <div>🛂 ${escapeHtml(applicant.passport_number || '-')}</div>
+              <div>🎂 ${escapeHtml(applicant.birth_date || '-')}${applicant.gender ? ' · ' + escapeHtml(applicant.gender) : ''}</div>
+              ${flightLine}
             </div>
-            <span class="status-pill status-${status}">${getStatusLabel(status)}</span>
-          </div>
-          <div class="info-list">
-            <div>${t('passport')}: ${escapeHtml(applicant.passport_number || '-')}</div>
-            <div>${t('group')}: ${escapeHtml(applicant.group_id || '-')}</div>
-            <div>${t('phone')}: ${escapeHtml(applicant.phone || '-')}</div>
-          </div>
-          <div class="progress-line">
-            <div class="progress-meta"><span>${t('progress')}</span><span>${applicant.documents_count || 0}/${applicant.total_documents || 0} · ${progress}%</span></div>
-            <div class="progress-track"><div class="progress-fill" style="width:${progress}%"></div></div>
-          </div>
-          <div class="card-actions">
-            <button class="button ghost" onclick="openDetails('${escapeJs(applicant.id)}')">${t('details')}</button>
+            <div class="badge-row">${badges}</div>
+            <button class="button ghost btn-sm" onclick="openDetails('${escapeJs(applicant.id)}')">${t('details')}</button>
           </div>
         </article>
       `;
@@ -2718,6 +2748,14 @@
       if (!demoMode && apiBaseUrl) await loadDriveFilesForGroup(groupId, true);
       renderDrivePanel();
       renderWorkspacePanel();
+      if (!demoMode && apiBaseUrl && hasGroupWorkItems(groupId)) {
+        try {
+          const vr = await api(`/api/validate/group/${encodeURIComponent(groupId)}`);
+          groupValidation = vr.data || vr.validation || null;
+          renderValidationResult();
+          renderWorkspaceApplicantCards();
+        } catch (_error) { /* 검증 자동 로드 실패는 무시(수동 검증 버튼으로 가능) */ }
+      }
       await loadChatHistory(groupId);
       if (!silent) toast(t('openWorkspace'));
     }
@@ -2759,6 +2797,20 @@
         </div>
       `).join('');
       renderValidationResult();
+      renderWorkspaceApplicantCards();
+    }
+
+    // 그룹 작업공간의 신청자 카드 그리드(사진+여권/항공+검증 배지)를 웹에 표시
+    function renderWorkspaceApplicantCards() {
+      const cardsTarget = $('#workspace-applicant-cards');
+      const countTarget = $('#workspace-applicant-count');
+      if (!cardsTarget) return;
+      const validations = (groupValidation && (groupValidation.applicant_validations || (groupValidation.data && groupValidation.data.applicant_validations))) || [];
+      const vById = new Map(validations.map((v) => [v.applicant_id, v]));
+      cardsTarget.innerHTML = currentGroupApplicants.length
+        ? currentGroupApplicants.map((applicant) => renderApplicantCard(applicant, vById.get(applicant.id))).join('')
+        : `<div class="empty-state">${t('noApplicantsInGroup')}</div>`;
+      if (countTarget) countTarget.textContent = currentGroupApplicants.length ? `· ${currentGroupApplicants.length}` : '';
     }
 
     function renderSelectedDriveFiles() {
@@ -3047,6 +3099,7 @@
         groupValidation = result.data || result.validation || null;
         toast(t('validationDone'));
         renderValidationResult();
+        renderWorkspaceApplicantCards();
       } catch (error) {
         groupValidation = { error: /No applicants/i.test(error.message) ? t('noApplicantsInGroup') : error.message };
         renderValidationResult();
