@@ -1643,6 +1643,9 @@
         updateGroupFolder: 'Sửa tên',
         selectGroup: 'Chọn nhóm',
         openWorkspace: 'Mở nhóm',
+        deleteGroup: 'Xóa',
+        confirmDelete: 'Xóa nhóm này khỏi hệ thống? File trên Google Drive vẫn được giữ nguyên.',
+        groupDeleted: 'Đã xóa nhóm.',
         currentGroupWorkspace: 'Không gian nhóm đang chọn',
         workspaceHint: 'Chọn nhóm để giữ chat và công cụ nhóm ở đây.',
         groupActions: 'Thao tác nhóm',
@@ -1792,6 +1795,9 @@
         updateGroupFolder: 'Update',
         selectGroup: 'Select group',
         openWorkspace: 'Open workspace',
+        deleteGroup: 'Delete',
+        confirmDelete: 'Remove this group from the system? Files on Google Drive are kept.',
+        groupDeleted: 'Group deleted.',
         currentGroupWorkspace: 'Selected group workspace',
         workspaceHint: 'Select a group to keep its chat and tools open here.',
         groupActions: 'Group actions',
@@ -1941,6 +1947,9 @@
         updateGroupFolder: '수정',
         selectGroup: '그룹 선택',
         openWorkspace: '작업공간 열기',
+        deleteGroup: '삭제',
+        confirmDelete: '이 그룹을 시스템에서 삭제할까요? Google Drive의 파일은 그대로 유지됩니다.',
+        groupDeleted: '그룹을 삭제했습니다.',
         currentGroupWorkspace: '선택 그룹 작업공간',
         workspaceHint: '그룹을 선택하면 채팅과 처리 도구가 여기에 계속 열립니다.',
         groupActions: '그룹 작업',
@@ -2635,9 +2644,24 @@
           <div class="card-actions">
             <button class="button primary" onclick="activateGroupWorkspace('${escapeJs(id)}')">${t('openWorkspace')}</button>
             ${group.web_view_link || group.drive_link ? `<a class="button ghost" href="${escapeHtml(group.web_view_link || group.drive_link)}" target="_blank" rel="noopener">${t('openDrive')}</a>` : ''}
+            <button class="button ghost" style="color:#c0392b;border-color:#f0c4bd" onclick="deleteGroup('${escapeJs(id)}','${escapeJs(name)}')">${t('deleteGroup')}</button>
           </div>
         </article>
       `;
+    }
+
+    async function deleteGroup(groupId, name) {
+      if (!groupId) return;
+      if (!confirm(`${t('confirmDelete')}\n\n${name || ''} (${groupId})`)) return;
+      try {
+        await api(`/api/drive/groups/${encodeURIComponent(groupId)}`, { method: 'DELETE' });
+        toast(t('groupDeleted'));
+        if (currentDriveGroup === groupId) currentDriveGroup = null;
+        if (typeof currentGroupId !== 'undefined' && currentGroupId === groupId) currentGroupId = null;
+        await refreshAll();
+      } catch (error) {
+        toast(error.message);
+      }
     }
 
     async function openSelectedGroupDetail(button) {
