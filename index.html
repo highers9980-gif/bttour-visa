@@ -1697,6 +1697,7 @@
         chatPlaceholder: 'Hỏi Gemini về nhóm này',
         send: 'Gửi',
         noChat: 'Chưa có hội thoại trong nhóm này.',
+        noApplicantsInGroup: 'Nhóm này chưa có ứng viên đã đăng ký. Hãy chọn nhóm có ứng viên hoặc đăng ký ứng viên trước.',
         applicantSaved: 'Ứng viên đã lưu.',
         applicantDeleted: 'Ứng viên đã xóa.',
         documentUploaded: 'Tài liệu đã tải lên và OCR đã chạy.',
@@ -1845,6 +1846,7 @@
         chatPlaceholder: 'Ask Gemini about this group',
         send: 'Send',
         noChat: 'No chat history for this group yet.',
+        noApplicantsInGroup: 'This group has no registered applicants. Select a group with applicants or register applicants first.',
         applicantSaved: 'Applicant saved.',
         applicantDeleted: 'Applicant deleted.',
         documentUploaded: 'Document uploaded and OCR completed.',
@@ -1993,6 +1995,7 @@
         chatPlaceholder: '이 그룹에 대해 Gemini에게 질문',
         send: '전송',
         noChat: '이 그룹의 대화 기록이 아직 없습니다.',
+        noApplicantsInGroup: '이 그룹에는 등록된 신청자가 없습니다. 신청자가 있는 그룹을 선택하거나 신청자를 먼저 등록하세요.',
         applicantSaved: '신청자를 저장했습니다.',
         applicantDeleted: '신청자를 삭제했습니다.',
         documentUploaded: '서류 업로드와 OCR 저장이 완료되었습니다.',
@@ -2285,7 +2288,7 @@
 
     function buildEntryGroups() {
       const map = new Map();
-      const merged = mergeGroupSources();
+      const merged = getActionableGroups();
       merged.forEach((group) => {
         const id = group.group_id || group.id;
         map.set(id, {
@@ -2441,7 +2444,7 @@
 
       const driveSelect = $('#drive-group-filter');
       if (!driveSelect) return;
-      const merged = mergeGroupSources();
+      const merged = getActionableGroups();
       const drivePrevious = currentDriveGroup || driveSelect.value || '';
       driveSelect.innerHTML = `<option value="">${t('selectGroup')}</option>` + merged.map((group) => {
         const id = group.group_id || group.id;
@@ -2471,6 +2474,40 @@
         map.set(id, { ...(map.get(id) || {}), ...group, group_id: id });
       });
       return Array.from(map.values());
+    }
+
+    function getGroupId(group) {
+      return group?.group_id || group?.id || '';
+    }
+
+    function getDriveFileCount(group) {
+      return Number(group?.mirrored_file_count ?? group?.drive_file_count ?? group?.file_count ?? 0);
+    }
+
+    function getRegisteredApplicantCount(groupId) {
+      if (!groupId) return 0;
+      return allApplicants.filter((applicant) => (applicant.group_id || 'UNGROUPED') === groupId).length;
+    }
+
+    function isContainerOnlyGroup(group, source = mergeGroupSources()) {
+      const folderId = group?.drive_folder_id;
+      if (!folderId) return false;
+      const groupId = getGroupId(group);
+      const hasChildGroup = source.some((item) => getGroupId(item) !== groupId && item.parent_folder_id === folderId);
+      return hasChildGroup && getDriveFileCount(group) === 0 && getRegisteredApplicantCount(groupId) === 0;
+    }
+
+    function getActionableGroups() {
+      const source = mergeGroupSources();
+      return source.filter((group) => !isContainerOnlyGroup(group, source));
+    }
+
+    function hasGroupWorkItems(groupId) {
+      if (!groupId) return false;
+      const group = mergeGroupSources().find((item) => getGroupId(item) === groupId);
+      return getRegisteredApplicantCount(groupId) > 0 ||
+        Number(group?.applicant_count || 0) > 0 ||
+        getDriveFileCount(group) > 0;
     }
 
     function getFilteredApplicants() {
@@ -2560,7 +2597,7 @@
       renderSelectedDriveFiles();
       const grid = $('#drive-groups-grid');
       if (!grid) return;
-      const source = mergeGroupSources();
+      const source = getActionableGroups();
       if (!source.length) {
         grid.innerHTML = `<div class="empty-state">${t('noGroups')}</div>`;
         return;
@@ -2573,8 +2610,8 @@
       const id = group.group_id || group.id;
       const name = group.name || group.name_vi || id;
       const progress = Number(group.progress_percent || 0);
-      const fileCount = Number(group.mirrored_file_count ?? group.drive_file_count ?? group.file_count ?? 0);
-      const applicantCount = Number(group.applicant_count ?? group.drive_applicant_count ?? 0);
+      const fileCount = getDriveFileCount(group);
+      const applicantCount = Number(group.applicant_count || group.drive_applicant_count || 0);
       const selected = currentDriveGroup === id ? 'selected' : '';
       return `
         <article class="group-card ${selected}">
@@ -2867,6 +2904,7 @@
 
     async function generateFinalPackageById(groupId, button) {
       if (demoMode || !apiBaseUrl) return toast(t('actionNeedsApi'));
+      if (!hasGroupWorkItems(groupId)) return toast(t('noApplicantsInGroup'));
       setButtonLoading(button, true);
       try {
         const result = await api(`/api/generate/final-package/${encodeURIComponent(groupId)}`, {
@@ -2879,7 +2917,7 @@
         toast(t('finalPackageDone'));
         await refreshAll();
       } catch (error) {
-        toast(error.message);
+        toast(/No applicants/i.test(error.message) ? t('noApplicantsInGroup') : error.message);
       } finally {
         setButtonLoading(button, false);
       }
@@ -2976,6 +3014,7 @@
     async function validateGroupDocs(button) {
       if (!currentGroupId) return toast(t('promptGroup'));
       if (demoMode || !apiBaseUrl) return toast(t('actionNeedsApi'));
+      if (!hasGroupWorkItems(currentGroupId)) return toast(t('noApplicantsInGroup'));
       setButtonLoading(button, true);
       try {
         const result = await api(`/api/validate/group/${encodeURIComponent(currentGroupId)}`);
@@ -2983,9 +3022,9 @@
         toast(t('validationDone'));
         renderValidationResult();
       } catch (error) {
-        groupValidation = { error: error.message };
+        groupValidation = { error: /No applicants/i.test(error.message) ? t('noApplicantsInGroup') : error.message };
         renderValidationResult();
-        toast(error.message);
+        toast(groupValidation.error);
       } finally {
         setButtonLoading(button, false);
       }
@@ -3407,6 +3446,7 @@
 
     async function batchPdfById(groupId, button) {
       if (demoMode || !apiBaseUrl) return toast(t('actionNeedsApi'));
+      if (!hasGroupWorkItems(groupId)) return toast(t('noApplicantsInGroup'));
       setButtonLoading(button, true);
       try {
         await api(`/api/batch/pdf/${encodeURIComponent(groupId)}`, {
@@ -3416,7 +3456,7 @@
         });
         toast(t('batchPdfDone'));
       } catch (error) {
-        toast(error.message);
+        toast(/No applicants/i.test(error.message) ? t('noApplicantsInGroup') : error.message);
       } finally {
         setButtonLoading(button, false);
       }
@@ -3430,6 +3470,7 @@
 
     async function batchExcelById(groupId, button) {
       if (demoMode || !apiBaseUrl) return toast(t('actionNeedsApi'));
+      if (!hasGroupWorkItems(groupId)) return toast(t('noApplicantsInGroup'));
       setButtonLoading(button, true);
       try {
         const result = await api(`/api/batch/excel/${encodeURIComponent(groupId)}`, {
@@ -3440,7 +3481,7 @@
         download(`${apiBaseUrl}${result.excel_path}`, result.download_name || localizedDownloadName('excel', groupId));
         toast(t('batchExcelDone'));
       } catch (error) {
-        toast(error.message);
+        toast(/No applicants/i.test(error.message) ? t('noApplicantsInGroup') : error.message);
       } finally {
         setButtonLoading(button, false);
       }
@@ -3451,7 +3492,7 @@
       const selected = $('#group-filter')?.value;
       if (selected && selected !== 'all') return selected;
       if (groups.length === 1) return groups[0].id;
-      const merged = mergeGroupSources();
+      const merged = getActionableGroups();
       if (merged.length === 1) return merged[0].group_id || merged[0].id;
       return window.prompt(t('promptGroup'), merged[0]?.group_id || groups[0]?.id || '');
     }
