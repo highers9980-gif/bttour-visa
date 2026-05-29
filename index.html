@@ -2103,6 +2103,7 @@
         return;
       }
       sessionStorage.setItem('bttourVisaLoggedIn', '1');
+      sessionStorage.setItem('bttourVisaAuth', input.value || '');
       error.textContent = '';
       applyAuthState();
       switchView('drive');
@@ -2215,6 +2216,7 @@
     async function api(endpoint, options = {}) {
       if (!apiBaseUrl) throw new Error('API unavailable');
       const { timeoutMs = 10000, ...fetchOptions } = options;
+      fetchOptions.headers = { ...(fetchOptions.headers || {}), 'x-bttour-auth': sessionStorage.getItem('bttourVisaAuth') || '' };
       const response = await fetchWithTimeout(`${apiBaseUrl}${endpoint}`, fetchOptions, timeoutMs);
       const json = await response.json();
       if (!response.ok || !json.success) throw new Error(json.error || `HTTP ${response.status}`);
@@ -2223,7 +2225,7 @@
 
     async function apiForm(endpoint, formData, timeoutMs = LONG_TASK_TIMEOUT_MS) {
       if (!apiBaseUrl) throw new Error('API unavailable');
-      const response = await fetchWithTimeout(`${apiBaseUrl}${endpoint}`, { method: 'POST', body: formData }, timeoutMs);
+      const response = await fetchWithTimeout(`${apiBaseUrl}${endpoint}`, { method: 'POST', body: formData, headers: { 'x-bttour-auth': sessionStorage.getItem('bttourVisaAuth') || '' } }, timeoutMs);
       const json = await response.json();
       if (!response.ok || !json.success) throw new Error(json.error || `HTTP ${response.status}`);
       return json;
@@ -3522,8 +3524,10 @@
     }
 
     function download(url, filename) {
+      const auth = sessionStorage.getItem('bttourVisaAuth') || '';
+      const finalUrl = auth ? `${url}${url.includes('?') ? '&' : '?'}auth=${encodeURIComponent(auth)}` : url;
       const link = document.createElement('a');
-      link.href = url;
+      link.href = finalUrl;
       link.download = filename;
       document.body.appendChild(link);
       link.click();
