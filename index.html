@@ -1547,6 +1547,7 @@
       'http://127.0.0.1:3510',
       'http://100.65.187.12:3510'
     ].filter(Boolean);
+    const LONG_TASK_TIMEOUT_MS = 60 * 60 * 1000;
 
     const demoApplicants = [
       { id: 'demo_001', name_vi: 'Nguyen Van An', name_en: 'NGUYEN VAN AN', passport_number: 'P0123456', nationality: 'Vietnam', phone: '+84 90 000 0001', group_id: 'DEMO_GROUP_A', entry_date: '2026-06-01', departure_date: '2026-06-07', hotel: 'BT TOUR Seoul Hotel', gender: 'M', status: 'completed', documents_count: 7, total_documents: 7 },
@@ -2207,7 +2208,7 @@
       return json;
     }
 
-    async function apiForm(endpoint, formData, timeoutMs = 180000) {
+    async function apiForm(endpoint, formData, timeoutMs = LONG_TASK_TIMEOUT_MS) {
       if (!apiBaseUrl) throw new Error('API unavailable');
       const response = await fetchWithTimeout(`${apiBaseUrl}${endpoint}`, { method: 'POST', body: formData }, timeoutMs);
       const json = await response.json();
@@ -2871,7 +2872,7 @@
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: languageBody(),
-          timeoutMs: 180000
+          timeoutMs: LONG_TASK_TIMEOUT_MS
         });
         if (result.zip_path) download(`${apiBaseUrl}${result.zip_path}`, result.download_name || localizedDownloadName('package', groupId));
         toast(t('finalPackageDone'));
@@ -2900,7 +2901,7 @@
       try {
         const result = await api(`/api/drive/normalize/${encodeURIComponent(groupId)}`, {
           method: 'POST',
-          timeoutMs: 180000
+          timeoutMs: LONG_TASK_TIMEOUT_MS
         });
         toast(`${t('normalizeDone')} ${result.data?.renamed_count ?? 0}`);
         await refreshAll();
@@ -3181,7 +3182,7 @@
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: languageBody({ message }),
-          timeoutMs: 180000
+          timeoutMs: LONG_TASK_TIMEOUT_MS
         });
         input.value = '';
         renderChatMessages(result.messages || result.data?.history || []);
@@ -3201,16 +3202,11 @@
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: languageBody(),
-          timeoutMs: 180000
+          timeoutMs: LONG_TASK_TIMEOUT_MS
         });
         currentGroupAnalysis = result.analysis || result.data?.analysis || result.data;
         toast(t('analysisDone'));
-        const synthetic = [{
-          role: 'assistant',
-          message: formatAnalysisMessage(currentGroupAnalysis),
-          created_at: new Date().toISOString()
-        }];
-        renderChatMessages(synthetic);
+        await loadChatHistory(currentGroupId);
       } catch (error) {
         toast(error.message);
       } finally {
