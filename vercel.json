@@ -1,45 +1,14 @@
 {
-  "version": 2,
-  "builds": [
-    {
-      "src": "index.html",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "manual.html",
-      "use": "@vercel/static"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/manual.html",
-      "dest": "manual.html"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "index.html"
-    }
+  "rewrites": [
+    { "source": "/api/:path*", "destination": "https://designs-explicit-mia-pharmacology.trycloudflare.com/api/:path*" },
+    { "source": "/download/:path*", "destination": "https://designs-explicit-mia-pharmacology.trycloudflare.com/download/:path*" }
   ],
   "headers": [
     {
       "source": "/(.*)",
       "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=3600, must-revalidate"
-        },
-        {
-          "key": "X-Content-Type-Options",
-          "value": "nosniff"
-        },
-        {
-          "key": "X-Frame-Options",
-          "value": "SAMEORIGIN"
-        },
-        {
-          "key": "X-XSS-Protection",
-          "value": "1; mode=block"
-        }
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "X-Frame-Options", "value": "SAMEORIGIN" }
       ]
     }
   ]
