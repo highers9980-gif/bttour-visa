@@ -1192,6 +1192,8 @@
     .applicant-photo img.photo-rot-180 { transform: rotate(180deg); }
     .applicant-photo img.photo-rot-90 { width: 76px; height: 60px; transform: rotate(90deg); }
     .applicant-photo img.photo-rot-270 { width: 76px; height: 60px; transform: rotate(270deg); }
+    .photo-rot-btn { position: absolute; bottom: 2px; right: 2px; background: rgba(15,23,42,0.62); color: #fff; border: none; cursor: pointer; font-size: 11px; width: 18px; height: 18px; border-radius: 50%; padding: 0; line-height: 1; display: grid; place-items: center; }
+    .photo-rot-btn:hover { background: rgba(15,23,42,0.88); }
     .applicant-solutions { font-size: 12px; color: #b9541b; margin: 4px 0 6px; line-height: 1.45; }
     .applicant-solutions div { margin-top: 2px; }
     .photo-fallback { font-size: 26px; font-weight: 800; color: #94a3b8; }
@@ -1372,6 +1374,7 @@
                 <button class="button primary" onclick="createDriveGroup(this)"><span>＋</span><span data-i18n="createGroupFolder">Create folder</span></button>
                 <button class="button ghost" onclick="updateDriveGroup(this)"><span>✎</span><span data-i18n="updateGroupFolder">Update</span></button>
               </div>
+              <div style="font-size:11.5px;color:#475569;margin:2px 0 8px;padding:7px 11px;background:#f1f5f9;border-radius:6px;line-height:1.5" data-i18n-html="folderExample">📁 생성 규칙: <b>입국일_폴더명</b> · 예시: <b>2026-06-17_DOAN_DUC_DMC</b> (입국일이 자동으로 앞에 붙습니다)</div>
 
               <div class="group-upload-panel">
                 <div class="group-upload-header">
@@ -1379,10 +1382,11 @@
                   <button class="button secondary" onclick="syncSelectedDriveGroup(this)"><span>↻</span><span data-i18n="syncSelectedGroup">Sync selected group</span></button>
                 </div>
                 <div class="group-upload-row">
-                  <input class="file-input" id="drive-files" type="file" multiple>
+                  <input class="file-input" id="drive-files" type="file" multiple accept=".zip,.pdf,image/*">
                   <input class="search-input" id="drive-upload-folder" data-i18n-placeholder="uploadFolderPlaceholder" placeholder="Optional subfolder">
                   <button class="button primary" onclick="uploadDriveFiles(this)"><span>⬆</span><span data-i18n="uploadGroupFiles">Upload files to group</span></button>
                 </div>
+                <div style="font-size:11.5px;color:#475569;margin-top:6px;line-height:1.5" data-i18n="zipHint">💡 .zip 압축파일을 올리면 자동으로 풀어 여권·서류를 OCR로 분석해 신청자에 적용합니다.</div>
                 <div class="upload-standards">
                   <span class="upload-standard-chip" data-i18n="c32RequiredUpload">Required upload: passport scan</span>
                   <span class="upload-standard-chip" data-i18n="c32ExtractedItems">Extract: photo and text from passport</span>
@@ -1643,6 +1647,7 @@
         progress: 'Tiến độ',
         supportingDocs: 'Hồ sơ bổ trợ',
         requiredAction: 'Cần xử lý',
+        rotatePhoto: 'Xoay ảnh 90°',
         photoQuality: 'Chất lượng ảnh',
         documentDefects: 'Lỗi hồ sơ',
         copied: 'Đã cập nhật',
@@ -1664,6 +1669,8 @@
         groupNamePlaceholder: 'Tên nhóm',
         createGroupFolder: 'Tạo thư mục',
         folderIdLabel: 'Tên thư mục (Drive)',
+        folderExample: '📁 Quy tắc: <b>ngày nhập cảnh_tên</b> · VD: <b>2026-06-17_DOAN_DUC_DMC</b> (ngày nhập cảnh tự thêm vào đầu)',
+        zipHint: '💡 Tải file .zip lên sẽ tự động giải nén, OCR hộ chiếu·hồ sơ và áp dụng vào ứng viên.',
         entryDateLabel: 'Ngày nhập cảnh',
         displayNameLabel: 'Tên hiển thị',
         updateGroupFolder: 'Sửa tên',
@@ -1799,6 +1806,7 @@
         progress: 'Progress',
         supportingDocs: 'Supporting docs',
         requiredAction: 'Action needed',
+        rotatePhoto: 'Rotate photo 90°',
         photoQuality: 'Photo quality',
         documentDefects: 'Document defects',
         copied: 'Updated',
@@ -1820,6 +1828,8 @@
         groupNamePlaceholder: 'Group name',
         createGroupFolder: 'Create folder',
         folderIdLabel: 'Folder name (Drive)',
+        folderExample: '📁 Rule: <b>entrydate_name</b> · e.g. <b>2026-06-17_DOAN_DUC_DMC</b> (entry date is auto-prefixed)',
+        zipHint: '💡 Upload a .zip and it auto-extracts, OCRs passports/docs, and applies them to applicants.',
         entryDateLabel: 'Entry date',
         displayNameLabel: 'Display name',
         updateGroupFolder: 'Update',
@@ -1955,6 +1965,7 @@
         progress: '진행률',
         supportingDocs: '보조서류',
         requiredAction: '필요 조치',
+        rotatePhoto: '사진 90° 회전',
         photoQuality: '사진 품질',
         documentDefects: '서류 하자',
         copied: '업데이트 완료',
@@ -1976,6 +1987,8 @@
         groupNamePlaceholder: '그룹 이름',
         createGroupFolder: '폴더 생성',
         folderIdLabel: '폴더명(Drive 폴더)',
+        folderExample: '📁 생성 규칙: <b>입국일_폴더명</b> · 예시: <b>2026-06-17_DOAN_DUC_DMC</b> (입국일이 자동으로 앞에 붙습니다)',
+        zipHint: '💡 .zip 압축파일을 올리면 자동으로 풀어 여권·서류를 OCR로 분석해 신청자에 적용합니다.',
         entryDateLabel: '입국일',
         displayNameLabel: '표시 이름',
         updateGroupFolder: '수정',
@@ -2152,6 +2165,7 @@
         select.value = lang;
       });
       $$('[data-i18n]').forEach((node) => node.textContent = t(node.dataset.i18n));
+      $$('[data-i18n-html]').forEach((node) => node.innerHTML = t(node.dataset.i18nHtml));
       $$('[data-i18n-placeholder]').forEach((node) => node.placeholder = t(node.dataset.i18nPlaceholder));
       renderStatusTabs();
       renderDocumentTabs();
@@ -2589,11 +2603,13 @@
       const photoQ = (validation && validation.photo_quality) || null;
       const photoIssues = (photoQ && Array.isArray(photoQ.issues)) ? photoQ.issues : [];
       const orientation = photoQ ? String(photoQ.orientation || 'upright').toLowerCase() : 'upright';
-      // OCR이 판단한 방향(photo_orientation)대로 사진을 자동으로 똑바로 회전한다.
-      let rotDeg = 0;
-      if (orientation === 'rotate_cw_90') rotDeg = 90;
-      else if (orientation === 'rotate_cw_180' || orientation === 'rotate_180' || photoIssues.includes('upside_down')) rotDeg = 180;
-      else if (orientation === 'rotate_cw_270') rotDeg = 270;
+      // OCR이 방향을 판단하면 자동 회전하고, 운영자가 직접 돌린 값(localStorage)이 있으면 그것을 우선한다.
+      let autoDeg = 0;
+      if (orientation === 'rotate_cw_90') autoDeg = 90;
+      else if (orientation === 'rotate_cw_180' || orientation === 'rotate_180' || photoIssues.includes('upside_down')) autoDeg = 180;
+      else if (orientation === 'rotate_cw_270') autoDeg = 270;
+      const savedRot = (typeof localStorage !== 'undefined') ? localStorage.getItem('photoRot_' + applicant.id) : null;
+      const rotDeg = (savedRot !== null && savedRot !== undefined) ? ((Number(savedRot) || 0) % 360) : autoDeg;
       const rotClass = rotDeg === 90 ? 'photo-rot-90' : rotDeg === 180 ? 'photo-rot-180' : rotDeg === 270 ? 'photo-rot-270' : '';
       const photoUrl = applicantPhotoUrl(applicant);
       const initial = escapeHtml((getApplicantName(applicant) || '?').trim().charAt(0).toUpperCase() || '?');
@@ -2617,6 +2633,7 @@
             ${photoUrl
               ? `<img class="${rotClass}" src="${photoUrl}" alt="photo" loading="lazy" onerror="this.parentElement.innerHTML='<span class=&quot;photo-fallback&quot;>${initial}</span>'">`
               : `<span class="photo-fallback">${initial}</span>`}
+            ${photoUrl ? `<button class="photo-rot-btn" onclick="rotatePhoto('${escapeJs(applicant.id)}', event)" title="${t('rotatePhoto')}">↻</button>` : ''}
           </div>
           <div class="applicant-body">
             <div class="applicant-name">${escapeHtml(getApplicantName(applicant))}</div>
@@ -2848,6 +2865,14 @@
         ? currentGroupApplicants.map((applicant) => renderApplicantCard(applicant, vById.get(applicant.id))).join('')
         : `<div class="empty-state">${t('noApplicantsInGroup')}</div>`;
       if (countTarget) countTarget.textContent = currentGroupApplicants.length ? `· ${currentGroupApplicants.length}` : '';
+    }
+
+    // OCR이 사진 방향을 못 잡을 때(현재 Gemini 한계로 흔함) 운영자가 90°씩 직접 돌려 똑바로 맞춘다(localStorage 저장, 새로고침 후에도 유지).
+    function rotatePhoto(id, e) {
+      if (e) e.stopPropagation();
+      const cur = Number(localStorage.getItem('photoRot_' + id) || '0');
+      localStorage.setItem('photoRot_' + id, String((cur + 90) % 360));
+      renderWorkspaceApplicantCards();
     }
 
     function renderSelectedDriveFiles() {
