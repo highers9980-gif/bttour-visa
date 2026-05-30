@@ -2161,8 +2161,8 @@
       renderWorkspacePanel();
       updateApiPanel();
       // 언어 변경 시 채팅을 현재 언어로 다시 번역해 표시하고, 분석 결과창도 다시 렌더한다.
-      if (currentGroupId && apiBaseUrl && !demoMode) loadChatHistory(currentGroupId);
-      if (typeof currentGroupAnalysis !== 'undefined' && currentGroupAnalysis) renderAnalysis(currentGroupAnalysis);
+      if (currentGroupId && apiBaseUrl && !demoMode) { loadChatHistory(currentGroupId); loadLatestAnalysis(currentGroupId); }
+      else if (currentGroupAnalysis) renderAnalysis(currentGroupAnalysis);
     }
 
     function toggleSidebar() {
@@ -2770,14 +2770,8 @@
         } catch (_error) { /* 검증 자동 로드 실패는 무시(수동 검증 버튼으로 가능) */ }
       }
       await loadChatHistory(groupId);
-      // 최근 Gemini 분석을 분석 전용창(채팅과 분리)에 불러온다.
-      if (!demoMode && apiBaseUrl) {
-        try {
-          const a = await api(`/api/analyze/group/${encodeURIComponent(groupId)}/latest`);
-          currentGroupAnalysis = a.analysis || a.data?.analysis || null;
-        } catch (_e) { currentGroupAnalysis = null; }
-        renderAnalysis(currentGroupAnalysis);
-      }
+      // 최근 Gemini 분석을 현재 화면 언어로 분석 전용창(채팅과 분리)에 불러온다.
+      await loadLatestAnalysis(groupId);
       if (!silent) toast(t('openWorkspace'));
     }
 
@@ -3345,7 +3339,8 @@
           timeoutMs: LONG_TASK_TIMEOUT_MS
         });
         currentGroupAnalysis = result.analysis || result.data?.analysis || result.data;
-        renderAnalysis(currentGroupAnalysis);
+        // 분석 원문은 영어로 생성되므로, 화면 언어로 번역된 최신본을 다시 불러와 표시한다.
+        await loadLatestAnalysis(currentGroupId);
         toast(t('analysisDone'));
       } catch (error) {
         toast(error.message);
@@ -3361,6 +3356,17 @@
       box.innerHTML = text
         ? `<div class="analysis-content">${escapeHtml(text).replace(/\n/g, '<br>')}</div>`
         : '';
+    }
+
+    // 최신 분석을 현재 화면 언어로 가져와(영어 원문은 서버가 번역) 분석 전용창에 렌더한다.
+    async function loadLatestAnalysis(groupId) {
+      const gid = groupId || currentGroupId;
+      if (demoMode || !apiBaseUrl || !gid) { renderAnalysis(currentGroupAnalysis); return; }
+      try {
+        const a = await api(`/api/analyze/group/${encodeURIComponent(gid)}/latest?language=${currentLanguage}`);
+        currentGroupAnalysis = a.analysis || a.data?.analysis || null;
+      } catch (_e) { /* 실패 시 기존 분석 유지 */ }
+      renderAnalysis(currentGroupAnalysis);
     }
 
     function formatDate(value) {
