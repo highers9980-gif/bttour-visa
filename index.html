@@ -1187,8 +1187,14 @@
     }
     /* 신청자 카드: 사진 썸네일 + 여권/항공 정보 + 검증 배지 */
     .applicant-card { display: flex; gap: 14px; align-items: flex-start; }
-    .applicant-photo { width: 60px; height: 76px; border-radius: 8px; overflow: hidden; background: #eef2f7; flex: 0 0 auto; display: grid; place-items: center; border: 1px solid #dce3ea; }
+    .applicant-photo { position: relative; width: 60px; height: 76px; border-radius: 8px; overflow: hidden; background: #eef2f7; flex: 0 0 auto; display: grid; place-items: center; border: 1px solid #dce3ea; }
     .applicant-photo img { width: 100%; height: 100%; object-fit: cover; }
+    .applicant-photo img.photo-rot-180 { transform: rotate(180deg); }
+    .applicant-photo img.photo-rot-90 { width: 76px; height: 60px; transform: rotate(90deg); }
+    .applicant-photo img.photo-rot-270 { width: 76px; height: 60px; transform: rotate(270deg); }
+    .photo-rot-badge { position: absolute; top: 2px; right: 2px; background: rgba(15,23,42,0.62); color: #fff; font-size: 10px; width: 15px; height: 15px; border-radius: 50%; display: grid; place-items: center; }
+    .applicant-solutions { font-size: 12px; color: #b9541b; margin: 4px 0 6px; line-height: 1.45; }
+    .applicant-solutions div { margin-top: 2px; }
     .photo-fallback { font-size: 26px; font-weight: 800; color: #94a3b8; }
     .applicant-body { flex: 1; min-width: 0; }
     .badge-row { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
@@ -1637,6 +1643,7 @@
         documents: 'Tài liệu',
         progress: 'Tiến độ',
         supportingDocs: 'Hồ sơ bổ trợ',
+        requiredAction: 'Cần xử lý',
         photoQuality: 'Chất lượng ảnh',
         documentDefects: 'Lỗi hồ sơ',
         copied: 'Đã cập nhật',
@@ -1792,6 +1799,7 @@
         documents: 'Documents',
         progress: 'Progress',
         supportingDocs: 'Supporting docs',
+        requiredAction: 'Action needed',
         photoQuality: 'Photo quality',
         documentDefects: 'Document defects',
         copied: 'Updated',
@@ -1947,6 +1955,7 @@
         documents: '서류',
         progress: '진행률',
         supportingDocs: '보조서류',
+        requiredAction: '필요 조치',
         photoQuality: '사진 품질',
         documentDefects: '서류 하자',
         copied: '업데이트 완료',
@@ -2577,6 +2586,16 @@
 
     function renderApplicantCard(applicant, validation) {
       const issues = (validation && Array.isArray(validation.issues)) ? validation.issues : null;
+      const solutions = (validation && Array.isArray(validation.solutions)) ? validation.solutions : [];
+      const photoQ = (validation && validation.photo_quality) || null;
+      const photoIssues = (photoQ && Array.isArray(photoQ.issues)) ? photoQ.issues : [];
+      const orientation = photoQ ? String(photoQ.orientation || 'upright').toLowerCase() : 'upright';
+      // OCR이 감지한 회전 방향으로 썸네일을 똑바로 보정한다. 방향 미상이면 issues 기반으로 추정한다.
+      let rotClass = '';
+      if (orientation === 'rotate_cw_90') rotClass = 'photo-rot-90';
+      else if (orientation === 'rotate_cw_180' || orientation === 'rotate_180' || photoIssues.includes('upside_down')) rotClass = 'photo-rot-180';
+      else if (orientation === 'rotate_cw_270') rotClass = 'photo-rot-270';
+      else if (photoIssues.includes('rotated')) rotClass = 'photo-rot-90';
       const photoUrl = applicantPhotoUrl(applicant);
       const initial = escapeHtml((getApplicantName(applicant) || '?').trim().charAt(0).toUpperCase() || '?');
       const flightLine = applicant.entry_date
@@ -2590,12 +2609,16 @@
       } else {
         badges = issues.map((issue) => `<span class="badge badge-warn">${escapeHtml(issue)}</span>`).join('');
       }
+      const solutionsHtml = solutions.length
+        ? `<div class="applicant-solutions">${solutions.map((s) => `<div>• ${escapeHtml(s)}</div>`).join('')}</div>`
+        : '';
       return `
         <article class="applicant-card">
           <div class="applicant-photo">
             ${photoUrl
-              ? `<img src="${photoUrl}" alt="photo" loading="lazy" onerror="this.parentElement.innerHTML='<span class=&quot;photo-fallback&quot;>${initial}</span>'">`
+              ? `<img class="${rotClass}" src="${photoUrl}" alt="photo" loading="lazy" onerror="this.parentElement.innerHTML='<span class=&quot;photo-fallback&quot;>${initial}</span>'">`
               : `<span class="photo-fallback">${initial}</span>`}
+            ${rotClass ? `<span class="photo-rot-badge" title="회전 보정됨">↻</span>` : ''}
           </div>
           <div class="applicant-body">
             <div class="applicant-name">${escapeHtml(getApplicantName(applicant))}</div>
@@ -2605,6 +2628,7 @@
               ${flightLine}
             </div>
             <div class="badge-row">${badges}</div>
+            ${solutionsHtml}
             <button class="button ghost btn-sm" onclick="openDetails('${escapeJs(applicant.id)}')">${t('details')}</button>
           </div>
         </article>
@@ -3143,6 +3167,7 @@
         [t('completed'), groupValidation.ready_count ?? '-'],
         [t('progress'), `${groupValidation.ready_rate ?? 0}%`],
         [t('statusFilter'), groupValidation.group_status || '-'],
+        [t('requiredAction'), formatRequiredAction(groupValidation.applicant_validations)],
         [t('supportingDocs'), formatSupportingSummary(groupValidation.supporting_summary)],
         [t('photoQuality'), formatPhotoQualitySummary(groupValidation.photo_quality_summary)],
         [t('documentDefects'), formatDefectSummary(groupValidation.defect_summary)]
@@ -3184,6 +3209,22 @@
         : currentLanguage === 'en'
           ? `Defects ${defect} · Suspicion ${fraud}`
           : `하자 ${defect} · 위변조 의심 ${fraud}`;
+    }
+
+    // 그룹의 신청자별 필요 조치를 카테고리별로 집계해 패널에 한 줄로 보여준다(미성년자 서류·사진 재요청 등).
+    function formatRequiredAction(validations) {
+      const av = Array.isArray(validations) ? validations : [];
+      const isMinor = (v) => (v.issues || []).some((i) => /미성년|minor|vị thành niên/i.test(String(i)));
+      const isPhoto = (v) => v.photo_quality && v.photo_quality.status === 'needs_resubmit';
+      const minorN = av.filter(isMinor).length;
+      const photoN = av.filter(isPhoto).length;
+      const otherN = av.filter((v) => v.has_issues && !isMinor(v) && !isPhoto(v)).length;
+      const parts = [];
+      if (minorN) parts.push(currentLanguage === 'vi' ? `${minorN} trẻ vị thành niên → giấy khai sinh·quan hệ gia đình·thư đồng ý` : currentLanguage === 'en' ? `${minorN} minors → birth/family/consent docs` : `미성년자 ${minorN}명 → 출생증명서·가족관계·부모동의서`);
+      if (photoN) parts.push(currentLanguage === 'vi' ? `${photoN} ảnh cần gửi lại` : currentLanguage === 'en' ? `${photoN} photos to resubmit` : `사진 재요청 ${photoN}명`);
+      if (otherN) parts.push(currentLanguage === 'vi' ? `${otherN} hồ sơ khác cần kiểm tra` : currentLanguage === 'en' ? `${otherN} other to check` : `기타 확인 ${otherN}명`);
+      if (!parts.length) return currentLanguage === 'vi' ? 'Tất cả đạt' : currentLanguage === 'en' ? 'All ready' : '모두 준비됨';
+      return parts.join(' · ');
     }
 
     function renderPackagePanel() {
