@@ -1192,8 +1192,6 @@
     .applicant-photo img.photo-rot-180 { transform: rotate(180deg); }
     .applicant-photo img.photo-rot-90 { width: 76px; height: 60px; transform: rotate(90deg); }
     .applicant-photo img.photo-rot-270 { width: 76px; height: 60px; transform: rotate(270deg); }
-    .photo-rot-btn { position: absolute; bottom: 2px; right: 2px; background: rgba(15,23,42,0.62); color: #fff; border: none; cursor: pointer; font-size: 11px; width: 18px; height: 18px; border-radius: 50%; padding: 0; line-height: 1; display: grid; place-items: center; }
-    .photo-rot-btn:hover { background: rgba(15,23,42,0.88); }
     .applicant-solutions { font-size: 12px; color: #b9541b; margin: 4px 0 6px; line-height: 1.45; }
     .applicant-solutions div { margin-top: 2px; }
     .photo-fallback { font-size: 26px; font-weight: 800; color: #94a3b8; }
@@ -1645,7 +1643,6 @@
         progress: 'Tiến độ',
         supportingDocs: 'Hồ sơ bổ trợ',
         requiredAction: 'Cần xử lý',
-        rotatePhoto: 'Xoay ảnh 90°',
         photoQuality: 'Chất lượng ảnh',
         documentDefects: 'Lỗi hồ sơ',
         copied: 'Đã cập nhật',
@@ -1802,7 +1799,6 @@
         progress: 'Progress',
         supportingDocs: 'Supporting docs',
         requiredAction: 'Action needed',
-        rotatePhoto: 'Rotate photo 90°',
         photoQuality: 'Photo quality',
         documentDefects: 'Document defects',
         copied: 'Updated',
@@ -1959,7 +1955,6 @@
         progress: '진행률',
         supportingDocs: '보조서류',
         requiredAction: '필요 조치',
-        rotatePhoto: '사진 90° 회전',
         photoQuality: '사진 품질',
         documentDefects: '서류 하자',
         copied: '업데이트 완료',
@@ -2594,14 +2589,11 @@
       const photoQ = (validation && validation.photo_quality) || null;
       const photoIssues = (photoQ && Array.isArray(photoQ.issues)) ? photoQ.issues : [];
       const orientation = photoQ ? String(photoQ.orientation || 'upright').toLowerCase() : 'upright';
-      // OCR 자동 추정(방향 또는 rotated 플래그) 위에, 운영자가 수동으로 돌린 값(localStorage)을 우선 적용한다.
-      let autoDeg = 0;
-      if (orientation === 'rotate_cw_90') autoDeg = 90;
-      else if (orientation === 'rotate_cw_180' || orientation === 'rotate_180' || photoIssues.includes('upside_down')) autoDeg = 180;
-      else if (orientation === 'rotate_cw_270') autoDeg = 270;
-      else if (photoIssues.includes('rotated')) autoDeg = 90;
-      const savedRot = (typeof localStorage !== 'undefined') ? localStorage.getItem('photoRot_' + applicant.id) : null;
-      const rotDeg = (savedRot !== null && savedRot !== undefined) ? ((Number(savedRot) || 0) % 360) : autoDeg;
+      // OCR이 판단한 방향(photo_orientation)대로 사진을 자동으로 똑바로 회전한다.
+      let rotDeg = 0;
+      if (orientation === 'rotate_cw_90') rotDeg = 90;
+      else if (orientation === 'rotate_cw_180' || orientation === 'rotate_180' || photoIssues.includes('upside_down')) rotDeg = 180;
+      else if (orientation === 'rotate_cw_270') rotDeg = 270;
       const rotClass = rotDeg === 90 ? 'photo-rot-90' : rotDeg === 180 ? 'photo-rot-180' : rotDeg === 270 ? 'photo-rot-270' : '';
       const photoUrl = applicantPhotoUrl(applicant);
       const initial = escapeHtml((getApplicantName(applicant) || '?').trim().charAt(0).toUpperCase() || '?');
@@ -2625,7 +2617,6 @@
             ${photoUrl
               ? `<img class="${rotClass}" src="${photoUrl}" alt="photo" loading="lazy" onerror="this.parentElement.innerHTML='<span class=&quot;photo-fallback&quot;>${initial}</span>'">`
               : `<span class="photo-fallback">${initial}</span>`}
-            ${photoUrl ? `<button class="photo-rot-btn" onclick="rotatePhoto('${escapeJs(applicant.id)}', event)" title="${t('rotatePhoto')}">↻</button>` : ''}
           </div>
           <div class="applicant-body">
             <div class="applicant-name">${escapeHtml(getApplicantName(applicant))}</div>
@@ -2857,14 +2848,6 @@
         ? currentGroupApplicants.map((applicant) => renderApplicantCard(applicant, vById.get(applicant.id))).join('')
         : `<div class="empty-state">${t('noApplicantsInGroup')}</div>`;
       if (countTarget) countTarget.textContent = currentGroupApplicants.length ? `· ${currentGroupApplicants.length}` : '';
-    }
-
-    // 운영자가 신청자 사진을 90°씩 수동 회전한다(localStorage 저장). OCR 자동 보정이 부정확하거나 회전을 놓쳤을 때 직접 똑바로 맞춘다.
-    function rotatePhoto(id, e) {
-      if (e) e.stopPropagation();
-      const cur = Number(localStorage.getItem('photoRot_' + id) || '0');
-      localStorage.setItem('photoRot_' + id, String((cur + 90) % 360));
-      renderWorkspaceApplicantCards();
     }
 
     function renderSelectedDriveFiles() {
@@ -3326,6 +3309,8 @@
     }
 
     function formatAnalysisMessage(analysis = {}) {
+      // display_text가 화면 언어로 번역된 최신 분석 본문이다. 무조건 이걸 최우선으로 보여준다(옛 준비도% fallback은 데이터 없을 때만).
+      if (typeof analysis.display_text === 'string' && analysis.display_text.trim()) return analysis.display_text.trim();
       if (analysis.display_message) return extractLanguageSection(analysis.display_message);
       const readiness = Math.round(Number(analysis.readiness_percent ?? analysis.ready_rate ?? 0));
       const missingCount = Array.isArray(analysis.missing_documents) ? analysis.missing_documents.length : 0;
