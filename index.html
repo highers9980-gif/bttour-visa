@@ -3345,7 +3345,15 @@
 
     function formatDate(value) {
       if (!value) return '-';
-      return String(value).replace('T', ' ').replace(/\.\d+Z?$/, '');
+      const raw = String(value).trim();
+      // 날짜만(YYYY-MM-DD)이면 그대로. 시간 포함이면 DB가 UTC(SQLite CURRENT_TIMESTAMP)이므로 언어별 현지 시간대로 변환한다.
+      if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
+      const iso = raw.replace(' ', 'T');
+      const d = new Date(/[zZ]|[+\-]\d{2}:?\d{2}$/.test(iso) ? iso : iso + 'Z');
+      if (isNaN(d.getTime())) return raw.replace('T', ' ').replace(/\.\d+Z?$/, '');
+      const tz = currentLanguage === 'vi' ? 'Asia/Ho_Chi_Minh' : 'Asia/Seoul';
+      const locale = currentLanguage === 'vi' ? 'vi-VN' : currentLanguage === 'en' ? 'en-GB' : 'ko-KR';
+      return d.toLocaleString(locale, { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
     }
 
     function emptyState() {
