@@ -2174,9 +2174,16 @@
       renderGroupDetail();
       renderWorkspacePanel();
       updateApiPanel();
-      // 언어 변경 시 채팅을 현재 언어로 다시 번역해 표시하고, 분석 결과창도 다시 렌더한다.
-      if (currentGroupId && apiBaseUrl && !demoMode) { loadChatHistory(currentGroupId); loadLatestAnalysis(currentGroupId); }
-      else if (currentGroupAnalysis) renderAnalysis(currentGroupAnalysis);
+      // 언어 변경 시 채팅·분석·검증 결과를 모두 현재 언어로 다시 받아 카드/패널까지 갱신한다.
+      if (currentGroupId && apiBaseUrl && !demoMode) {
+        loadChatHistory(currentGroupId);
+        loadLatestAnalysis(currentGroupId);
+        api(`/api/validate/group/${encodeURIComponent(currentGroupId)}?language=${currentLanguage}`)
+          .then((vr) => { groupValidation = vr.data || vr.validation || groupValidation; renderValidationResult(); renderWorkspaceApplicantCards(); })
+          .catch(() => {});
+      } else if (currentGroupAnalysis) {
+        renderAnalysis(currentGroupAnalysis);
+      }
     }
 
     function toggleSidebar() {
@@ -2783,7 +2790,7 @@
       renderWorkspacePanel();
       if (!demoMode && apiBaseUrl && hasGroupWorkItems(groupId)) {
         try {
-          const vr = await api(`/api/validate/group/${encodeURIComponent(groupId)}`);
+          const vr = await api(`/api/validate/group/${encodeURIComponent(groupId)}?language=${currentLanguage}`);
           groupValidation = vr.data || vr.validation || null;
           renderValidationResult();
           renderWorkspaceApplicantCards();
@@ -3130,7 +3137,7 @@
       if (!hasGroupWorkItems(currentGroupId)) return toast(t('noApplicantsInGroup'));
       setButtonLoading(button, true);
       try {
-        const result = await api(`/api/validate/group/${encodeURIComponent(currentGroupId)}`);
+        const result = await api(`/api/validate/group/${encodeURIComponent(currentGroupId)}?language=${currentLanguage}`);
         groupValidation = result.data || result.validation || null;
         toast(t('validationDone'));
         renderValidationResult();
