@@ -1361,9 +1361,9 @@
               </div>
 
               <div class="group-toolbar">
-                <input class="search-input" id="drive-group-id" data-i18n-placeholder="groupIdPlaceholder" placeholder="Group ID">
-                <input class="search-input" id="drive-entry-date" type="date" aria-label="Entry date">
-                <input class="search-input" id="drive-group-name" data-i18n-placeholder="groupNamePlaceholder" placeholder="Group name">
+                <label style="display:flex;flex-direction:column;gap:3px;flex:1;min-width:120px"><span style="font-size:11px;color:#6b7280" data-i18n="folderIdLabel">폴더명(Drive 폴더)</span><input class="search-input" id="drive-group-id" data-i18n-placeholder="groupIdPlaceholder" placeholder="Group ID"></label>
+                <label style="display:flex;flex-direction:column;gap:3px;min-width:140px"><span style="font-size:11px;color:#6b7280" data-i18n="entryDateLabel">입국일</span><input class="search-input" id="drive-entry-date" type="date" aria-label="Entry date"></label>
+                <label style="display:flex;flex-direction:column;gap:3px;flex:1;min-width:120px"><span style="font-size:11px;color:#6b7280" data-i18n="displayNameLabel">표시 이름</span><input class="search-input" id="drive-group-name" data-i18n-placeholder="groupNamePlaceholder" placeholder="Group name"></label>
                 <button class="button primary" onclick="createDriveGroup(this)"><span>＋</span><span data-i18n="createGroupFolder">Create folder</span></button>
                 <button class="button ghost" onclick="updateDriveGroup(this)"><span>✎</span><span data-i18n="updateGroupFolder">Update</span></button>
               </div>
@@ -1657,6 +1657,9 @@
         groupIdPlaceholder: 'Mã nhóm',
         groupNamePlaceholder: 'Tên nhóm',
         createGroupFolder: 'Tạo thư mục',
+        folderIdLabel: 'Tên thư mục (Drive)',
+        entryDateLabel: 'Ngày nhập cảnh',
+        displayNameLabel: 'Tên hiển thị',
         updateGroupFolder: 'Sửa tên',
         selectGroup: 'Chọn nhóm',
         openWorkspace: 'Mở nhóm',
@@ -1809,6 +1812,9 @@
         groupIdPlaceholder: 'Group ID',
         groupNamePlaceholder: 'Group name',
         createGroupFolder: 'Create folder',
+        folderIdLabel: 'Folder name (Drive)',
+        entryDateLabel: 'Entry date',
+        displayNameLabel: 'Display name',
         updateGroupFolder: 'Update',
         selectGroup: 'Select group',
         openWorkspace: 'Open workspace',
@@ -1961,6 +1967,9 @@
         groupIdPlaceholder: '그룹 ID',
         groupNamePlaceholder: '그룹 이름',
         createGroupFolder: '폴더 생성',
+        folderIdLabel: '폴더명(Drive 폴더)',
+        entryDateLabel: '입국일',
+        displayNameLabel: '표시 이름',
         updateGroupFolder: '수정',
         selectGroup: '그룹 선택',
         openWorkspace: '작업공간 열기',
@@ -2151,6 +2160,9 @@
       renderGroupDetail();
       renderWorkspacePanel();
       updateApiPanel();
+      // 언어 변경 시 채팅을 현재 언어로 다시 번역해 표시하고, 분석 결과창도 다시 렌더한다.
+      if (currentGroupId && apiBaseUrl && !demoMode) loadChatHistory(currentGroupId);
+      if (typeof currentGroupAnalysis !== 'undefined' && currentGroupAnalysis) renderAnalysis(currentGroupAnalysis);
     }
 
     function toggleSidebar() {
@@ -2758,6 +2770,14 @@
         } catch (_error) { /* 검증 자동 로드 실패는 무시(수동 검증 버튼으로 가능) */ }
       }
       await loadChatHistory(groupId);
+      // 최근 Gemini 분석을 분석 전용창(채팅과 분리)에 불러온다.
+      if (!demoMode && apiBaseUrl) {
+        try {
+          const a = await api(`/api/analyze/group/${encodeURIComponent(groupId)}/latest`);
+          currentGroupAnalysis = a.analysis || a.data?.analysis || null;
+        } catch (_e) { currentGroupAnalysis = null; }
+        renderAnalysis(currentGroupAnalysis);
+      }
       if (!silent) toast(t('openWorkspace'));
     }
 
@@ -3198,7 +3218,7 @@
         return;
       }
       try {
-        const result = await api(`/api/chat/group/${encodeURIComponent(groupId)}/history`);
+        const result = await api(`/api/chat/group/${encodeURIComponent(groupId)}/history?language=${currentLanguage}`);
         renderChatMessages(result.data || result.messages || []);
       } catch (error) {
         renderChatMessages([]);
