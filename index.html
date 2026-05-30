@@ -1433,6 +1433,7 @@
                       <h3 class="panel-title" data-i18n="groupChat">Group chat</h3>
                       <button class="button ghost" onclick="runGroupAnalysis(this)" data-i18n="runGeminiAnalysis">Run Gemini analysis</button>
                     </div>
+                    <div class="analysis-box" id="analysisBox"></div>
                     <div class="chat-box" id="chatMessages"></div>
                     <div class="chat-compose">
                       <input class="search-input" id="chat-input" data-i18n-placeholder="chatPlaceholder" placeholder="Ask Gemini about this group">
@@ -3324,13 +3325,22 @@
           timeoutMs: LONG_TASK_TIMEOUT_MS
         });
         currentGroupAnalysis = result.analysis || result.data?.analysis || result.data;
+        renderAnalysis(currentGroupAnalysis);
         toast(t('analysisDone'));
-        await loadChatHistory(currentGroupId);
       } catch (error) {
         toast(error.message);
       } finally {
         setButtonLoading(button, false);
       }
+    }
+
+    function renderAnalysis(analysis) {
+      const box = $('#analysisBox');
+      if (!box) return;
+      const text = analysis ? formatAnalysisMessage(analysis) : '';
+      box.innerHTML = text
+        ? `<div class="analysis-content">${escapeHtml(text).replace(/\n/g, '<br>')}</div>`
+        : '';
     }
 
     function formatDate(value) {
