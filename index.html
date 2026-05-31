@@ -1483,15 +1483,15 @@
   <div class="modal-backdrop" id="telegram-modal">
     <div class="modal">
       <h2 data-i18n="botConfigTitle">Telegram bot notifications</h2>
-      <p class="hero-text" data-i18n="botConfigHint">Enter the bot token and your chat_id to receive job notifications.</p>
+      <p class="hero-text" data-i18n="botConfigHint">알림 받을 사람의 chat_id를 추가하세요. 등록한 모두에게 알림이 갑니다.</p>
       <div id="telegram-status" class="hero-text" style="margin:6px 0;font-weight:600"></div>
-      <div class="form-grid">
-        <label class="field-label" style="grid-column:1/-1"><span data-i18n="botToken">Bot token</span><input class="search-input" id="tg-bot-token" placeholder="123456:ABC-DEF..." autocomplete="off"></label>
-        <label class="field-label" style="grid-column:1/-1"><span data-i18n="botChatId">Your chat_id</span><input class="search-input" id="tg-chat-id" placeholder="1474053772" autocomplete="off"></label>
+      <div style="display:flex;gap:8px;align-items:flex-end">
+        <label class="field-label" style="flex:1"><span data-i18n="botChatId">chat_id</span><input class="search-input" id="tg-chat-id" placeholder="1474053772" autocomplete="off"></label>
+        <button class="button primary" onclick="addTelegramChat(this)" data-i18n="botAdd">Add</button>
       </div>
-      <div style="font-size:11.5px;color:#475569;margin-top:6px;line-height:1.5" data-i18n="botConfigNote">💡 봇 토큰은 BotFather에서 발급받고, chat_id는 알림 받을 사람의 텔레그램 ID입니다. 저장하면 봇이 테스트 메시지를 보냅니다(받는 사람이 봇과 먼저 /start 해야 합니다).</div>
+      <div id="tg-chat-list" style="margin-top:10px"></div>
+      <div style="font-size:11.5px;color:#475569;margin-top:6px;line-height:1.5" data-i18n="botConfigNote2">💡 알림 받을 사람의 텔레그램 chat_id를 추가하면 모두에게 알림이 갑니다. 또는 봇에게 /start를 보내면 자동 등록됩니다. 그룹은 봇을 초대한 뒤 그룹에서 /start 하세요.</div>
       <div class="modal-actions">
-        <button class="button primary" onclick="saveTelegramConfig(this)" data-i18n="botConnect">Connect</button>
         <button class="button ghost" onclick="closeTelegramModal()" data-i18n="close">Close</button>
       </div>
     </div>
@@ -1660,7 +1660,12 @@
         eerExit: 'Xuất cảnh',
         botConfig: 'Bot',
         botConfigTitle: 'Thông báo qua bot Telegram',
-        botConfigHint: 'Nhập bot token và chat_id của bạn để nhận thông báo tiến trình.',
+        botConfigHint: 'Thêm chat_id của người nhận. Tất cả người đã đăng ký sẽ nhận thông báo.',
+        botAdd: 'Thêm',
+        botNotConnected: 'Bot chưa kết nối',
+        botNoChats: 'Chưa có chat_id nào',
+        botNeedChatId: 'Nhập chat_id.',
+        botConfigNote2: '💡 Thêm chat_id Telegram của người nhận để tất cả đều nhận thông báo. Hoặc gửi /start cho bot để tự đăng ký. Với nhóm: mời bot vào nhóm rồi gửi /start trong nhóm.',
         botConfigNote: '💡 Bot token lấy từ BotFather, chat_id là ID Telegram của người nhận. Khi lưu, bot sẽ gửi tin nhắn thử (người nhận phải /start bot trước).',
         botToken: 'Bot token',
         botChatId: 'Chat_id của bạn',
@@ -1854,7 +1859,12 @@
         eerExit: 'Exit',
         botConfig: 'Bot',
         botConfigTitle: 'Telegram bot notifications',
-        botConfigHint: 'Enter the bot token and your chat_id to receive job notifications.',
+        botConfigHint: 'Add the chat_id of each recipient. Everyone registered receives notifications.',
+        botAdd: 'Add',
+        botNotConnected: 'Bot not connected',
+        botNoChats: 'No chat_id registered',
+        botNeedChatId: 'Enter a chat_id.',
+        botConfigNote2: '💡 Add each recipient Telegram chat_id so all get notified. Or send /start to the bot to auto-register. For a group: invite the bot, then send /start in the group.',
         botConfigNote: '💡 Get the bot token from BotFather; chat_id is the Telegram ID of the recipient. On save, the bot sends a test message (the recipient must /start the bot first).',
         botToken: 'Bot token',
         botChatId: 'Your chat_id',
@@ -2048,7 +2058,12 @@
         eerExit: '출국',
         botConfig: '봇',
         botConfigTitle: '텔레그램 봇 알림',
-        botConfigHint: '봇 토큰과 본인 chat_id를 입력하면 작업 알림을 받습니다.',
+        botConfigHint: '알림 받을 사람의 chat_id를 추가하세요. 등록한 모두에게 알림이 갑니다.',
+        botAdd: '추가',
+        botNotConnected: '봇 미연결',
+        botNoChats: '등록된 chat_id가 없습니다',
+        botNeedChatId: 'chat_id를 입력하세요.',
+        botConfigNote2: '💡 알림 받을 사람의 텔레그램 chat_id를 추가하면 모두에게 알림이 갑니다. 또는 봇에게 /start를 보내면 자동 등록됩니다. 그룹은 봇을 초대한 뒤 그룹에서 /start 하세요.',
         botConfigNote: '💡 봇 토큰은 BotFather에서 발급받고, chat_id는 알림 받을 사람의 텔레그램 ID입니다. 저장하면 봇이 테스트 메시지를 보냅니다(받는 사람이 봇과 먼저 /start 해야 합니다).',
         botToken: '봇 토큰',
         botChatId: '본인 chat_id',
@@ -3790,41 +3805,44 @@
     // 텔레그램 봇 설정 팝업: 봇 토큰 + chat_id 입력 → 저장 + 테스트 메시지
     function openTelegramConfig() {
       const modal = $('#telegram-modal');
-      $('#telegram-status').textContent = '';
       if (modal) modal.classList.add('show');
-      if (!demoMode && apiBaseUrl) {
-        api('/api/telegram/config').then((r) => {
-          if (r.configured) {
-            $('#tg-chat-id').value = r.chat_id || '';
-            $('#telegram-status').innerHTML = `<span style="color:#16a34a">● ${escapeHtml(t('botConnected'))}</span> @${escapeHtml(r.bot_username || '')} · ${escapeHtml(r.token_masked || '')}`;
-          }
-        }).catch(() => {});
-      }
+      refreshTelegramConfig();
     }
     function closeTelegramModal() { $('#telegram-modal')?.classList.remove('show'); }
-    async function saveTelegramConfig(button) {
+    // 봇 연결 상태 + 등록된 chat_id 목록을 다시 그린다.
+    function refreshTelegramConfig() {
+      if (demoMode || !apiBaseUrl) return;
+      api('/api/telegram/config').then((r) => {
+        const status = $('#telegram-status');
+        if (status) status.innerHTML = r.configured
+          ? `<span style="color:#16a34a">● ${escapeHtml(t('botConnected'))}</span> @${escapeHtml(r.bot_username || '')}`
+          : `<span style="color:#dc2626">● ${escapeHtml(t('botNotConnected'))}</span>`;
+        const list = $('#tg-chat-list');
+        const ids = r.chat_ids || [];
+        if (list) list.innerHTML = ids.length
+          ? ids.map((id) => `<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid #e2e8f0"><span>${escapeHtml(String(id))}</span><button class="button ghost btn-sm" onclick="removeTelegramChat('${escapeJs(String(id))}')">${escapeHtml(t('remove'))}</button></div>`).join('')
+          : `<div class="hero-text">${escapeHtml(t('botNoChats'))}</div>`;
+      }).catch(() => {});
+    }
+    // chat_id 추가 → 서버가 테스트 메시지 발송
+    async function addTelegramChat(button) {
       if (demoMode || !apiBaseUrl) return toast(t('actionNeedsApi'));
-      const bot_token = $('#tg-bot-token').value.trim();
       const chat_id = $('#tg-chat-id').value.trim();
-      if (!bot_token || !chat_id) return toast(t('botNeedBoth'));
+      if (!chat_id) return toast(t('botNeedChatId'));
       setButtonLoading(button, true);
       try {
-        const r = await api('/api/telegram/config', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ bot_token, chat_id })
-        });
-        $('#tg-bot-token').value = '';
-        $('#telegram-status').innerHTML = r.test_sent
-          ? `<span style="color:#16a34a">● ${escapeHtml(t('botConnected'))}</span> @${escapeHtml(r.bot_username || '')} · ${escapeHtml(t('botTestSent'))}`
-          : `<span style="color:#dc2626">● @${escapeHtml(r.bot_username || '')}</span> · ${escapeHtml(t('botTestFail'))}: ${escapeHtml(r.test_error || '')}`;
-        toast(r.test_sent ? t('botConnected') : t('botTestFail'));
-      } catch (error) {
-        $('#telegram-status').innerHTML = `<span style="color:#dc2626">● ${escapeHtml(error.message)}</span>`;
-        toast(error.message);
-      } finally {
-        setButtonLoading(button, false);
-      }
+        const r = await api('/api/telegram/chats', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id }) });
+        $('#tg-chat-id').value = '';
+        toast(r.test_sent ? t('botTestSent') : t('botTestFail'));
+        refreshTelegramConfig();
+      } catch (error) { toast(error.message); } finally { setButtonLoading(button, false); }
+    }
+    async function removeTelegramChat(chatId) {
+      if (demoMode || !apiBaseUrl) return;
+      try {
+        await api('/api/telegram/chats', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: chatId }) });
+        refreshTelegramConfig();
+      } catch (error) { toast(error.message); }
     }
 
     async function generatePdf(applicantId, button) {
