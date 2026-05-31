@@ -1229,6 +1229,7 @@
         </div>
       </div>
       <div class="topbar-actions">
+        <button class="button ghost" id="bot-config-btn" onclick="openTelegramConfig()" data-i18n-title="botConfigTitle" title="Telegram bot notifications">🤖 <span data-i18n="botConfig">Bot</span></button>
         <div class="api-compact">
           <div class="api-state" id="api-state"><span class="spinner"></span><span data-i18n="checking">Checking</span></div>
           <div class="api-url" id="api-url" style="display:none">http://localhost:3510</div>
@@ -1479,6 +1480,23 @@
     </div>
   </div>
 
+  <div class="modal-backdrop" id="telegram-modal">
+    <div class="modal">
+      <h2 data-i18n="botConfigTitle">Telegram bot notifications</h2>
+      <p class="hero-text" data-i18n="botConfigHint">Enter the bot token and your chat_id to receive job notifications.</p>
+      <div id="telegram-status" class="hero-text" style="margin:6px 0;font-weight:600"></div>
+      <div class="form-grid">
+        <label class="field-label" style="grid-column:1/-1"><span data-i18n="botToken">Bot token</span><input class="search-input" id="tg-bot-token" placeholder="123456:ABC-DEF..." autocomplete="off"></label>
+        <label class="field-label" style="grid-column:1/-1"><span data-i18n="botChatId">Your chat_id</span><input class="search-input" id="tg-chat-id" placeholder="1474053772" autocomplete="off"></label>
+      </div>
+      <div style="font-size:11.5px;color:#475569;margin-top:6px;line-height:1.5" data-i18n="botConfigNote">💡 봇 토큰은 BotFather에서 발급받고, chat_id는 알림 받을 사람의 텔레그램 ID입니다. 저장하면 봇이 테스트 메시지를 보냅니다(받는 사람이 봇과 먼저 /start 해야 합니다).</div>
+      <div class="modal-actions">
+        <button class="button primary" onclick="saveTelegramConfig(this)" data-i18n="botConnect">Connect</button>
+        <button class="button ghost" onclick="closeTelegramModal()" data-i18n="close">Close</button>
+      </div>
+    </div>
+  </div>
+
   <div class="modal-backdrop" id="detail-modal">
     <div class="modal">
       <h2 id="modal-title">Applicant</h2>
@@ -1640,6 +1658,17 @@
         eerPort: 'Cửa khẩu',
         eerEntry: 'Nhập cảnh',
         eerExit: 'Xuất cảnh',
+        botConfig: 'Bot',
+        botConfigTitle: 'Thông báo qua bot Telegram',
+        botConfigHint: 'Nhập bot token và chat_id của bạn để nhận thông báo tiến trình.',
+        botConfigNote: '💡 Bot token lấy từ BotFather, chat_id là ID Telegram của người nhận. Khi lưu, bot sẽ gửi tin nhắn thử (người nhận phải /start bot trước).',
+        botToken: 'Bot token',
+        botChatId: 'Chat_id của bạn',
+        botConnect: 'Kết nối',
+        botConnected: 'Đã kết nối',
+        botTestSent: 'Đã gửi tin nhắn thử',
+        botTestFail: 'Gửi thử thất bại',
+        botNeedBoth: 'Cần cả bot token và chat_id.',
         finalPackage: 'Hồ sơ cuối cùng',
         finalPackageDone: 'Gói hồ sơ cuối cùng đã tạo xong.',
         details: 'Chi tiết',
@@ -1821,6 +1850,17 @@
         eerPort: 'Port',
         eerEntry: 'Entry',
         eerExit: 'Exit',
+        botConfig: 'Bot',
+        botConfigTitle: 'Telegram bot notifications',
+        botConfigHint: 'Enter the bot token and your chat_id to receive job notifications.',
+        botConfigNote: '💡 Get the bot token from BotFather; chat_id is the Telegram ID of the recipient. On save, the bot sends a test message (the recipient must /start the bot first).',
+        botToken: 'Bot token',
+        botChatId: 'Your chat_id',
+        botConnect: 'Connect',
+        botConnected: 'Connected',
+        botTestSent: 'Test message sent',
+        botTestFail: 'Test send failed',
+        botNeedBoth: 'Both bot token and chat_id are required.',
         finalPackage: 'Final package',
         finalPackageDone: 'Final visa package generated.',
         details: 'Details',
@@ -2002,6 +2042,17 @@
         eerPort: '공항/항구',
         eerEntry: '입국',
         eerExit: '출국',
+        botConfig: '봇',
+        botConfigTitle: '텔레그램 봇 알림',
+        botConfigHint: '봇 토큰과 본인 chat_id를 입력하면 작업 알림을 받습니다.',
+        botConfigNote: '💡 봇 토큰은 BotFather에서 발급받고, chat_id는 알림 받을 사람의 텔레그램 ID입니다. 저장하면 봇이 테스트 메시지를 보냅니다(받는 사람이 봇과 먼저 /start 해야 합니다).',
+        botToken: '봇 토큰',
+        botChatId: '본인 chat_id',
+        botConnect: '연결',
+        botConnected: '연결됨',
+        botTestSent: '테스트 메시지 전송됨',
+        botTestFail: '테스트 전송 실패',
+        botNeedBoth: '봇 토큰과 chat_id를 모두 입력하세요.',
         finalPackage: '최종 신청서류',
         finalPackageDone: '최종 신청서류 패키지를 생성했습니다.',
         details: '상세',
@@ -3725,6 +3776,46 @@
 
     function closeModal() {
       $('#detail-modal').classList.remove('show');
+    }
+
+    // 텔레그램 봇 설정 팝업: 봇 토큰 + chat_id 입력 → 저장 + 테스트 메시지
+    function openTelegramConfig() {
+      const modal = $('#telegram-modal');
+      $('#telegram-status').textContent = '';
+      if (modal) modal.classList.add('show');
+      if (!demoMode && apiBaseUrl) {
+        api('/api/telegram/config').then((r) => {
+          if (r.configured) {
+            $('#tg-chat-id').value = r.chat_id || '';
+            $('#telegram-status').innerHTML = `<span style="color:#16a34a">● ${escapeHtml(t('botConnected'))}</span> @${escapeHtml(r.bot_username || '')} · ${escapeHtml(r.token_masked || '')}`;
+          }
+        }).catch(() => {});
+      }
+    }
+    function closeTelegramModal() { $('#telegram-modal')?.classList.remove('show'); }
+    async function saveTelegramConfig(button) {
+      if (demoMode || !apiBaseUrl) return toast(t('actionNeedsApi'));
+      const bot_token = $('#tg-bot-token').value.trim();
+      const chat_id = $('#tg-chat-id').value.trim();
+      if (!bot_token || !chat_id) return toast(t('botNeedBoth'));
+      setButtonLoading(button, true);
+      try {
+        const r = await api('/api/telegram/config', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ bot_token, chat_id })
+        });
+        $('#tg-bot-token').value = '';
+        $('#telegram-status').innerHTML = r.test_sent
+          ? `<span style="color:#16a34a">● ${escapeHtml(t('botConnected'))}</span> @${escapeHtml(r.bot_username || '')} · ${escapeHtml(t('botTestSent'))}`
+          : `<span style="color:#dc2626">● @${escapeHtml(r.bot_username || '')}</span> · ${escapeHtml(t('botTestFail'))}: ${escapeHtml(r.test_error || '')}`;
+        toast(r.test_sent ? t('botConnected') : t('botTestFail'));
+      } catch (error) {
+        $('#telegram-status').innerHTML = `<span style="color:#dc2626">● ${escapeHtml(error.message)}</span>`;
+        toast(error.message);
+      } finally {
+        setButtonLoading(button, false);
+      }
     }
 
     async function generatePdf(applicantId, button) {
