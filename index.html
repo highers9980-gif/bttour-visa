@@ -2655,6 +2655,7 @@
             <div class="info-list">
               <div>🛂 ${escapeHtml(applicant.passport_number || '-')}</div>
               <div>🎂 ${escapeHtml(applicant.birth_date || '-')}${applicant.gender ? ' · ' + escapeHtml(applicant.gender) : ''}</div>
+              ${applicant.place_of_birth ? `<div>📍 ${escapeHtml(applicant.place_of_birth)}</div>` : ''}
               ${flightLine}
             </div>
             <div class="badge-row">${badges}</div>
