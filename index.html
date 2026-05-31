@@ -1669,6 +1669,8 @@
         botTestSent: 'Đã gửi tin nhắn thử',
         botTestFail: 'Gửi thử thất bại',
         botNeedBoth: 'Cần cả bot token và chat_id.',
+        oneClickStartedNotify: 'Đã bắt đầu xử lý một chạm. Tiến trình sẽ gửi qua bot Telegram. (Vẫn chạy dù bạn đóng trang)',
+        oneClickStartedNoBot: 'Đã bắt đầu xử lý một chạm. (Chưa cấu hình bot 🤖 — không có thông báo. Tải lại trang sau khi xong)',
         finalPackage: 'Hồ sơ cuối cùng',
         finalPackageDone: 'Gói hồ sơ cuối cùng đã tạo xong.',
         details: 'Chi tiết',
@@ -1861,6 +1863,8 @@
         botTestSent: 'Test message sent',
         botTestFail: 'Test send failed',
         botNeedBoth: 'Both bot token and chat_id are required.',
+        oneClickStartedNotify: 'One-click job started. Progress will be sent via the Telegram bot. (Continues even if you close the page)',
+        oneClickStartedNoBot: 'One-click job started. (No 🤖 bot configured — no notifications. Refresh after it finishes)',
         finalPackage: 'Final package',
         finalPackageDone: 'Final visa package generated.',
         details: 'Details',
@@ -2053,6 +2057,8 @@
         botTestSent: '테스트 메시지 전송됨',
         botTestFail: '테스트 전송 실패',
         botNeedBoth: '봇 토큰과 chat_id를 모두 입력하세요.',
+        oneClickStartedNotify: '원클릭 작업을 시작했습니다. 진행 상황은 텔레그램 봇으로 알려드립니다. (사이트를 닫아도 계속됩니다)',
+        oneClickStartedNoBot: '원클릭 작업을 시작했습니다. (🤖 Bot 미설정 — 알림 없음. 완료 후 새로고침하세요)',
         finalPackage: '최종 신청서류',
         finalPackageDone: '최종 신청서류 패키지를 생성했습니다.',
         details: '상세',
@@ -3508,14 +3514,9 @@
       if (demoMode || !apiBaseUrl) return toast(t('actionNeedsApi'));
       setButtonLoading(button, true);
       try {
-        toast(t('oneClickStep1'));
-        await api(`/api/drive/sync/${encodeURIComponent(currentGroupId)}`, { method: 'POST', timeoutMs: LONG_TASK_TIMEOUT_MS });
-        toast(t('oneClickStep2'));
-        await api(`/api/drive/normalize/${encodeURIComponent(currentGroupId)}`, { method: 'POST', timeoutMs: LONG_TASK_TIMEOUT_MS });
-        toast(t('oneClickStep3'));
-        await api(`/api/analyze/group/${encodeURIComponent(currentGroupId)}`, { method: 'POST', timeoutMs: LONG_TASK_TIMEOUT_MS });
-        await activateGroupWorkspace(currentGroupId, true);
-        toast(t('oneClickDone'));
+        // 서버 백그라운드 잡으로 실행(사이트를 닫아도 진행). 진행 상황은 텔레그램 봇으로 알린다.
+        const r = await api(`/api/oneclick/${encodeURIComponent(currentGroupId)}`, { method: 'POST' });
+        toast(r.notify ? t('oneClickStartedNotify') : t('oneClickStartedNoBot'));
       } catch (error) {
         toast(error.message);
       } finally {
