@@ -3719,7 +3719,15 @@
     function renderDocumentSlots(applicantId, documents) {
       const target = $('#modal-documents');
       if (!target) return;
-      const byType = new Map((documents || []).map((document) => [document.doc_type, document]));
+      // 같은 doc_type 문서가 여러 장이면, 여권은 바이오 페이지(출입국 기록 없는 장)를 미리보기로 우선한다.
+      const byType = new Map();
+      for (const document of (documents || [])) {
+        const existing = byType.get(document.doc_type);
+        if (!existing) { byType.set(document.doc_type, document); continue; }
+        if (document.doc_type === 'passport' && existing.has_entry_exit && !document.has_entry_exit) {
+          byType.set(document.doc_type, document);
+        }
+      }
       target.innerHTML = docTypes.map(([labelKey, type, icon]) => {
         const document = byType.get(type);
         return `
