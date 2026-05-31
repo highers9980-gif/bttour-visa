@@ -1633,6 +1633,13 @@
         oneClickStep2: '2/3 Đang chuẩn hóa tên tệp...',
         oneClickStep3: '3/3 Đang phân tích Gemini...',
         oneClickDone: 'Hoàn tất xử lý một chạm.',
+        entryExitRecords: 'Lịch sử xuất nhập cảnh',
+        eerDate: 'Ngày',
+        eerCountry: 'Quốc gia',
+        eerType: 'Loại',
+        eerPort: 'Cửa khẩu',
+        eerEntry: 'Nhập cảnh',
+        eerExit: 'Xuất cảnh',
         finalPackage: 'Hồ sơ cuối cùng',
         finalPackageDone: 'Gói hồ sơ cuối cùng đã tạo xong.',
         details: 'Chi tiết',
@@ -1807,6 +1814,13 @@
         oneClickStep2: '2/3 Normalizing file names...',
         oneClickStep3: '3/3 Running Gemini analysis...',
         oneClickDone: 'One-click processing complete.',
+        entryExitRecords: 'Entry/Exit records',
+        eerDate: 'Date',
+        eerCountry: 'Country',
+        eerType: 'Type',
+        eerPort: 'Port',
+        eerEntry: 'Entry',
+        eerExit: 'Exit',
         finalPackage: 'Final package',
         finalPackageDone: 'Final visa package generated.',
         details: 'Details',
@@ -1981,6 +1995,13 @@
         oneClickStep2: '2/3 파일명 정리 중...',
         oneClickStep3: '3/3 Gemini 분석 중...',
         oneClickDone: '원클릭 처리를 완료했습니다.',
+        entryExitRecords: '출입국 기록',
+        eerDate: '날짜',
+        eerCountry: '국가',
+        eerType: '구분',
+        eerPort: '공항/항구',
+        eerEntry: '입국',
+        eerExit: '출국',
         finalPackage: '최종 신청서류',
         finalPackageDone: '최종 신청서류 패키지를 생성했습니다.',
         details: '상세',
@@ -3605,12 +3626,33 @@
         [t('hotel'), applicant.hotel],
         [t('documents'), `${applicant.documents_count || 0}/${applicant.total_documents || 0}`]
       ];
+      const eer = Array.isArray(applicant.entry_exit_records) ? applicant.entry_exit_records : [];
+      const eerHtml = eer.length ? `
+        <div class="detail-item" style="grid-column:1/-1">
+          <div class="detail-label">${escapeHtml(t('entryExitRecords'))} (${eer.length})</div>
+          <div class="detail-value" style="overflow-x:auto">
+            <table style="width:100%;border-collapse:collapse;font-size:12.5px">
+              <thead><tr style="text-align:left;color:#64748b">
+                <th style="padding:3px 8px">${escapeHtml(t('eerDate'))}</th>
+                <th style="padding:3px 8px">${escapeHtml(t('eerCountry'))}</th>
+                <th style="padding:3px 8px">${escapeHtml(t('eerType'))}</th>
+                <th style="padding:3px 8px">${escapeHtml(t('eerPort'))}</th>
+              </tr></thead>
+              <tbody>${eer.map((r) => `<tr style="border-top:1px solid #e2e8f0">
+                <td style="padding:3px 8px">${escapeHtml(r.date || '-')}</td>
+                <td style="padding:3px 8px">${escapeHtml(r.country || '-')}</td>
+                <td style="padding:3px 8px">${r.type === 'entry' ? '⬇ ' + escapeHtml(t('eerEntry')) : (r.type === 'exit' ? '⬆ ' + escapeHtml(t('eerExit')) : escapeHtml(r.type || '-'))}</td>
+                <td style="padding:3px 8px">${escapeHtml(r.port || '-')}</td>
+              </tr>`).join('')}</tbody>
+            </table>
+          </div>
+        </div>` : '';
       $('#modal-details').innerHTML = details.map(([label, value]) => `
         <div class="detail-item">
           <div class="detail-label">${escapeHtml(label)}</div>
           <div class="detail-value">${escapeHtml(value || '-')}</div>
         </div>
-      `).join('');
+      `).join('') + eerHtml;
       renderDocumentSlots(applicantId, []);
       $('#detail-modal').classList.add('show');
       if (!demoMode && apiBaseUrl) {
