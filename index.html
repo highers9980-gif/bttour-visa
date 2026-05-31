@@ -1663,6 +1663,15 @@
         groupNamePlaceholder: 'Tên nhóm',
         createGroupFolder: 'Tạo thư mục',
         folderIdLabel: 'Tên thư mục (Drive)',
+        preview: 'Xem trước',
+        flightArrivalLabel: 'Chuyến bay · giờ đến',
+        passportSurname: 'Họ (Surname)',
+        passportGiven: 'Tên (Given names)',
+        birthDateLabel: 'Ngày sinh',
+        placeOfBirthLabel: 'Nơi sinh',
+        issueDateLabel: 'Ngày cấp',
+        expiryDateLabel: 'Ngày hết hạn',
+        placeOfIssueLabel: 'Nơi cấp',
         folderExample: '📁 Quy tắc: <b>ngày nhập cảnh_tên</b> · VD: <b>2026-06-17_DOAN_DUC_DMC</b> (ngày nhập cảnh tự thêm vào đầu)',
         zipHint: '💡 Tải file .zip lên sẽ tự động giải nén, OCR hộ chiếu·hồ sơ và áp dụng vào ứng viên.',
         entryDateLabel: 'Ngày nhập cảnh',
@@ -1821,6 +1830,15 @@
         groupNamePlaceholder: 'Group name',
         createGroupFolder: 'Create folder',
         folderIdLabel: 'Folder name (Drive)',
+        preview: 'Preview',
+        flightArrivalLabel: 'Flight · arrival time',
+        passportSurname: 'Surname',
+        passportGiven: 'Given names',
+        birthDateLabel: 'Birth date',
+        placeOfBirthLabel: 'Place of birth',
+        issueDateLabel: 'Issue date',
+        expiryDateLabel: 'Expiry date',
+        placeOfIssueLabel: 'Place of issue',
         folderExample: '📁 Rule: <b>entrydate_name</b> · e.g. <b>2026-06-17_DOAN_DUC_DMC</b> (entry date is auto-prefixed)',
         zipHint: '💡 Upload a .zip and it auto-extracts, OCRs passports/docs, and applies them to applicants.',
         entryDateLabel: 'Entry date',
@@ -1979,6 +1997,15 @@
         groupNamePlaceholder: '그룹 이름',
         createGroupFolder: '폴더 생성',
         folderIdLabel: '폴더명(Drive 폴더)',
+        preview: '미리보기',
+        flightArrivalLabel: '항공편 · 도착시간',
+        passportSurname: '성(Surname)',
+        passportGiven: '이름(Given names)',
+        birthDateLabel: '생년월일',
+        placeOfBirthLabel: '출생지',
+        issueDateLabel: '발급일',
+        expiryDateLabel: '만료일',
+        placeOfIssueLabel: '발급지',
         folderExample: '📁 생성 규칙: <b>입국일_폴더명</b> · 예시: <b>2026-06-17_DOAN_DUC_DMC</b> (입국일이 자동으로 앞에 붙습니다)',
         zipHint: '💡 .zip 압축파일을 올리면 자동으로 풀어 여권·서류를 OCR로 분석해 신청자에 적용합니다.',
         entryDateLabel: '입국일',
@@ -2603,7 +2630,7 @@
       const photoUrl = applicantPhotoUrl(applicant);
       const initial = escapeHtml((getApplicantName(applicant) || '?').trim().charAt(0).toUpperCase() || '?');
       const flightLine = applicant.entry_date
-        ? `<div>🛬 ${escapeHtml(applicant.entry_date)}${applicant.flight_number ? ' · ' + escapeHtml(applicant.flight_number) : ''}</div>`
+        ? `<div>🛬 ${escapeHtml(applicant.entry_date)}${applicant.flight_number ? ' · ' + escapeHtml(applicant.flight_number) : ''}${applicant.arrival_time ? ' · 🕓 ' + escapeHtml(applicant.arrival_time) : ''}</div>`
         : '';
       let badges;
       if (issues === null) {
@@ -3504,9 +3531,17 @@
       $('#modal-subtitle').textContent = `${t('passport')}: ${applicant.passport_number || '-'} · ${getStatusLabel(applicant.status || 'pending')}`;
       const details = [
         [t('group'), applicant.group_id],
+        [t('passportSurname'), applicant.name_last],
+        [t('passportGiven'), applicant.name_first],
+        [t('birthDateLabel'), applicant.birth_date],
+        [t('placeOfBirthLabel'), applicant.place_of_birth],
+        [t('issueDateLabel'), applicant.passport_issue],
+        [t('expiryDateLabel'), applicant.passport_expiry],
+        [t('placeOfIssueLabel'), applicant.place_of_issue],
         [t('phone'), applicant.phone],
         [t('nationality'), applicant.nationality],
         [t('period'), `${applicant.entry_date || '-'} → ${applicant.departure_date || '-'}`],
+        [t('flightArrivalLabel'), `${applicant.flight_number || '-'}${applicant.arrival_time ? ' · ' + applicant.arrival_time : ''}`],
         [t('hotel'), applicant.hotel],
         [t('documents'), `${applicant.documents_count || 0}/${applicant.total_documents || 0}`]
       ];
@@ -3540,6 +3575,7 @@
             <div class="document-slot-meta">${document ? escapeHtml(document.original_name || document.file_path || document.id) : t('pending')}</div>
             <input class="file-input" id="doc-upload-${escapeHtml(type)}" type="file">
             <div class="modal-actions">
+              ${document && document.web_view_link ? `<a class="button secondary" href="${escapeHtml(document.web_view_link)}" target="_blank" rel="noopener">${t('preview')}</a>` : ''}
               <button class="button primary" onclick="uploadDocument('${escapeJs(applicantId)}', '${escapeJs(type)}', this)">${t('upload')}</button>
               ${document ? `<button class="button ghost" onclick="deleteDocument('${escapeJs(document.id)}', this)">${t('remove')}</button>` : ''}
             </div>
