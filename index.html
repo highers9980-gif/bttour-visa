@@ -3584,7 +3584,7 @@
       const gid = groupId || currentGroupId;
       if (demoMode || !apiBaseUrl || !gid) { renderAnalysis(currentGroupAnalysis); return; }
       try {
-        const a = await api(`/api/analyze/group/${encodeURIComponent(gid)}/latest?language=${currentLanguage}`);
+        const a = await api(`/api/analyze/group/${encodeURIComponent(gid)}/latest?language=${currentLanguage}`, { timeoutMs: 45000 });
         currentGroupAnalysis = a.analysis || a.data?.analysis || null;
       } catch (_e) { /* 실패 시 기존 분석 유지 */ }
       renderAnalysis(currentGroupAnalysis);
