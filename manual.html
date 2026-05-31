@@ -890,6 +890,19 @@
           <li>Gói cuối đã upload lại vào Google Drive nếu cần lưu trữ tập trung.</li>
         </ul>
       </section>
+      <section class="section">
+        <h2>9. Bot thông báo qua Telegram</h2>
+        <p>Tác vụ Một chạm chạy trên máy chủ, nên <strong>dù bạn đóng trang web thì công việc vẫn tiếp tục</strong>. Tiến trình (bắt đầu → OCR → phân tích → hoàn tất → phân tích Gemini bằng tiếng Hàn/tiếng Việt) sẽ được gửi qua Telegram.</p>
+        <h3>① Cách lấy chat_id của bạn</h3>
+        <p>Cách dễ nhất: tìm <strong>@bt_viet_visa_bot</strong> trên Telegram và gửi <strong>/start</strong>. Bạn sẽ tự động được đăng ký nhận thông báo (không cần nhập gì thêm).</p>
+        <p>Nếu muốn biết con số chat_id: gửi <strong>/start</strong> cho <strong>@userinfobot</strong>, con số hiển thị chính là chat_id của bạn (ví dụ: 1474053772).</p>
+        <h3>② Cách đăng ký trên trang web</h3>
+        <p>Bấm nút <strong>🤖 Bot</strong> ở góc trên bên phải → nhập chat_id → bấm <strong>Add</strong>. Thêm nhiều người thì tất cả đều nhận thông báo. Dùng nút xóa bên cạnh để gỡ.</p>
+        <h3>③ Nhận thông báo theo nhóm</h3>
+        <p>Mời bot <strong>@bt_viet_visa_bot</strong> vào nhóm Telegram, rồi gửi <strong>/start</strong> một lần trong nhóm. Cả nhóm sẽ nhận được thông báo.</p>
+        <h3>④ Tin nhắn hướng dẫn gửi cho mọi người</h3>
+        <p style="background:#f1f5f9;padding:10px 12px;border-radius:8px">Để nhận thông báo công việc visa, hãy tìm <strong>@bt_viet_visa_bot</strong> trên Telegram và bấm <strong>/start</strong>. Sau đó bạn sẽ tự động nhận thông báo OCR, phân tích và hoàn tất. (Đóng trang web thì công việc vẫn tiếp tục chạy trên máy chủ.)</p>
+      </section>
     </section>
 
     <section id="manual-ko" class="manual" lang="ko">
@@ -1262,6 +1275,19 @@
           <li>최종 패키지를 생성하고 Excel, PDF, TXT 보고서를 열어 확인했습니다.</li>
           <li>필요하면 최종 패키지를 Google Drive에 다시 업로드해 중앙 보관합니다.</li>
         </ul>
+      </section>
+      <section class="section">
+        <h2>9. 텔레그램 작업 알림 봇</h2>
+        <p>원클릭 작업은 서버에서 처리되므로 <strong>사이트를 닫아도 계속 진행</strong>됩니다. 진행 상황(시작 → OCR → 분석 → 완료 → Gemini 분석 한국어/베트남어)이 텔레그램으로 전송됩니다.</p>
+        <h3>① 내 chat_id 받는 법</h3>
+        <p>가장 쉬운 방법은 텔레그램에서 <strong>@bt_viet_visa_bot</strong>을 찾아 <strong>/start</strong>를 보내는 것입니다. 그러면 자동으로 알림 대상에 등록됩니다(따로 입력할 필요 없음).</p>
+        <p>숫자 chat_id를 직접 알고 싶으면 텔레그램에서 <strong>@userinfobot</strong>에게 <strong>/start</strong>를 보내세요. 표시되는 숫자가 본인 chat_id입니다(예: 1474053772).</p>
+        <h3>② 사이트에서 등록하는 법</h3>
+        <p>화면 오른쪽 위 <strong>🤖 Bot</strong> 버튼 → chat_id 입력 → <strong>Add</strong>를 누릅니다. 여러 명을 추가하면 모두에게 알림이 갑니다. 옆의 삭제 버튼으로 제거합니다.</p>
+        <h3>③ 그룹으로 받는 법</h3>
+        <p>봇 <strong>@bt_viet_visa_bot</strong>을 텔레그램 그룹에 초대한 뒤, 그 그룹에서 <strong>/start</strong>를 한 번 보내면 그룹 전체가 알림을 받습니다.</p>
+        <h3>④ 직원·동료에게 보낼 안내 메시지</h3>
+        <p style="background:#f1f5f9;padding:10px 12px;border-radius:8px">비자 작업 알림을 받으시려면 텔레그램에서 <strong>@bt_viet_visa_bot</strong>을 검색해 <strong>/start</strong>를 눌러주세요. 이후 OCR·분석·완료 알림을 자동으로 받습니다. (사이트를 닫아도 작업은 서버에서 계속 진행됩니다.)</p>
       </section>
     </section>
 
