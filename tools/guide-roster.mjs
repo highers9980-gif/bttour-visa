@@ -6,13 +6,16 @@
 //   node guide-roster.mjs apply roster.tsv --erp --gateway            dry-run
 //   node guide-roster.mjs apply roster.tsv --erp --gateway --commit   반영
 //
+// 기본 구간은 2026-03 ~ 2026-10. 바꾸려면 --from / --to.
+//
 // 어디서 긁어오나
-//   이름  : ERP 일정현황 GET /api/schedule?year&month 의 team.guide
-//   연락처: 같은 행의 raw. 동기화 스크립트가 심어둔 ##META##.guide_rows[2] 가 1순위,
-//           없으면 "||" 로 나뉜 3번째 구간(= 시트의 GUIDE 열)의 첫 010 번호.
-//           2번째 구간은 DRIVER 열이라 절대 가이드 번호로 쓰지 않는다.
-//           기사 번호를 가이드로 잘못 넣으면 지시서가 기사에게 날아간다.
-//   보강  : ERP 가이드 마스터 GET /api/guides 의 phone
+//   한글이름  : ERP 일정현황 GET /api/schedule?year&month 의 team.guide
+//   베트남이름: 같은 행 raw 의 ##META##.guide_rows, 없으면 2번째 구간의 Mr./Ms. 표기
+//   연락처    : 같은 행 raw 의 ##META##.guide_rows 중 휴대폰 형태,
+//               없으면 "||" 로 나뉜 3번째 구간(= 시트의 GUIDE 열)의 첫 010 번호.
+//               2번째 구간은 DRIVER 열이라 절대 가이드 번호로 쓰지 않는다.
+//               기사 번호를 가이드로 잘못 넣으면 지시서가 기사에게 날아간다.
+//   보강      : ERP 가이드 마스터 GET /api/guides 의 phone
 //
 // 반영 대상
 //   --erp      ERP 가이드 마스터 Guide.phone (ERP 화면에 보이는 명부)
@@ -31,8 +34,8 @@ const argOf = (k, dflt) => {
   return hit ? hit.slice(k.length + 3) : dflt;
 };
 
-const FROM = argOf('from', '2026-04');
-const TO = argOf('to', null);
+const FROM = argOf('from', '2026-03');
+const TO = argOf('to', '2026-10');
 
 // ---------------------------------------------------------------
 // 확정 번호 — 대표가 직접 확인해 준 값이라 스캔 결과보다 우선한다.
@@ -95,9 +98,13 @@ function splitGuideCell(cell) {
 // ERP 화면과 같은 패턴. 공백 구분도 하이픈으로 통일한다.
 const PHONE_RE = /010[-\s]?\d{4}[-\s]?\d{4}/g;
 
-// raw 에서 "가이드" 번호만 뽑는다. 확신이 없으면 빈 값을 돌려준다.
-function guidePhoneFromRaw(raw) {
-  if (!raw) return '';
+// 베트남 이름은 시트에 Mr./Ms. 를 붙여 적는다.
+const VN_RE = /((?:Mr|Ms)[.\s]\s*[\wÀ-ỹĐđ]+)/i;
+
+// raw 에서 가이드의 번호와 베트남 이름을 뽑는다. 확신이 없으면 빈 값을 돌려준다.
+function guideFromRaw(raw) {
+  const out = { phone: '', vn: '' };
+  if (!raw) return out;
   let body = raw;
   if (raw.includes('##META##')) {
     const [before, metaJson] = raw.split('##META##');
@@ -105,17 +112,28 @@ function guidePhoneFromRaw(raw) {
     try {
       const meta = JSON.parse(metaJson);
       // guide_rows 는 [한국명, 베트남명, 전화] 순서지만 중간이 비면 자리가 밀린다.
-      // 자리로 집지 말고 휴대폰 형태인 값을 고른다. 이 배열은 GUIDE 열만
-      // 담고 있어서 기사 번호가 섞여 들어올 일이 없다.
+      // 자리로 집지 말고 값의 생김새로 고른다. 이 배열은 GUIDE 열만 담고
+      // 있어서 기사 번호가 섞여 들어올 일이 없다.
       for (const v of meta.guide_rows || []) {
-        const p = normPhone(String(v ?? ''));
-        if (isMobile(p)) return p;
+        const s = String(v ?? '').trim();
+        if (!s) continue;
+        const p = normPhone(s);
+        if (isMobile(p)) { out.phone ||= p; continue; }
+        if (VN_RE.test(s) || /^[A-Za-zÀ-ỹĐđ][\w\sÀ-ỹĐđ.]*$/.test(s)) out.vn ||= s;
       }
     } catch { /* META 가 깨져 있으면 아래 구간 파싱으로 넘어간다 */ }
   }
-  const row3 = body.split('||').map((s) => s.trim())[2];
-  const hit = row3 ? (row3.match(PHONE_RE) || [])[0] : null;
-  return hit && isMobile(hit) ? normPhone(hit) : '';
+  const rows = body.split('||').map((s) => s.trim());
+  if (!out.phone) {
+    // 3번째 구간이 GUIDE 열이다. 2번째는 DRIVER 열이라 쓰면 안 된다.
+    const hit = rows[2] ? (rows[2].match(PHONE_RE) || [])[0] : null;
+    if (hit && isMobile(hit)) out.phone = normPhone(hit);
+  }
+  if (!out.vn) {
+    const hit = rows[1] ? rows[1].match(VN_RE) : null;
+    if (hit) out.vn = hit[1].replace(/\s+/g, ' ').trim();
+  }
+  return out;
 }
 
 // ---------------------------------------------------------------
@@ -138,70 +156,54 @@ let scannedMonths = [];
 
 // 훑을 달 목록. 연락처는 오래된 일정에만 남아 있는 경우가 많아 전 기간을 본다.
 // --from 은 "언제부터를 현역으로 볼지"만 정한다.
-async function monthsToScan() {
-  if (TO) {
-    const [fy, fm] = FROM.split('-').map(Number);
-    const [ty, tm] = TO.split('-').map(Number);
-    if (!fy || !fm || !ty || !tm) throw new Error('--from/--to 형식 오류 (예: --from=2026-04)');
-    const out = [];
-    for (let y = fy, m = fm; ymKey(y, m) <= ymKey(ty, tm); m === 12 ? (y++, m = 1) : m++) out.push([y, m]);
-    return out;
-  }
-  const rows = await api('/api/schedule/months');
-  if (!Array.isArray(rows) || rows.length === 0) throw new Error('동기화된 월이 없습니다.');
-  return rows
-    .map((r) => [Number(r.year), Number(r.month)])
-    .filter(([y, m]) => y && m)
-    .sort((a, b) => ymKey(...a) - ymKey(...b));
+function monthsToScan() {
+  const [fy, fm] = FROM.split('-').map(Number);
+  const [ty, tm] = TO.split('-').map(Number);
+  if (!fy || !fm || !ty || !tm) throw new Error('--from/--to 형식 오류 (예: --from=2026-03)');
+  const out = [];
+  for (let y = fy, m = fm; ymKey(y, m) <= ymKey(ty, tm); m === 12 ? (y++, m = 1) : m++) out.push([y, m]);
+  return out;
 }
 
 async function scan() {
-  // 이름 → { name, phone, src, teams, months:Set, ambiguous, lastSeen }
+  // 이름 → { name, vn, phone, src, teams, months:Set, ambiguous }
   const roster = new Map();
   const touch = (name) => {
     const k = normName(name);
     if (!k) return null;
     if (!roster.has(k)) {
-      roster.set(k, { name: k, phone: '', src: '', teams: 0, months: new Set(), ambiguous: false, lastSeen: '' });
+      roster.set(k, { name: k, vn: '', phone: '', src: '', teams: 0, months: new Set(), ambiguous: false });
     }
     return roster.get(k);
   };
 
-  const months = await monthsToScan();
+  const months = monthsToScan();
   scannedMonths = months;
-  const [fy, fm] = FROM.split('-').map(Number);
-  const activeFrom = ymKey(fy, fm);
-  console.error(
-    `일정현황 ${ymLabel(...months[0])} ~ ${ymLabel(...months.at(-1))} (${months.length}개월) 조회 중… ` +
-    `— 현역 기준 ${FROM} 이후`);
+  console.error(`일정현황 ${ymLabel(...months[0])} ~ ${ymLabel(...months.at(-1))} (${months.length}개월) 조회 중…`);
 
   // 같은 팀이 두 달에 걸치면 양쪽 응답에 다 들어오므로 팀 id 로 한 번만 센다.
   const seenTeam = new Set();
-  let done = 0;
 
   for (const [y, m] of months) {
     let data;
     try { data = await api(`/api/schedule?year=${y}&month=${m}`); }
     catch (e) { console.error(`  ${ymLabel(y, m)} 실패: ${e.message}`); continue; }
-    if (++done % 10 === 0) console.error(`  …${done}/${months.length}개월`);
 
-    const active = ymKey(y, m) >= activeFrom;
     for (const t of data.teams || []) {
       if (seenTeam.has(t.id)) continue;
       seenTeam.add(t.id);
       const names = splitGuideCell(t.guide);
       if (names.length === 0) continue;
-      const phone = guidePhoneFromRaw(t.raw);
+      const { phone, vn } = guideFromRaw(t.raw);
       for (const nm of names) {
         const g = touch(nm);
         if (!g) continue;
-        g.lastSeen = ymLabel(y, m);      // 달 순으로 도니 마지막 값이 가장 최근이다
-        if (active) { g.teams += 1; g.months.add(ymLabel(y, m)); }
-        if (!phone) continue;
-        // 한 칸에 두 명이 적혀 있으면 누구 번호인지 알 수 없다.
-        if (names.length > 1) { g.ambiguous = true; continue; }
-        g.phone = phone;   // 뒤에 오는 달이 더 최근이므로 그대로 덮어쓴다
-        g.src = active ? '일정현황' : `과거(${ymLabel(y, m)})`;
+        g.teams += 1;
+        g.months.add(ymLabel(y, m));
+        // 한 칸에 두 명이 적혀 있으면 번호도 베트남 이름도 누구 건지 알 수 없다.
+        if (names.length > 1) { if (phone || vn) g.ambiguous = true; continue; }
+        if (vn) g.vn = vn;
+        if (phone) { g.phone = phone; g.src = '일정현황'; }  // 뒤에 오는 달이 더 최근이다
       }
     }
   }
@@ -272,14 +274,10 @@ async function openSqlite(readonly) {
 // TSV
 // ---------------------------------------------------------------
 
-// 미배정은 활동월이 비어 있으므로 마지막으로 이름이 보인 달을 대신 적는다.
-const activity = (g) => (g.months.size ? [...g.months].sort().join(' ') : (g.lastSeen ? `최종 ${g.lastSeen}` : ''));
-
 function writeTsv(file, rows) {
-  const lines = ['이름\t전화번호\t구분\t출처\t행사수\t활동월'];
+  const lines = ['한글이름\t베트남이름\t연락처\t구분'];
   for (const g of rows) {
-    lines.push([g.name, prettyPhone(g.phone), roleOf(g),
-      g.src || (g.ambiguous ? '확인필요' : ''), g.teams, activity(g)].join('\t'));
+    lines.push([g.name, g.vn, prettyPhone(g.phone), roleOf(g)].join('\t'));
   }
   fs.writeFileSync(file, lines.join('\n') + '\n');
 }
@@ -288,12 +286,15 @@ function readTsv(file) {
   const out = [];
   for (const line of fs.readFileSync(file, 'utf8').split(/\r?\n/)) {
     if (!line.trim() || line.startsWith('#')) continue;
-    const [name, phone, role] = line.split('\t');
+    const [name, vn, phone, role] = line.split('\t');
     const n = normName(name);
-    if (!n || n === '이름') continue;
+    if (!n || n === '한글이름') continue;
     // 구분 칸을 손으로 고쳤으면 그 값을 따르고, 비어 있으면 직원 목록으로 판단한다.
     const r = normName(role);
-    out.push({ name: n, phone: normPhone(phone), role: ROLE_CODE[r] ? r : (STAFF.includes(n) ? '직원' : '가이드') });
+    out.push({
+      name: n, vn: String(vn ?? '').trim(), phone: normPhone(phone),
+      role: ROLE_CODE[r] ? r : (STAFF.includes(n) ? '직원' : '가이드'),
+    });
   }
   for (const p of PINNED) {
     const hit = out.find((r) => r.name === normName(p.name));
@@ -324,13 +325,12 @@ if (cmd === 'scan') {
   const rank = { 직원: 0, 가이드: 1, 미배정: 2 };
   const rows = all.sort((a, b) => rank[roleOf(a)] - rank[roleOf(b)] || a.name.localeCompare(b.name, 'ko'));
   let lastRole = null;
-  console.log('\n' + pad('이름', 14) + pad('전화번호', 18) + pad('출처', 16) + '행사수  활동월');
+  console.log('\n' + pad('한글이름', 14) + pad('베트남이름', 20) + pad('연락처', 18) + '행사수');
   for (const g of rows) {
     const role = roleOf(g);
     if (role !== lastRole) { console.log(`\n── ${role} ──`); lastRole = role; }
-    console.log(pad(g.name, 14) + pad(prettyPhone(g.phone) || '—', 18) +
-      pad(g.src || (g.ambiguous ? '확인필요' : '—'), 16) +
-      pad(g.teams, 8) + activity(g));
+    console.log(pad(g.name, 14) + pad(g.vn || '—', 20) +
+      pad(prettyPhone(g.phone) || '—', 18) + g.teams);
   }
   const ok = rows.filter((r) => isMobile(r.phone));
   const byRole = (r) => rows.filter((g) => roleOf(g) === r).length;
@@ -356,10 +356,7 @@ if (cmd === 'scan') {
 
 if (cmd !== 'apply' || !fileArg) {
   console.log(`사용법:
-  node guide-roster.mjs scan [roster.tsv] [--from=2026-04]
-      기본은 동기화된 전 기간을 훑어 연락처를 모으고,
-      --from 이후 배정이 있는 사람만 "가이드"로 분류한다.
-      --to 를 주면 그 구간만 훑는다.
+  node guide-roster.mjs scan [roster.tsv] [--from=2026-03] [--to=2026-10]
   node guide-roster.mjs apply roster.tsv --erp --gateway            (dry-run)
   node guide-roster.mjs apply roster.tsv --erp --gateway --commit   (반영)`);
   process.exit(1);
