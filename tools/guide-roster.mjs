@@ -43,6 +43,18 @@ const PINNED = [
 ];
 
 // ---------------------------------------------------------------
+// 구분 — 직원은 행사 배정과 무관하게 항상 수신 대상이다.
+// ---------------------------------------------------------------
+const STAFF = ['박수현', '양보유', '김유미', '김다솜'];
+
+// 직원: 내근. 가이드: 4월 이후 배정 있음. 미배정: 이름만 남아 있고 배정 없음.
+function roleOf(g) {
+  if (STAFF.includes(g.name)) return '직원';
+  return g.teams > 0 ? '가이드' : '미배정';
+}
+const ROLE_CODE = { 직원: 'staff', 가이드: 'guide', 미배정: 'inactive' };
+
+// ---------------------------------------------------------------
 // 정규화
 // ---------------------------------------------------------------
 
@@ -67,10 +79,13 @@ function prettyPhone(v) {
 // "애초에 대상이 아님"으로 갈라놔야 나중에 원인을 헷갈리지 않는다.
 const isMobile = (v) => /^01[016789]\d{7,8}$/.test(normPhone(v));
 
-// GUIDE 칸은 "김유미/타오", "타오(인솔)", "미정" 처럼 자유롭게 적혀 있다.
+// GUIDE 칸은 "김유미/타오", "타오(인솔)", "픽업:최성민", "미정" 처럼 자유롭게 적혀 있다.
 const NOT_A_NAME = /^(미정|미배정|없음|공석|tbd|tba|x|-|\.)$/i;
+// "픽업:최성민" 을 그대로 두면 최성민과 다른 사람으로 갈라진다.
+const ROLE_PREFIX = /(픽업|샌딩|송영|공항|인솔|가이드|보조|담당|TC)\s*[:：]\s*/gi;
 function splitGuideCell(cell) {
   return String(cell ?? '')
+    .replace(ROLE_PREFIX, '')
     .split(/[\/,、·|+&]|\s{2,}/)
     .map((s) => s.replace(/\([^)]*\)/g, '').replace(/\d/g, ''))
     .map(normName)
@@ -89,9 +104,11 @@ function guidePhoneFromRaw(raw) {
     body = before.trim();
     try {
       const meta = JSON.parse(metaJson);
-      const gr = (meta.guide_rows || []).filter(Boolean);
-      if (gr[2]) {
-        const p = normPhone(String(gr[2]));
+      // guide_rows 는 [한국명, 베트남명, 전화] 순서지만 중간이 비면 자리가 밀린다.
+      // 자리로 집지 말고 휴대폰 형태인 값을 고른다. 이 배열은 GUIDE 열만
+      // 담고 있어서 기사 번호가 섞여 들어올 일이 없다.
+      for (const v of meta.guide_rows || []) {
+        const p = normPhone(String(v ?? ''));
         if (isMobile(p)) return p;
       }
     } catch { /* META 가 깨져 있으면 아래 구간 파싱으로 넘어간다 */ }
@@ -217,12 +234,18 @@ async function openSqlite(readonly) {
   if (ok.length === 0) throw new Error('guides 테이블이 있는 SQLite 를 찾지 못했습니다. GUIDE_DB=/경로/x.db 로 지정하세요.');
   if (ok.length > 1) throw new Error(`SQLite 후보가 여러 개입니다. GUIDE_DB 로 지정하세요:\n  ${ok.join('\n  ')}`);
   const db = new Database(ok[0], { readonly });
-  const cols = db.prepare('PRAGMA table_info(guides)').all().map((c) => c.name);
+  let cols = db.prepare('PRAGMA table_info(guides)').all().map((c) => c.name);
   const nameCol = ['name', 'guide_name', 'display_name'].find((c) => cols.includes(c));
   const phoneCol = ['phone', 'phone_number', 'tel', 'mobile', 'contact'].find((c) => cols.includes(c));
   if (!nameCol) throw new Error(`guides 에 이름 컬럼이 없습니다: ${cols.join(', ')}`);
   if (!phoneCol) throw new Error(`guides 에 전화번호 컬럼이 없습니다: ${cols.join(', ')}`);
-  return { db, file: ok[0], nameCol, phoneCol };
+  // 직원/가이드 구분을 담을 칸. 없으면 만든다(멱등).
+  if (!readonly && !cols.includes('role')) {
+    db.exec("ALTER TABLE guides ADD COLUMN role TEXT DEFAULT 'guide'");
+    console.log('[MIGRATE] guides + role');
+    cols = db.prepare('PRAGMA table_info(guides)').all().map((c) => c.name);
+  }
+  return { db, file: ok[0], nameCol, phoneCol, hasRole: cols.includes('role') };
 }
 
 // ---------------------------------------------------------------
@@ -230,9 +253,10 @@ async function openSqlite(readonly) {
 // ---------------------------------------------------------------
 
 function writeTsv(file, rows) {
-  const lines = ['이름\t전화번호\t출처\t행사수\t활동월'];
+  const lines = ['이름\t전화번호\t구분\t출처\t행사수\t활동월'];
   for (const g of rows) {
-    lines.push([g.name, prettyPhone(g.phone), g.src || (g.ambiguous ? '확인필요' : ''), g.teams,
+    lines.push([g.name, prettyPhone(g.phone), roleOf(g),
+      g.src || (g.ambiguous ? '확인필요' : ''), g.teams,
       [...g.months].sort().join(' ')].join('\t'));
   }
   fs.writeFileSync(file, lines.join('\n') + '\n');
@@ -242,17 +266,21 @@ function readTsv(file) {
   const out = [];
   for (const line of fs.readFileSync(file, 'utf8').split(/\r?\n/)) {
     if (!line.trim() || line.startsWith('#')) continue;
-    const [name, phone] = line.split('\t');
+    const [name, phone, role] = line.split('\t');
     const n = normName(name);
     if (!n || n === '이름') continue;
-    out.push({ name: n, phone: normPhone(phone) });
+    // 구분 칸을 손으로 고쳤으면 그 값을 따르고, 비어 있으면 직원 목록으로 판단한다.
+    const r = normName(role);
+    out.push({ name: n, phone: normPhone(phone), role: ROLE_CODE[r] ? r : (STAFF.includes(n) ? '직원' : '가이드') });
   }
   for (const p of PINNED) {
     const hit = out.find((r) => r.name === normName(p.name));
     if (hit) hit.phone = normPhone(p.phone);
-    else out.push({ name: normName(p.name), phone: normPhone(p.phone) });
+    else out.push({ name: normName(p.name), phone: normPhone(p.phone), role: '직원' });
   }
-  return out.sort((a, b) => a.name.localeCompare(b.name, 'ko'));
+  // 직원 먼저, 그 안에서 가나다순.
+  const rank = { 직원: 0, 가이드: 1, 미배정: 2 };
+  return out.sort((a, b) => (rank[a.role] ?? 1) - (rank[b.role] ?? 1) || a.name.localeCompare(b.name, 'ko'));
 }
 
 const pad = (s, n) => { const w = [...String(s)].reduce((a, c) => a + (c.charCodeAt(0) > 0x2000 ? 2 : 1), 0); return String(s) + ' '.repeat(Math.max(1, n - w)); };
@@ -270,15 +298,22 @@ const doErp = process.argv.includes('--erp');
 const doGw = process.argv.includes('--gateway');
 
 if (cmd === 'scan') {
-  const rows = await scan();
+  const all = await scan();
+  const rank = { 직원: 0, 가이드: 1, 미배정: 2 };
+  const rows = all.sort((a, b) => rank[roleOf(a)] - rank[roleOf(b)] || a.name.localeCompare(b.name, 'ko'));
+  let lastRole = null;
   console.log('\n' + pad('이름', 14) + pad('전화번호', 18) + pad('출처', 12) + '행사수  활동월');
   for (const g of rows) {
+    const role = roleOf(g);
+    if (role !== lastRole) { console.log(`\n── ${role} ──`); lastRole = role; }
     console.log(pad(g.name, 14) + pad(prettyPhone(g.phone) || '—', 18) +
       pad(g.src || (g.ambiguous ? '확인필요' : '—'), 12) +
       pad(g.teams, 8) + [...g.months].sort().join(' '));
   }
   const ok = rows.filter((r) => isMobile(r.phone));
-  console.log(`\n가이드 ${rows.length}명 / 번호 확보 ${ok.length}명 / 번호 없음 ${rows.length - ok.length}명`);
+  const byRole = (r) => rows.filter((g) => roleOf(g) === r).length;
+  console.log(`\n총 ${rows.length}명 (직원 ${byRole('직원')} / 가이드 ${byRole('가이드')} / 미배정 ${byRole('미배정')})`);
+  console.log(`번호 확보 ${ok.length}명 / 번호 없음 ${rows.length - ok.length}명`);
   const amb = rows.filter((r) => !r.phone && r.ambiguous);
   if (amb.length) console.log(`※ 한 칸에 여러 명이 적혀 있어 번호를 못 고른 가이드: ${amb.map((r) => r.name).join(', ')}`);
   if (fileArg) { writeTsv(fileArg, rows); console.log(`\n${fileArg} 저장 — 빈 번호를 채운 뒤 apply 하세요.`); }
@@ -319,21 +354,34 @@ if (doErp) {
 }
 
 if (doGw) {
-  const { db, file, nameCol, phoneCol } = await openSqlite(!commit);
-  const cur = db.prepare(`SELECT id, ${nameCol} AS name, ${phoneCol} AS phone FROM guides`).all();
+  const { db, file, nameCol, phoneCol, hasRole } = await openSqlite(!commit);
+  const cur = db.prepare(
+    `SELECT id, ${nameCol} AS name, ${phoneCol} AS phone${hasRole ? ', role' : ''} FROM guides`).all();
   const byName = new Map(cur.map((r) => [normName(r.name), r]));
   const ins = valid.filter((r) => !byName.has(r.name));
-  const upd = valid.filter((r) => byName.has(r.name) && normPhone(byName.get(r.name).phone) !== r.phone);
+  const upd = valid.filter((r) => {
+    const c = byName.get(r.name);
+    if (!c) return false;
+    return normPhone(c.phone) !== r.phone || (hasRole && c.role !== ROLE_CODE[r.role]);
+  });
   console.log(`\n[알림톡 수신자] ${file}`);
-  console.log(`  신규 ${ins.length} / 번호갱신 ${upd.length} / 동일 ${valid.length - ins.length - upd.length}`);
-  for (const r of ins) console.log(`  + ${r.name}\t${prettyPhone(r.phone)}`);
-  for (const r of upd) console.log(`  ~ ${r.name}\t${prettyPhone(byName.get(r.name).phone) || '(없음)'} → ${prettyPhone(r.phone)}`);
+  console.log(`  신규 ${ins.length} / 갱신 ${upd.length} / 동일 ${valid.length - ins.length - upd.length}`);
+  for (const r of ins) console.log(`  + [${r.role}] ${r.name}\t${prettyPhone(r.phone)}`);
+  for (const r of upd) {
+    const c = byName.get(r.name);
+    const phoneChanged = normPhone(c.phone) !== r.phone;
+    console.log(`  ~ [${r.role}] ${r.name}\t` +
+      (phoneChanged ? `${prettyPhone(c.phone) || '(없음)'} → ${prettyPhone(r.phone)}` : '구분만 변경'));
+  }
   if (commit) {
-    const insert = db.prepare(`INSERT INTO guides(${nameCol}, ${phoneCol}) VALUES(?, ?)`);
-    const update = db.prepare(`UPDATE guides SET ${phoneCol}=? WHERE id=?`);
+    const cols = [nameCol, phoneCol, ...(hasRole ? ['role'] : [])];
+    const insert = db.prepare(
+      `INSERT INTO guides(${cols.join(', ')}) VALUES(${cols.map(() => '?').join(', ')})`);
+    const update = db.prepare(
+      `UPDATE guides SET ${phoneCol}=?${hasRole ? ', role=?' : ''} WHERE id=?`);
     db.transaction(() => {
-      for (const r of ins) insert.run(r.name, prettyPhone(r.phone));
-      for (const r of upd) update.run(prettyPhone(r.phone), byName.get(r.name).id);
+      for (const r of ins) insert.run(...[r.name, prettyPhone(r.phone), ...(hasRole ? [ROLE_CODE[r.role]] : [])]);
+      for (const r of upd) update.run(...[prettyPhone(r.phone), ...(hasRole ? [ROLE_CODE[r.role]] : []), byName.get(r.name).id]);
     })();
     console.log(`[알림톡 수신자] 반영 완료 — 신규 ${ins.length}, 갱신 ${upd.length}`);
   }
