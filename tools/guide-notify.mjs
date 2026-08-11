@@ -434,6 +434,15 @@ export function registerGuideNotify(app, db, requireAdminToken) {
     const clean = normalizeGuideInput({ name, vnName, phone, role });
     if (clean.error) return res.status(400).json({ error: clean.error });
 
+    // 사람을 가리는 열쇠는 연락처다. 이름은 표기가 흔들려도 번호는 하나다.
+    // 번호가 겹치면 같은 사람이므로 새 행을 만들지 않는다.
+    const samePhone = db.prepare('SELECT id, name, phone FROM guides').all()
+      .find((g) => normalizePhone(g.phone) === normalizePhone(clean.phone));
+    if (samePhone) {
+      return res.status(409).json({
+        error: `이 번호는 이미 ${samePhone.name}(#${samePhone.id}) 에 등록돼 있습니다. 그 행을 수정하세요.`,
+      });
+    }
     // "박 수현"과 "박수현"을 같은 사람으로 본다. 양쪽 다 공백을 지우고 비교한다.
     const dup = db.prepare(
       "SELECT id FROM guides WHERE REPLACE(TRIM(name),' ','')=?").get(clean.name.replace(/\s/g, ''));

@@ -433,36 +433,65 @@ if (doGw) {
   const extra = [hasRole ? 'role' : null, hasVn ? 'vn_name' : null].filter(Boolean);
   const cur = db.prepare(
     `SELECT id, ${nameCol} AS name, ${phoneCol} AS phone${extra.length ? ', ' + extra.join(', ') : ''} FROM guides`).all();
-  const byName = new Map(cur.map((r) => [normName(r.name), r]));
-  const ins = valid.filter((r) => !byName.has(r.name));
-  const upd = valid.filter((r) => {
-    const c = byName.get(r.name);
-    if (!c) return false;
-    if (normPhone(c.phone) !== r.phone) return true;
-    if (hasRole && c.role !== ROLE_CODE[r.role]) return true;
+  console.log(`\n[알림톡 수신자] ${file}`);
+
+  // 사람을 가리는 열쇠는 연락처다. 이름은 "안", "김유미/타오" 처럼 흔들리지만
+  // 번호는 하나다. 번호로 먼저 찾고, 번호가 없는 기존 행만 이름으로 잇는다.
+  const byPhone = new Map();
+  const byName = new Map();
+  for (const r of cur) {
+    const p = normPhone(r.phone);
+    if (isMobile(p) && !byPhone.has(p)) byPhone.set(p, r);
+    const n = normName(r.name);
+    if (!byName.has(n)) byName.set(n, r);
+  }
+  const matchOf = (r) => byPhone.get(r.phone) ?? byName.get(r.name);
+
+  // 같은 번호가 이미 두 행에 들어 있으면 여기서 멈춘다. 이걸 두고 진행하면
+  // 한 사람에게 알림톡이 두 번 간다.
+  const dupPhones = new Map();
+  for (const r of cur) {
+    const p = normPhone(r.phone);
+    if (!isMobile(p)) continue;
+    dupPhones.set(p, [...(dupPhones.get(p) ?? []), r]);
+  }
+  const collisions = [...dupPhones.entries()].filter(([, rows]) => rows.length > 1);
+  if (collisions.length) {
+    console.log('\n같은 번호를 쓰는 행이 이미 있습니다 — 정리한 뒤 다시 실행하세요:');
+    for (const [p, rows] of collisions) {
+      console.log(`  ${prettyPhone(p)} → ${rows.map((r) => `#${r.id} ${r.name}`).join(' , ')}`);
+    }
+    db.close();
+    process.exit(1);
+  }
+
+  const ins = valid.filter((r) => !matchOf(r));
+  const changesOf = (r) => {
+    const c = matchOf(r);
+    const out = [];
+    if (!c) return out;
+    if (normPhone(c.phone) !== r.phone) out.push(`${prettyPhone(c.phone) || '(없음)'} → ${prettyPhone(r.phone)}`);
+    if (normName(c.name) !== r.name) out.push(`이름 ${c.name} → ${r.name}`);
+    if (hasRole && c.role !== ROLE_CODE[r.role]) out.push(`구분 ${r.role}`);
     // 베트남 이름은 채우기만 하고 비우지 않는다. 스캔에서 못 읽었다고
     // 손으로 넣어둔 값을 지워버리면 안 된다.
-    if (hasVn && r.vn && (c.vn_name ?? '') !== r.vn) return true;
-    return false;
-  });
-  console.log(`\n[알림톡 수신자] ${file}`);
+    if (hasVn && r.vn && (c.vn_name ?? '') !== r.vn) out.push(`베트남명 ${r.vn}`);
+    return out;
+  };
+  const upd = valid.filter((r) => changesOf(r).length > 0);
+
   console.log(`  신규 ${ins.length} / 갱신 ${upd.length} / 동일 ${valid.length - ins.length - upd.length}`);
   for (const r of ins) console.log(`  + [${r.role}] ${r.name}\t${r.vn || '—'}\t${prettyPhone(r.phone)}`);
-  for (const r of upd) {
-    const c = byName.get(r.name);
-    const changes = [];
-    if (normPhone(c.phone) !== r.phone) changes.push(`${prettyPhone(c.phone) || '(없음)'} → ${prettyPhone(r.phone)}`);
-    if (hasRole && c.role !== ROLE_CODE[r.role]) changes.push(`구분 ${r.role}`);
-    if (hasVn && r.vn && (c.vn_name ?? '') !== r.vn) changes.push(`베트남명 ${r.vn}`);
-    console.log(`  ~ [${r.role}] ${r.name}\t${changes.join(' · ')}`);
-  }
+  for (const r of upd) console.log(`  ~ [${r.role}] ${r.name}\t${changesOf(r).join(' · ')}`);
+
   // NOT NULL 인데 기본값이 없는 칸은 자리를 채워야 INSERT 가 통과한다.
-  // 무엇을 넣는지 눈에 보여야 나중에 이 값이 어디서 왔는지 헷갈리지 않는다.
-  const fillFor = (name) => required.map((c) => (
-    c.numeric ? 0 : c.unique ? `erp:${name}` : ''));
+  // 유일 칸에는 번호를 넣는다. 이름은 바뀌어도 번호는 그 사람 것이라
+  // 두 번 돌려도 같은 값이 나오고, 나중에 번호로 되짚을 수도 있다.
+  const fillFor = (r) => required.map((c) => (
+    c.numeric ? 0 : c.unique ? `phone:${r.phone}` : ''));
   if (ins.length && required.length) {
     console.log(`  ※ ${required.map((c) => c.name).join(', ')} 는 필수 칸이라 자리값을 넣습니다` +
-      (required.some((c) => c.unique) ? ' (유일 칸은 erp:이름 형태)' : ''));
+      (required.some((c) => c.unique) ? ' (유일 칸은 phone:번호)' : ''));
   }
 
   if (commit) {
@@ -470,7 +499,7 @@ if (doGw) {
       ...required.map((c) => c.name)];
     const insert = db.prepare(
       `INSERT INTO guides(${cols.join(', ')}) VALUES(${cols.map(() => '?').join(', ')})`);
-    const sets = [`${phoneCol}=?`, ...(hasRole ? ['role=?'] : []),
+    const sets = [`${nameCol}=?`, `${phoneCol}=?`, ...(hasRole ? ['role=?'] : []),
       ...(hasVn ? ['vn_name=COALESCE(NULLIF(?,\'\'), vn_name)'] : [])];
     const update = db.prepare(`UPDATE guides SET ${sets.join(', ')} WHERE id=?`);
     // 드라이버마다 트랜잭션 헬퍼가 다르므로 SQL 로 직접 감싼다.
@@ -479,17 +508,28 @@ if (doGw) {
       for (const r of ins) {
         insert.run(r.name, prettyPhone(r.phone),
           ...(hasRole ? [ROLE_CODE[r.role]] : []), ...(hasVn ? [r.vn || null] : []),
-          ...fillFor(r.name));
+          ...fillFor(r));
       }
       for (const r of upd) {
-        update.run(prettyPhone(r.phone),
+        update.run(r.name, prettyPhone(r.phone),
           ...(hasRole ? [ROLE_CODE[r.role]] : []), ...(hasVn ? [r.vn || ''] : []),
-          byName.get(r.name).id);
+          matchOf(r).id);
       }
       db.exec('COMMIT');
     } catch (e) {
       db.exec('ROLLBACK');
       throw e;
+    }
+
+    // 앞으로 같은 번호가 두 행에 들어가지 못하게 DB 차원에서 막는다.
+    // 스크립트가 조심하는 것만으로는 봇이나 손으로 넣을 때 뚫린다.
+    try {
+      db.exec(`CREATE UNIQUE INDEX IF NOT EXISTS idx_guides_phone_unique
+                 ON guides(${phoneCol})
+              WHERE ${phoneCol} IS NOT NULL AND TRIM(${phoneCol}) != ''`);
+      console.log('[알림톡 수신자] 연락처 중복 방지 인덱스 확인');
+    } catch (e) {
+      console.log(`[알림톡 수신자] 중복 방지 인덱스를 걸지 못했습니다 — ${e.message}`);
     }
     console.log(`[알림톡 수신자] 반영 완료 — 신규 ${ins.length}, 갱신 ${upd.length}`);
   }
