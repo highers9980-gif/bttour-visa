@@ -15,8 +15,9 @@ import { SolapiMessageService } from 'solapi';
 import crypto from 'node:crypto';
 
 // SDK 가 심사 요청을 감싸지 않아 REST 를 직접 부른다.
-// 취소 경로가 kakao/v2/templates/{id}/inspection/cancel 이므로 요청은 그 상위 경로다.
-async function solapiPost(path) {
+// 검수 취소가 PUT kakao/v2/templates/{id}/inspection/cancel 이므로
+// 검수 요청은 같은 계열의 PUT .../inspection 이다.
+async function solapiRequest(method, path) {
   const date = new Date().toISOString();
   const salt = crypto.randomBytes(32).toString('hex');
   const signature = crypto
@@ -25,7 +26,7 @@ async function solapiPost(path) {
     .digest('hex');
 
   const res = await fetch(`https://api.solapi.com/${path}`, {
-    method: 'POST',
+    method,
     headers: {
       'content-type': 'application/json',
       Authorization: `HMAC-SHA256 apiKey=${process.env.SOLAPI_API_KEY}, date=${date}, salt=${salt}, signature=${signature}`,
@@ -33,8 +34,35 @@ async function solapiPost(path) {
     body: '{}',
   });
   const text = await res.text();
-  if (!res.ok) throw new Error(`${res.status} ${text.slice(0, 160)}`);
+  if (!res.ok) {
+    const body = text.trim().startsWith('<') ? '(HTML 404 — 경로 없음)' : text.slice(0, 200);
+    const err = new Error(`${res.status} ${body}`);
+    err.status = res.status;
+    throw err;
+  }
   return text;
+}
+
+// 경로가 문서화되어 있지 않아 후보를 순서대로 시도한다.
+// 404 는 "그 경로가 없다"는 뜻이므로 다음 후보로 넘어가고,
+// 그 외 상태코드(400/403 등)는 경로는 맞고 요청이 거절된 것이므로 즉시 던진다.
+const INSPECTION_ROUTES = [
+  ['PUT', (id) => `kakao/v2/templates/${id}/inspection`],
+  ['POST', (id) => `kakao/v2/templates/${id}/inspection`],
+  ['PUT', (id) => `kakao/v2/templates/${id}/inspection/request`],
+];
+
+async function requestInspection(templateId) {
+  let last;
+  for (const [method, build] of INSPECTION_ROUTES) {
+    try {
+      return await solapiRequest(method, build(templateId));
+    } catch (e) {
+      if (e.status !== 404) throw e;
+      last = e;
+    }
+  }
+  throw last;
 }
 
 const CDN = process.env.DOCS_CDN_BASE || 'https://cdn.for-bt.com';
@@ -265,7 +293,7 @@ if (cmd === 'categories') {
 
   for (const t of targets) {
     try {
-      await solapiPost(`kakao/v2/templates/${t.templateId}/inspection`);
+      await requestInspection(t.templateId);
       console.log(`✅ 심사 요청  ${t.name}`);
     } catch (e) {
       const msg = String(e?.message ?? e);
