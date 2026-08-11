@@ -12,6 +12,30 @@
 // 전체 URL 을 변수로 두면 심사에서 반려되는 경우가 많다.
 
 import { SolapiMessageService } from 'solapi';
+import crypto from 'node:crypto';
+
+// SDK 가 심사 요청을 감싸지 않아 REST 를 직접 부른다.
+// 취소 경로가 kakao/v2/templates/{id}/inspection/cancel 이므로 요청은 그 상위 경로다.
+async function solapiPost(path) {
+  const date = new Date().toISOString();
+  const salt = crypto.randomBytes(32).toString('hex');
+  const signature = crypto
+    .createHmac('sha256', process.env.SOLAPI_API_SECRET)
+    .update(date + salt)
+    .digest('hex');
+
+  const res = await fetch(`https://api.solapi.com/${path}`, {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      Authorization: `HMAC-SHA256 apiKey=${process.env.SOLAPI_API_KEY}, date=${date}, salt=${salt}, signature=${signature}`,
+    },
+    body: '{}',
+  });
+  const text = await res.text();
+  if (!res.ok) throw new Error(`${res.status} ${text.slice(0, 160)}`);
+  return text;
+}
 
 const CDN = process.env.DOCS_CDN_BASE || 'https://cdn.for-bt.com';
 const service = new SolapiMessageService(process.env.SOLAPI_API_KEY, process.env.SOLAPI_API_SECRET);
@@ -241,7 +265,7 @@ if (cmd === 'categories') {
 
   for (const t of targets) {
     try {
-      await service.requestInspectionKakaoAlimtalkTemplate(t.templateId);
+      await solapiPost(`kakao/v2/templates/${t.templateId}/inspection`);
       console.log(`✅ 심사 요청  ${t.name}`);
     } catch (e) {
       const msg = String(e?.message ?? e);
