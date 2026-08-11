@@ -232,6 +232,25 @@ if (cmd === 'categories') {
   }
   console.log('\n등록 후 솔라피 콘솔에서 "심사 요청"을 눌러야 검수가 시작됩니다.');
 
+} else if (cmd === 'submit') {
+  // 등록만 해두면 검수가 걸리지 않는다. 대기 상태인 템플릿을 모두 심사 요청한다.
+  const res = await service.getKakaoAlimtalkTemplates({ channelId });
+  const rows = res?.templateList ?? res?.templates ?? res ?? [];
+  const targets = rows.filter((t) => !arg || t.templateId === arg);
+  if (!targets.length) { console.log('심사 요청할 템플릿이 없습니다.'); process.exit(0); }
+
+  for (const t of targets) {
+    try {
+      await service.requestInspectionKakaoAlimtalkTemplate(t.templateId);
+      console.log(`✅ 심사 요청  ${t.name}`);
+    } catch (e) {
+      const msg = String(e?.message ?? e);
+      // 이미 검수 중이거나 승인된 건은 오류가 아니다.
+      const done = /inspect|검수|승인|approved|pending/i.test(msg);
+      console.log(`${done ? '⏭' : '❌'} ${t.name}  →  ${msg.slice(0, 90)}`);
+    }
+  }
+
 } else if (cmd === 'list') {
   const res = await service.getKakaoAlimtalkTemplates({ channelId });
   const rows = res?.templateList ?? res?.templates ?? res ?? [];
@@ -242,7 +261,8 @@ if (cmd === 'categories') {
   node --env-file=.env create-templates.mjs categories      카테고리 코드 조회
   node --env-file=.env create-templates.mjs create           템플릿 11종 등록
   node --env-file=.env create-templates.mjs create <코드>    카테고리를 강제 지정해 등록
-  node --env-file=.env create-templates.mjs list            등록 상태 확인
+  node --env-file=.env create-templates.mjs submit          등록된 템플릿 전체 심사 요청
+  node --env-file=.env create-templates.mjs list            등록 · 심사 상태 확인
 
 등록될 템플릿:
 ${TEMPLATES.map((t, i) => `  ${String(i + 1).padStart(2)}. ${t.name}  [${t.categoryCode}]`).join('\n')}`);
