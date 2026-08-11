@@ -286,8 +286,27 @@ async function openSqlite(readonly) {
     }
     cols = db.prepare('PRAGMA table_info(guides)').all().map((c) => c.name);
   }
+  // 이 테이블은 원래 카카오 챗봇이 만든 것이라 kakao_user_id 같은
+  // NOT NULL 컬럼이 있다. ERP 로 넣는 사람은 카카오 사용자 ID 가 없으므로
+  // 무엇을 채울지 스키마를 보고 정한다.
+  const info = db.prepare('PRAGMA table_info(guides)').all();
+  const uniqueCols = new Set();
+  for (const i of db.prepare('PRAGMA index_list(guides)').all()) {
+    if (!i.unique) continue;
+    for (const c of db.prepare(`PRAGMA index_info('${i.name}')`).all()) uniqueCols.add(c.name);
+  }
+  const known = new Set([nameCol, phoneCol, 'role', 'vn_name']);
+  const required = info
+    .filter((c) => c.notnull && c.dflt_value === null && !c.pk && !known.has(c.name))
+    .map((c) => ({
+      name: c.name,
+      // 유일 인덱스가 걸린 칸은 행마다 달라야 하므로 이름을 섞어 넣는다.
+      unique: uniqueCols.has(c.name),
+      numeric: /INT|REAL|NUM|DEC|FLOA|DOUB/i.test(c.type || ''),
+    }));
+
   return {
-    db, file: ok[0], nameCol, phoneCol,
+    db, file: ok[0], nameCol, phoneCol, required,
     hasRole: cols.includes('role'), hasVn: cols.includes('vn_name'),
   };
 }
@@ -410,7 +429,7 @@ if (doErp) {
 }
 
 if (doGw) {
-  const { db, file, nameCol, phoneCol, hasRole, hasVn } = await openSqlite(!commit);
+  const { db, file, nameCol, phoneCol, hasRole, hasVn, required } = await openSqlite(!commit);
   const extra = [hasRole ? 'role' : null, hasVn ? 'vn_name' : null].filter(Boolean);
   const cur = db.prepare(
     `SELECT id, ${nameCol} AS name, ${phoneCol} AS phone${extra.length ? ', ' + extra.join(', ') : ''} FROM guides`).all();
@@ -437,8 +456,18 @@ if (doGw) {
     if (hasVn && r.vn && (c.vn_name ?? '') !== r.vn) changes.push(`베트남명 ${r.vn}`);
     console.log(`  ~ [${r.role}] ${r.name}\t${changes.join(' · ')}`);
   }
+  // NOT NULL 인데 기본값이 없는 칸은 자리를 채워야 INSERT 가 통과한다.
+  // 무엇을 넣는지 눈에 보여야 나중에 이 값이 어디서 왔는지 헷갈리지 않는다.
+  const fillFor = (name) => required.map((c) => (
+    c.numeric ? 0 : c.unique ? `erp:${name}` : ''));
+  if (ins.length && required.length) {
+    console.log(`  ※ ${required.map((c) => c.name).join(', ')} 는 필수 칸이라 자리값을 넣습니다` +
+      (required.some((c) => c.unique) ? ' (유일 칸은 erp:이름 형태)' : ''));
+  }
+
   if (commit) {
-    const cols = [nameCol, phoneCol, ...(hasRole ? ['role'] : []), ...(hasVn ? ['vn_name'] : [])];
+    const cols = [nameCol, phoneCol, ...(hasRole ? ['role'] : []), ...(hasVn ? ['vn_name'] : []),
+      ...required.map((c) => c.name)];
     const insert = db.prepare(
       `INSERT INTO guides(${cols.join(', ')}) VALUES(${cols.map(() => '?').join(', ')})`);
     const sets = [`${phoneCol}=?`, ...(hasRole ? ['role=?'] : []),
@@ -449,7 +478,8 @@ if (doGw) {
     try {
       for (const r of ins) {
         insert.run(r.name, prettyPhone(r.phone),
-          ...(hasRole ? [ROLE_CODE[r.role]] : []), ...(hasVn ? [r.vn || null] : []));
+          ...(hasRole ? [ROLE_CODE[r.role]] : []), ...(hasVn ? [r.vn || null] : []),
+          ...fillFor(r.name));
       }
       for (const r of upd) {
         update.run(prettyPhone(r.phone),

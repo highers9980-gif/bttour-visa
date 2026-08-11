@@ -252,6 +252,23 @@ export function normalizePhone(value) {
 
 const ROLES = ['staff', 'guide', 'inactive'];
 
+// NOT NULL 인데 기본값이 없고 우리가 안 채우는 칸을 찾아 자리값을 만든다.
+// 유일 인덱스가 걸린 칸은 행마다 달라야 하므로 이름을 섞는다.
+function requiredFillers(db, handled, name) {
+  const unique = new Set();
+  for (const i of db.prepare('PRAGMA index_list(guides)').all()) {
+    if (!i.unique) continue;
+    for (const c of db.prepare(`PRAGMA index_info('${i.name}')`).all()) unique.add(c.name);
+  }
+  return db.prepare('PRAGMA table_info(guides)').all()
+    .filter((c) => c.notnull && c.dflt_value === null && !c.pk && !handled.includes(c.name))
+    .map((c) => ({
+      name: c.name,
+      value: /INT|REAL|NUM|DEC|FLOA|DOUB/i.test(c.type || '') ? 0
+        : unique.has(c.name) ? `erp:${name}` : '',
+    }));
+}
+
 // 화면에서 들어온 값을 저장 형태로 다듬는다. 번호는 국내 휴대폰만 받는다 —
 // 알림톡이 유선·해외로는 나가지 않으므로 넣는 순간 걸러야 나중에
 // "왜 안 갔지"를 되짚지 않는다.
@@ -422,9 +439,14 @@ export function registerGuideNotify(app, db, requireAdminToken) {
       "SELECT id FROM guides WHERE REPLACE(TRIM(name),' ','')=?").get(clean.name.replace(/\s/g, ''));
     if (dup) return res.status(409).json({ error: `이미 있는 이름입니다 (#${dup.id})` });
 
+    // guides 는 원래 카카오 챗봇이 만든 테이블이라 kakao_user_id 처럼
+    // NOT NULL 인데 기본값이 없는 칸이 있다. ERP 로 넣는 사람은 카카오
+    // 사용자 ID 가 없으므로 스키마를 보고 자리값을 채운다.
+    const extra = requiredFillers(db, ['name', 'vn_name', 'phone', 'role', 'notify_active'], clean.name);
+    const cols = ['name', 'vn_name', 'phone', 'role', 'notify_active', ...extra.map((c) => c.name)];
+    const vals = [clean.name, clean.vnName, clean.phone, clean.role, 1, ...extra.map((c) => c.value)];
     const info = db.prepare(
-      'INSERT INTO guides(name, vn_name, phone, role, notify_active) VALUES(?,?,?,?,1)')
-      .run(clean.name, clean.vnName, clean.phone, clean.role);
+      `INSERT INTO guides(${cols.join(', ')}) VALUES(${cols.map(() => '?').join(', ')})`).run(...vals);
     res.json({ guide: db.prepare('SELECT * FROM guides WHERE id=?').get(info.lastInsertRowid) });
   });
 
