@@ -9,12 +9,32 @@
 //   runNotifyWorker(db);                               // 발송 워커 시작
 //
 // 환경변수
-//   DOCS_UPLOAD_URL    https://cdn.for-bt.com/upload
-//   DOCS_UPLOAD_TOKEN  Worker 의 UPLOAD_TOKEN 과 동일
+//   DOCS_ROOT          문서 보관 폴더 (기본 ~/zalo-bot/settlement/docs)
+//   DOCS_PUBLIC_BASE   버튼 링크 도메인 (기본 https://cdn.for-bt.com)
 //   SOLAPI_API_KEY     솔라피 API Key
 //   SOLAPI_API_SECRET  솔라피 API Secret
 //   SOLAPI_PF_ID       카카오 채널 발신프로필 ID (KA01PF...)
 //   SOLAPI_SENDER      대체발송용 발신번호 (없으면 대체발송 꺼짐)
+
+import crypto from 'node:crypto';
+import fsp from 'node:fs/promises';
+import path from 'node:path';
+
+// ERP 화면은 템플릿 key 만 보낸다. 반려 후 재등록으로 ID 가 바뀌면
+// 여기만 고치면 되고 웹은 재배포하지 않아도 된다.
+export const TEMPLATE_IDS = {
+  'team-assign':    'KA01TP260811081834827tploAdp4BEJ',  // 가이드-팀배정안내
+  'briefing':       'KA01TP2608110818352803ceDTMUoQci',  // 가이드-지시서발송
+  'driver':         'KA01TP260811081835353JbEVZXKJrV7',  // 가이드-차량기사안내
+  'booking':        'KA01TP260811081835394BAHuZ21LMx1',  // 가이드-예약안내
+  'change':         'KA01TP260811081835462JxxieOQc8AL',  // 가이드-변경안내
+  'booking-change': 'KA01TP260811081835542WEMJgXxB8cx',  // 가이드-예약변경안내
+  'day-before':     'KA01TP2608110818356174GbjxXkvtzc',  // 가이드-행사전날안내
+  'urgent':         'KA01TP260811081835650O5cJZue7kse',  // 가이드-긴급공지
+  'notice':         'KA01TP260811081835738EQpROshOS51',  // 가이드-그룹공지
+  'settle-request': 'KA01TP260811081835772FzAbweX0CGY',  // 가이드-정산요청안내
+  'settle-result':  'KA01TP260811081835813vrEqWBjdiBa',  // 가이드-정산처리결과
+};
 
 const KIND = 'guide_notify';
 const MAX_ATTEMPTS = 5;
@@ -38,7 +58,12 @@ export function migrateGuideNotify(db) {
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     key TEXT UNIQUE NOT NULL, url TEXT NOT NULL, kind TEXT, label TEXT,
     bytes INTEGER, expires_at TEXT, created_by TEXT,
+    hits INTEGER DEFAULT 0, last_hit_at TEXT,
     created_at TEXT DEFAULT (datetime('now','localtime')))`);
+  for (const col of ['hits INTEGER DEFAULT 0', 'last_hit_at TEXT']) {
+    try { db.exec(`ALTER TABLE guide_documents ADD COLUMN ${col}`); }
+    catch (e) { if (!/duplicate column/i.test(e.message)) throw e; }
+  }
   db.exec(`CREATE TABLE IF NOT EXISTS guide_notifications (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     guide_id INTEGER NOT NULL, outbox_id INTEGER,
@@ -86,67 +111,53 @@ const CONTENT_TYPES = {
   pdf: 'application/pdf',
 };
 
+// 문서는 이 게이트웨이가 직접 보관하고 내보낸다. 별도 스토리지를 두면
+// 도메인·토큰·만료를 한 군데 더 관리해야 하는데, PWA 를 이미 여기서
+// 서빙하고 있어 얻는 게 없다.
+const DOCS_ROOT = process.env.DOCS_ROOT || '/home/bttour/zalo-bot/settlement/docs';
+// 알림톡 템플릿 버튼에 박혀 있는 주소. 템플릿이 승인된 뒤에는 바꿀 수 없다.
+const DOCS_BASE = (process.env.DOCS_PUBLIC_BASE || 'https://cdn.for-bt.com').replace(/\/+$/, '');
+
 export async function uploadDocument(db, { buffer, ext, label, expireDays = 90, actor = 'erp' }) {
-  const contentType = CONTENT_TYPES[String(ext || '').toLowerCase().replace(/^\./, '')];
+  const clean = String(ext || '').toLowerCase().replace(/^\./, '');
+  const contentType = CONTENT_TYPES[clean];
   if (!contentType) throw new Error(`지원하지 않는 형식: ${ext}`);
 
-  const endpoint = process.env.DOCS_UPLOAD_URL;
-  const token = process.env.DOCS_UPLOAD_TOKEN;
-  if (!endpoint || !token) throw new Error('DOCS_UPLOAD_URL / DOCS_UPLOAD_TOKEN 미설정');
+  // 브리핑에는 가이드·기사 연락처와 실명 로밍리스트가 들어간다.
+  // 주소를 추측할 수 없어야 하므로 128비트 난수를 쓴다.
+  const key = `${crypto.randomBytes(16).toString('hex')}.${clean}`;
+  await fsp.mkdir(DOCS_ROOT, { recursive: true });
+  await fsp.writeFile(path.join(DOCS_ROOT, key), buffer);
 
-  const res = await fetch(endpoint, {
-    method: 'POST',
-    headers: {
-      'content-type': contentType,
-      authorization: `Bearer ${token}`,
-      'x-expire-days': String(expireDays),
-      'x-label': encodeURIComponent(String(label || '').slice(0, 200)),
-    },
-    body: buffer,
-  });
-
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(`업로드 실패 ${res.status}: ${data?.error || ''}`);
-
+  const expiresAt = new Date(Date.now() + expireDays * 86400_000).toISOString().slice(0, 19).replace('T', ' ');
+  const url = `${DOCS_BASE}/d/${key}`;
   db.prepare(`INSERT INTO guide_documents(key,url,kind,label,bytes,expires_at,created_by)
     VALUES(?,?,?,?,?,?,?)`)
-    .run(data.key, data.url, contentType, String(label || ''), Number(data.bytes || 0), data.expiresAt, actor);
+    .run(key, url, contentType, String(label || ''), buffer.length, expiresAt, actor);
 
-  return data; // { key, url, expiresAt, bytes }
+  return { key, url, expiresAt, bytes: buffer.length };
 }
 
 // ---------------------------------------------------------------
-// 열람 확인 — Worker 에 쌓인 조회 기록을 붙여준다.
+// 열람 확인
 //
 // 발송 성공과 "가이드가 실제로 봤다"는 다르다. 브리핑을 열지 않은 가이드를
 // 찾아내는 게 운영상 가장 중요해서, 이력 조회에 항상 함께 실어 보낸다.
 // ---------------------------------------------------------------
 
-export async function fetchOpenStats(keys) {
-  const list = [...new Set((keys || []).filter(Boolean))];
+export function fetchOpenStats(db, keys) {
+  const list = [...new Set((keys || []).filter(Boolean))].slice(0, 200);
   if (!list.length) return {};
-
-  const base = process.env.DOCS_UPLOAD_URL;
-  const token = process.env.DOCS_UPLOAD_TOKEN;
-  if (!base || !token) return {};
-
-  try {
-    const res = await fetch(base.replace(/\/upload$/, '/stats'), {
-      method: 'POST',
-      headers: { 'content-type': 'application/json', authorization: `Bearer ${token}` },
-      body: JSON.stringify({ keys: list.slice(0, 200) }),
-      signal: AbortSignal.timeout(8000),
-    });
-    if (!res.ok) return {};
-    return (await res.json())?.stats || {};
-  } catch (e) {
-    console.warn('[NOTIFY] 열람 통계 조회 실패', e.message);
-    return {}; // 통계는 부가정보다. 실패해도 이력 조회 자체는 살려둔다.
-  }
+  const rows = db.prepare(
+    `SELECT key, hits, last_hit_at FROM guide_documents
+      WHERE key IN (${list.map(() => '?').join(',')})`).all(...list);
+  const out = {};
+  for (const r of rows) out[r.key] = { count: r.hits ?? 0, lastAt: r.last_hit_at };
+  return out;
 }
 
-async function withOpenStats(rows) {
-  const stats = await fetchOpenStats(rows.map((r) => r.doc_key));
+function withOpenStats(db, rows) {
+  const stats = fetchOpenStats(db, rows.map((r) => r.doc_key));
   return rows.map((row) => {
     const stat = row.doc_key ? stats[row.doc_key] : null;
     return {
@@ -253,8 +264,8 @@ export function normalizePhone(value) {
 const ROLES = ['staff', 'guide', 'inactive'];
 
 // NOT NULL 인데 기본값이 없고 우리가 안 채우는 칸을 찾아 자리값을 만든다.
-// 유일 인덱스가 걸린 칸은 행마다 달라야 하므로 이름을 섞는다.
-function requiredFillers(db, handled, name) {
+// 유일 인덱스가 걸린 칸에는 번호를 넣는다 — 이름은 표기가 흔들려도 번호는 하나다.
+function requiredFillers(db, handled, phone) {
   const unique = new Set();
   for (const i of db.prepare('PRAGMA index_list(guides)').all()) {
     if (!i.unique) continue;
@@ -265,7 +276,7 @@ function requiredFillers(db, handled, name) {
     .map((c) => ({
       name: c.name,
       value: /INT|REAL|NUM|DEC|FLOA|DOUB/i.test(c.type || '') ? 0
-        : unique.has(c.name) ? `erp:${name}` : '',
+        : unique.has(c.name) ? `phone:${normalizePhone(phone)}` : '',
     }));
 }
 
@@ -424,6 +435,37 @@ export function runNotifyWorker(db, { intervalMs = 5000 } = {}) {
 export function registerGuideNotify(app, db, requireAdminToken) {
   migrateGuideNotify(db);
 
+  // 알림톡 버튼이 가리키는 주소. 가이드는 로그인 없이 이 링크만 누른다.
+  // 키가 곧 비밀번호이므로 형식을 엄격히 검사하고 색인은 막는다.
+  app.get('/d/:key', async (req, res) => {
+    const key = String(req.params.key || '');
+    if (!/^[a-f0-9]{32}\.[a-z]{3,4}$/.test(key)) return res.status(404).send('not found');
+
+    const doc = db.prepare('SELECT * FROM guide_documents WHERE key=?').get(key);
+    if (!doc) return res.status(404).send('not found');
+    if (doc.expires_at && doc.expires_at < new Date().toISOString().slice(0, 19).replace('T', ' ')) {
+      return res.status(410).send('만료된 링크입니다. 담당자에게 문의해 주세요.');
+    }
+
+    let body;
+    try { body = await fsp.readFile(path.join(DOCS_ROOT, key)); }
+    catch { return res.status(404).send('not found'); }
+
+    // 열람 기록 — "보냈는데 안 봤다"를 잡아내는 유일한 근거다.
+    db.prepare("UPDATE guide_documents SET hits=COALESCE(hits,0)+1, last_hit_at=datetime('now','localtime') WHERE key=?").run(key);
+
+    res.set({
+      'Content-Type': doc.kind || 'application/octet-stream',
+      'X-Robots-Tag': 'noindex, nofollow, noarchive',
+      'Cache-Control': 'private, no-store',
+      'Referrer-Policy': 'no-referrer',
+      // 브리핑 HTML 은 우리가 만든 문서지만, 열람 화면에서 바깥을 부르게 두지 않는다.
+      'Content-Security-Policy':
+        "default-src 'none'; img-src 'self' data:; style-src 'unsafe-inline'; font-src data:; base-uri 'none'; form-action 'none'",
+    });
+    res.send(body);
+  });
+
   app.get('/api/admin/guides', requireAdminToken, (req, res) => {
     res.json({ guides: listNotifyGuides(db) });
   });
@@ -451,7 +493,7 @@ export function registerGuideNotify(app, db, requireAdminToken) {
     // guides 는 원래 카카오 챗봇이 만든 테이블이라 kakao_user_id 처럼
     // NOT NULL 인데 기본값이 없는 칸이 있다. ERP 로 넣는 사람은 카카오
     // 사용자 ID 가 없으므로 스키마를 보고 자리값을 채운다.
-    const extra = requiredFillers(db, ['name', 'vn_name', 'phone', 'role', 'notify_active'], clean.name);
+    const extra = requiredFillers(db, ['name', 'vn_name', 'phone', 'role', 'notify_active'], clean.phone);
     const cols = ['name', 'vn_name', 'phone', 'role', 'notify_active', ...extra.map((c) => c.name)];
     const vals = [clean.name, clean.vnName, clean.phone, clean.role, 1, ...extra.map((c) => c.value)];
     const info = db.prepare(
@@ -507,7 +549,7 @@ export function registerGuideNotify(app, db, requireAdminToken) {
        WHERE ${where.join(' AND ')}
        ORDER BY n.id DESC LIMIT ?`).all(...params, limit);
 
-    res.json({ notifications: await withOpenStats(rows) });
+    res.json({ notifications: withOpenStats(db, rows) });
   });
 
   // 특정 알림의 시도 로그 — 왜 실패했는지 되짚을 때 쓴다.
@@ -537,8 +579,14 @@ export function registerGuideNotify(app, db, requireAdminToken) {
 
   app.post('/api/admin/notify', requireAdminToken, (req, res) => {
     try {
-      const { guideIds, title, body, docUrl, imageUrl } = req.body || {};
-      res.json({ created: enqueueNotification(db, { guideIds, title, body, docUrl, imageUrl, actor: 'erp-admin' }) });
+      const { guideIds, title, body, docUrl, imageUrl, templateKey, variables } = req.body || {};
+      const templateId = TEMPLATE_IDS[templateKey];
+      if (!templateId) throw new Error(`모르는 템플릿입니다: ${templateKey}`);
+      res.json({
+        created: enqueueNotification(db, {
+          guideIds, title, body, docUrl, imageUrl, templateId, variables, actor: 'erp-admin',
+        }),
+      });
     } catch (e) {
       res.status(400).json({ error: e.message });
     }
