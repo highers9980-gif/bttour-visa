@@ -196,6 +196,18 @@ export function listNotifyGuides(db) {
 // 큐 적재
 // ---------------------------------------------------------------
 
+// 변수 이름을 솔라피 형식(#{이름})으로 맞춘다. 이미 감싼 것은 그대로 둔다.
+export function wrapVariables(vars) {
+  const out = {};
+  for (const [k, v] of Object.entries(vars || {})) {
+    const name = String(k).trim();
+    if (!name) continue;
+    const key = /^#\{.+\}$/.test(name) ? name : `#{${name}}`;
+    out[key] = String(v ?? '');
+  }
+  return out;
+}
+
 export function enqueueNotification(db, { guideIds, title, body, docUrl, imageUrl, templateId, variables, buttonName, actor = 'erp' }) {
   const ids = [...new Set((guideIds || []).map(Number).filter(Number.isInteger))];
   if (!ids.length) throw new Error('수신 가이드를 선택하세요');
@@ -215,7 +227,9 @@ export function enqueueNotification(db, { guideIds, title, body, docUrl, imageUr
       const payload = JSON.stringify({
         guideId, title, body, docUrl, imageUrl,
         templateId, buttonName, linkUrl: docUrl || imageUrl || null,
-        variables: { ...(variables || {}), '#{가이드명}': guide.name },
+        // 솔라피는 변수 이름을 #{...} 로 감싼 형태로 받는다. 화면은 팀명 처럼
+        // 맨 이름으로 보내므로 여기서 통일한다. 섞이면 그 변수만 빈 채로 나간다.
+        variables: { ...wrapVariables(variables), '#{가이드명}': guide.name },
       });
       const outboxId = Number(insertOutbox.run(KIND, `guide:${guideId}`, payload).lastInsertRowid);
       const notifId = Number(
