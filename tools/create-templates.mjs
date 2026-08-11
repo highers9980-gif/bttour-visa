@@ -27,7 +27,7 @@ const link = (label) => ([{
 const TEMPLATES = [
   // ── 배정 · 발송 ──────────────────────────────────────────────
   {
-    name: '가이드-팀배정안내',
+    name: '가이드-팀배정안내', categoryCode: '008002', // 내부 업무 알림
     content: `[BT TOUR] 팀 배정 안내
 
 #{가이드명}님, 담당 팀이 배정되었습니다.
@@ -41,7 +41,7 @@ const TEMPLATES = [
     buttons: link('배정 확인'),
   },
   {
-    name: '가이드-지시서발송',
+    name: '가이드-지시서발송', categoryCode: '008002', // 내부 업무 알림
     content: `[BT TOUR] 행사 지시서 안내
 
 #{가이드명}님, 담당 행사의 지시서가 등록되었습니다.
@@ -55,7 +55,7 @@ const TEMPLATES = [
     buttons: link('지시서 확인'),
   },
   {
-    name: '가이드-차량기사안내',
+    name: '가이드-차량기사안내', categoryCode: '008002', // 내부 업무 알림
     content: `[BT TOUR] 차량 기사 안내
 
 #{가이드명}님, 담당 행사의 차량 기사 정보를 안내드립니다.
@@ -71,7 +71,7 @@ const TEMPLATES = [
   },
   {
     // KTX · 항공 · 공연 · 입장권을 #{예약구분} 으로 흡수한다.
-    name: '가이드-예약안내',
+    name: '가이드-예약안내', categoryCode: '003001', // 예약완료/예약내역
     content: `[BT TOUR] 예약 안내
 
 #{가이드명}님, 담당 행사의 예약 정보를 안내드립니다.
@@ -89,7 +89,7 @@ const TEMPLATES = [
   // ── 변경 ────────────────────────────────────────────────────
   {
     // 호텔·일정·인원·식당 변경을 #{변경항목} 으로 흡수한다.
-    name: '가이드-변경안내',
+    name: '가이드-변경안내', categoryCode: '008002', // 내부 업무 알림
     content: `[BT TOUR] 변경 사항 안내
 
 #{가이드명}님, 담당 행사에 변경 사항이 있습니다.
@@ -105,7 +105,7 @@ const TEMPLATES = [
   },
   {
     // 차량·예약 변경은 "안내"와 성격이 달라 따로 둔다. 제목으로 바로 구분돼야 한다.
-    name: '가이드-예약변경안내',
+    name: '가이드-예약변경안내', categoryCode: '003002', // 예약상태
     content: `[BT TOUR] 예약 변경 안내
 
 #{가이드명}님, 담당 행사의 예약이 변경되었습니다.
@@ -121,7 +121,7 @@ const TEMPLATES = [
 
   // ── 운영 ────────────────────────────────────────────────────
   {
-    name: '가이드-행사전날안내',
+    name: '가이드-행사전날안내', categoryCode: '004008', // 리마인드
     content: `[BT TOUR] 행사 시작 안내
 
 #{가이드명}님, 담당 행사가 내일 시작됩니다.
@@ -134,7 +134,7 @@ const TEMPLATES = [
     buttons: link('지시서 확인'),
   },
   {
-    name: '가이드-긴급공지',
+    name: '가이드-긴급공지', categoryCode: '004001', // 이용안내/공지
     content: `[BT TOUR] 긴급 공지
 
 #{가이드명}님, 진행 중인 행사 관련 긴급 안내입니다.
@@ -148,7 +148,7 @@ const TEMPLATES = [
   },
   {
     // 전체 가이드 대상. 특정 행사와 무관한 사내 공지.
-    name: '가이드-그룹공지',
+    name: '가이드-그룹공지', categoryCode: '004001', // 이용안내/공지
     content: `[BT TOUR] 공지사항
 
 #{가이드명}님, 안내드립니다.
@@ -163,7 +163,7 @@ const TEMPLATES = [
 
   // ── 정산 ────────────────────────────────────────────────────
   {
-    name: '가이드-정산요청안내',
+    name: '가이드-정산요청안내', categoryCode: '008002', // 내부 업무 알림
     content: `[BT TOUR] 정산 등록 안내
 
 #{가이드명}님, 종료된 행사의 정산 등록을 요청드립니다.
@@ -177,7 +177,7 @@ const TEMPLATES = [
   },
   {
     // 승인 · 반려를 #{처리결과} 로 흡수한다.
-    name: '가이드-정산처리결과',
+    name: '가이드-정산처리결과', categoryCode: '008002', // 내부 업무 알림
     content: `[BT TOUR] 정산 처리 결과 안내
 
 #{가이드명}님, 제출하신 정산의 처리 결과를 안내드립니다.
@@ -213,8 +213,8 @@ if (cmd === 'categories') {
   if (arg === 'all') for (const c of rows) console.log(c.code, c.name ?? '', c.firstCategory ?? '', c.secondCategory ?? '');
 
 } else if (cmd === 'create') {
-  if (!arg) { console.error('카테고리 코드가 필요합니다.'); process.exit(1); }
   if (!channelId) { console.error('SOLAPI_PF_ID 가 없습니다.'); process.exit(1); }
+  if (arg) console.log(`※ 모든 템플릿을 카테고리 ${arg} 로 강제 등록합니다.\n`);
 
   for (const t of TEMPLATES) {
     try {
@@ -222,10 +222,10 @@ if (cmd === 'categories') {
         channelId,
         name: t.name,
         content: t.content,
-        categoryCode: arg,
+        categoryCode: arg || t.categoryCode,
         buttons: t.buttons,
       });
-      console.log(`✅ ${t.name}  →  ${res?.templateId ?? JSON.stringify(res).slice(0, 80)}`);
+      console.log(`✅ ${t.name}  [${arg || t.categoryCode}]  →  ${res?.templateId ?? JSON.stringify(res).slice(0, 60)}`);
     } catch (e) {
       console.error(`❌ ${t.name}  →  ${e?.message ?? e}`);
     }
@@ -240,9 +240,10 @@ if (cmd === 'categories') {
 } else {
   console.log(`사용법
   node --env-file=.env create-templates.mjs categories      카테고리 코드 조회
-  node --env-file=.env create-templates.mjs create <코드>    템플릿 11종 등록
+  node --env-file=.env create-templates.mjs create           템플릿 11종 등록
+  node --env-file=.env create-templates.mjs create <코드>    카테고리를 강제 지정해 등록
   node --env-file=.env create-templates.mjs list            등록 상태 확인
 
 등록될 템플릿:
-${TEMPLATES.map((t, i) => `  ${i + 1}. ${t.name}`).join('\n')}`);
+${TEMPLATES.map((t, i) => `  ${String(i + 1).padStart(2)}. ${t.name}  [${t.categoryCode}]`).join('\n')}`);
 }
