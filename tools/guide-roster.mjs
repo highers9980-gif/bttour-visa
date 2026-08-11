@@ -261,13 +261,19 @@ async function openSqlite(readonly) {
   const phoneCol = ['phone', 'phone_number', 'tel', 'mobile', 'contact'].find((c) => cols.includes(c));
   if (!nameCol) throw new Error(`guides 에 이름 컬럼이 없습니다: ${cols.join(', ')}`);
   if (!phoneCol) throw new Error(`guides 에 전화번호 컬럼이 없습니다: ${cols.join(', ')}`);
-  // 직원/가이드 구분을 담을 칸. 없으면 만든다(멱등).
-  if (!readonly && !cols.includes('role')) {
-    db.exec("ALTER TABLE guides ADD COLUMN role TEXT DEFAULT 'guide'");
-    console.log('[MIGRATE] guides + role');
+  // 구분과 베트남 이름을 담을 칸. 없으면 만든다(멱등).
+  if (!readonly) {
+    for (const [col, ddl] of [['role', "role TEXT DEFAULT 'guide'"], ['vn_name', 'vn_name TEXT']]) {
+      if (cols.includes(col)) continue;
+      db.exec(`ALTER TABLE guides ADD COLUMN ${ddl}`);
+      console.log(`[MIGRATE] guides + ${col}`);
+    }
     cols = db.prepare('PRAGMA table_info(guides)').all().map((c) => c.name);
   }
-  return { db, file: ok[0], nameCol, phoneCol, hasRole: cols.includes('role') };
+  return {
+    db, file: ok[0], nameCol, phoneCol,
+    hasRole: cols.includes('role'), hasVn: cols.includes('vn_name'),
+  };
 }
 
 // ---------------------------------------------------------------
@@ -388,34 +394,50 @@ if (doErp) {
 }
 
 if (doGw) {
-  const { db, file, nameCol, phoneCol, hasRole } = await openSqlite(!commit);
+  const { db, file, nameCol, phoneCol, hasRole, hasVn } = await openSqlite(!commit);
+  const extra = [hasRole ? 'role' : null, hasVn ? 'vn_name' : null].filter(Boolean);
   const cur = db.prepare(
-    `SELECT id, ${nameCol} AS name, ${phoneCol} AS phone${hasRole ? ', role' : ''} FROM guides`).all();
+    `SELECT id, ${nameCol} AS name, ${phoneCol} AS phone${extra.length ? ', ' + extra.join(', ') : ''} FROM guides`).all();
   const byName = new Map(cur.map((r) => [normName(r.name), r]));
   const ins = valid.filter((r) => !byName.has(r.name));
   const upd = valid.filter((r) => {
     const c = byName.get(r.name);
     if (!c) return false;
-    return normPhone(c.phone) !== r.phone || (hasRole && c.role !== ROLE_CODE[r.role]);
+    if (normPhone(c.phone) !== r.phone) return true;
+    if (hasRole && c.role !== ROLE_CODE[r.role]) return true;
+    // 베트남 이름은 채우기만 하고 비우지 않는다. 스캔에서 못 읽었다고
+    // 손으로 넣어둔 값을 지워버리면 안 된다.
+    if (hasVn && r.vn && (c.vn_name ?? '') !== r.vn) return true;
+    return false;
   });
   console.log(`\n[알림톡 수신자] ${file}`);
   console.log(`  신규 ${ins.length} / 갱신 ${upd.length} / 동일 ${valid.length - ins.length - upd.length}`);
-  for (const r of ins) console.log(`  + [${r.role}] ${r.name}\t${prettyPhone(r.phone)}`);
+  for (const r of ins) console.log(`  + [${r.role}] ${r.name}\t${r.vn || '—'}\t${prettyPhone(r.phone)}`);
   for (const r of upd) {
     const c = byName.get(r.name);
-    const phoneChanged = normPhone(c.phone) !== r.phone;
-    console.log(`  ~ [${r.role}] ${r.name}\t` +
-      (phoneChanged ? `${prettyPhone(c.phone) || '(없음)'} → ${prettyPhone(r.phone)}` : '구분만 변경'));
+    const changes = [];
+    if (normPhone(c.phone) !== r.phone) changes.push(`${prettyPhone(c.phone) || '(없음)'} → ${prettyPhone(r.phone)}`);
+    if (hasRole && c.role !== ROLE_CODE[r.role]) changes.push(`구분 ${r.role}`);
+    if (hasVn && r.vn && (c.vn_name ?? '') !== r.vn) changes.push(`베트남명 ${r.vn}`);
+    console.log(`  ~ [${r.role}] ${r.name}\t${changes.join(' · ')}`);
   }
   if (commit) {
-    const cols = [nameCol, phoneCol, ...(hasRole ? ['role'] : [])];
+    const cols = [nameCol, phoneCol, ...(hasRole ? ['role'] : []), ...(hasVn ? ['vn_name'] : [])];
     const insert = db.prepare(
       `INSERT INTO guides(${cols.join(', ')}) VALUES(${cols.map(() => '?').join(', ')})`);
-    const update = db.prepare(
-      `UPDATE guides SET ${phoneCol}=?${hasRole ? ', role=?' : ''} WHERE id=?`);
+    const sets = [`${phoneCol}=?`, ...(hasRole ? ['role=?'] : []),
+      ...(hasVn ? ['vn_name=COALESCE(NULLIF(?,\'\'), vn_name)'] : [])];
+    const update = db.prepare(`UPDATE guides SET ${sets.join(', ')} WHERE id=?`);
     db.transaction(() => {
-      for (const r of ins) insert.run(...[r.name, prettyPhone(r.phone), ...(hasRole ? [ROLE_CODE[r.role]] : [])]);
-      for (const r of upd) update.run(...[prettyPhone(r.phone), ...(hasRole ? [ROLE_CODE[r.role]] : []), byName.get(r.name).id]);
+      for (const r of ins) {
+        insert.run(r.name, prettyPhone(r.phone),
+          ...(hasRole ? [ROLE_CODE[r.role]] : []), ...(hasVn ? [r.vn || null] : []));
+      }
+      for (const r of upd) {
+        update.run(prettyPhone(r.phone),
+          ...(hasRole ? [ROLE_CODE[r.role]] : []), ...(hasVn ? [r.vn || ''] : []),
+          byName.get(r.name).id);
+      }
     })();
     console.log(`[알림톡 수신자] 반영 완료 — 신규 ${ins.length}, 갱신 ${upd.length}`);
   }

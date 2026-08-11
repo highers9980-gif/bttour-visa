@@ -25,7 +25,8 @@ const SEND_GAP_MS = 400;
 // ---------------------------------------------------------------
 
 export function migrateGuideNotify(db) {
-  for (const col of ['notify_channel TEXT', 'notify_active INTEGER DEFAULT 1', 'last_notified_at TEXT']) {
+  for (const col of ['notify_channel TEXT', 'notify_active INTEGER DEFAULT 1', 'last_notified_at TEXT',
+    'vn_name TEXT', "role TEXT DEFAULT 'guide'"]) {
     try {
       db.exec(`ALTER TABLE guides ADD COLUMN ${col}`);
       console.log('[MIGRATE] guides +', col.split(' ')[0]);
@@ -165,6 +166,8 @@ async function withOpenStats(rows) {
 export function listNotifyGuides(db) {
   return db.prepare(`
     SELECT g.id, g.name, g.phone, g.kakao_user_id,
+           COALESCE(g.vn_name,'')             AS vn_name,
+           COALESCE(g.role,'guide')           AS role,
            COALESCE(g.notify_channel,'kakao') AS channel,
            COALESCE(g.notify_active,1)        AS active,
            g.last_notified_at,
@@ -243,7 +246,38 @@ async function solapi() {
 export function normalizePhone(value) {
   let digits = String(value || '').replace(/\D/g, '');
   if (digits.startsWith('82')) digits = '0' + digits.slice(2);
+  if (digits.length === 10 && digits.startsWith('10')) digits = '0' + digits;
   return digits;
+}
+
+const ROLES = ['staff', 'guide', 'inactive'];
+
+// 화면에서 들어온 값을 저장 형태로 다듬는다. 번호는 국내 휴대폰만 받는다 —
+// 알림톡이 유선·해외로는 나가지 않으므로 넣는 순간 걸러야 나중에
+// "왜 안 갔지"를 되짚지 않는다.
+function normalizeGuideInput({ name, vnName, phone, role }, { allowEmptyPhone = false } = {}) {
+  const cleanName = String(name ?? '').replace(/[\s　]+/g, ' ').trim();
+  if (cleanName.length < 1) return { error: '이름을 입력하세요' };
+  if (cleanName.length > 40) return { error: '이름이 너무 깁니다' };
+
+  const digits = normalizePhone(phone);
+  if (digits && !/^01[016789]\d{7,8}$/.test(digits)) {
+    return { error: `휴대폰 번호 형식이 아닙니다 (${phone})` };
+  }
+  if (!digits && !allowEmptyPhone) return { error: '연락처를 입력하세요' };
+
+  const pretty = digits.length === 11
+    ? `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`
+    : digits.length === 10
+      ? `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6)}`
+      : '';
+
+  return {
+    name: cleanName,
+    vnName: String(vnName ?? '').trim().slice(0, 60),
+    phone: pretty,
+    role: ROLES.includes(role) ? role : 'guide',
+  };
 }
 
 async function sendAlimtalk(guide, payload) {
@@ -375,6 +409,46 @@ export function registerGuideNotify(app, db, requireAdminToken) {
 
   app.get('/api/admin/guides', requireAdminToken, (req, res) => {
     res.json({ guides: listNotifyGuides(db) });
+  });
+
+  // 명부 추가 — 일정현황에 아직 안 뜬 신규 가이드나 내근 직원을 손으로 넣는다.
+  app.post('/api/admin/guides', requireAdminToken, (req, res) => {
+    const { name, vnName, phone, role } = req.body || {};
+    const clean = normalizeGuideInput({ name, vnName, phone, role });
+    if (clean.error) return res.status(400).json({ error: clean.error });
+
+    // "박 수현"과 "박수현"을 같은 사람으로 본다. 양쪽 다 공백을 지우고 비교한다.
+    const dup = db.prepare(
+      "SELECT id FROM guides WHERE REPLACE(TRIM(name),' ','')=?").get(clean.name.replace(/\s/g, ''));
+    if (dup) return res.status(409).json({ error: `이미 있는 이름입니다 (#${dup.id})` });
+
+    const info = db.prepare(
+      'INSERT INTO guides(name, vn_name, phone, role, notify_active) VALUES(?,?,?,?,1)')
+      .run(clean.name, clean.vnName, clean.phone, clean.role);
+    res.json({ guide: db.prepare('SELECT * FROM guides WHERE id=?').get(info.lastInsertRowid) });
+  });
+
+  // 명부 수정 — 보낸 이력이 id 로 묶여 있으므로 행을 지우지 않고 값만 고친다.
+  app.patch('/api/admin/guides/:id', requireAdminToken, (req, res) => {
+    const id = Number(req.params.id);
+    const cur = db.prepare('SELECT * FROM guides WHERE id=?').get(id);
+    if (!cur) return res.status(404).json({ error: '없는 가이드입니다' });
+
+    const clean = normalizeGuideInput({
+      name: req.body?.name ?? cur.name,
+      vnName: req.body?.vnName ?? cur.vn_name ?? '',
+      phone: req.body?.phone ?? cur.phone ?? '',
+      role: req.body?.role ?? cur.role ?? 'guide',
+    }, { allowEmptyPhone: true });
+    if (clean.error) return res.status(400).json({ error: clean.error });
+
+    const active = req.body?.active === undefined
+      ? (cur.notify_active ?? 1)
+      : (req.body.active ? 1 : 0);
+
+    db.prepare(`UPDATE guides SET name=?, vn_name=?, phone=?, role=?, notify_active=? WHERE id=?`)
+      .run(clean.name, clean.vnName, clean.phone, clean.role, active, id);
+    res.json({ guide: db.prepare('SELECT * FROM guides WHERE id=?').get(id) });
   });
 
   // 발송 이력 — 상태, 시도 횟수, 마지막 오류, 그리고 실제 열람 여부까지 함께 준다.
