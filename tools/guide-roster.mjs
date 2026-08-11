@@ -134,6 +134,7 @@ async function api(pathname, init) {
 
 const ymKey = (y, m) => y * 100 + m;
 const ymLabel = (y, m) => `${y}-${String(m).padStart(2, '0')}`;
+let scannedMonths = [];
 
 // 훑을 달 목록. 연락처는 오래된 일정에만 남아 있는 경우가 많아 전 기간을 본다.
 // --from 은 "언제부터를 현역으로 볼지"만 정한다.
@@ -167,6 +168,7 @@ async function scan() {
   };
 
   const months = await monthsToScan();
+  scannedMonths = months;
   const [fy, fm] = FROM.split('-').map(Number);
   const activeFrom = ymKey(fy, fm);
   console.error(
@@ -332,10 +334,22 @@ if (cmd === 'scan') {
   }
   const ok = rows.filter((r) => isMobile(r.phone));
   const byRole = (r) => rows.filter((g) => roleOf(g) === r).length;
-  console.log(`\n총 ${rows.length}명 (직원 ${byRole('직원')} / 가이드 ${byRole('가이드')} / 미배정 ${byRole('미배정')})`);
+  console.log(`\n조회 기간 ${ymLabel(...scannedMonths[0])} ~ ${ymLabel(...scannedMonths.at(-1))}`);
+  console.log(`총 ${rows.length}명 (직원 ${byRole('직원')} / 가이드 ${byRole('가이드')} / 미배정 ${byRole('미배정')})`);
   console.log(`번호 확보 ${ok.length}명 / 번호 없음 ${rows.length - ok.length}명`);
-  const amb = rows.filter((r) => !r.phone && r.ambiguous);
-  if (amb.length) console.log(`※ 한 칸에 여러 명이 적혀 있어 번호를 못 고른 가이드: ${amb.map((r) => r.name).join(', ')}`);
+
+  // 빈 칸은 반드시 이름까지 찍는다. 숫자만 보여주면 누가 빠졌는지 모른 채
+  // 그대로 반영하게 된다.
+  const gaps = rows.filter((r) => !isMobile(r.phone));
+  if (gaps.length) {
+    console.log('\n번호를 못 찾은 사람 — TSV 에서 직접 채워 주세요:');
+    for (const r of gaps) {
+      const why = r.ambiguous ? '한 칸에 여러 명이 적혀 있음'
+        : r.phone ? `휴대폰 형식 아님 (${r.phone})`
+        : '일정현황에 번호가 적혀 있지 않음';
+      console.log(`  ${pad(r.name, 14)}${pad(roleOf(r), 10)}${why}`);
+    }
+  }
   if (fileArg) { writeTsv(fileArg, rows); console.log(`\n${fileArg} 저장 — 빈 번호를 채운 뒤 apply 하세요.`); }
   process.exit(0);
 }
