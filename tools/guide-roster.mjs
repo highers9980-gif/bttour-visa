@@ -83,7 +83,10 @@ function prettyPhone(v) {
 const isMobile = (v) => /^01[016789]\d{7,8}$/.test(normPhone(v));
 
 // GUIDE 칸은 "김유미/타오", "타오(인솔)", "픽업:최성민", "미정" 처럼 자유롭게 적혀 있다.
-const NOT_A_NAME = /^(미정|미배정|없음|공석|tbd|tba|x|-|\.)$/i;
+// 가이드 칸에는 사람이 아닌 표시도 들어온다. ONLY HOTEL(숙박만 판 건),
+// 노가이드 같은 것들은 명부에 들어가면 안 된다.
+const NOT_A_NAME = /^(미정|미배정|없음|공석|노가이드|가이드없음|tbd|tba|x|-|\.)$/i;
+const NOT_A_PERSON = /hotel|호텔|only|no\s*guide|버스|차량/i;
 // "픽업:최성민" 을 그대로 두면 최성민과 다른 사람으로 갈라진다.
 const ROLE_PREFIX = /(픽업|샌딩|송영|공항|인솔|가이드|보조|담당|TC)\s*[:：]\s*/gi;
 function splitGuideCell(cell) {
@@ -92,7 +95,7 @@ function splitGuideCell(cell) {
     .split(/[\/,、·|+&]|\s{2,}/)
     .map((s) => s.replace(/\([^)]*\)/g, '').replace(/\d/g, ''))
     .map(normName)
-    .filter((s) => s && s.length <= 12 && !NOT_A_NAME.test(s));
+    .filter((s) => s && s.length <= 12 && !NOT_A_NAME.test(s) && !NOT_A_PERSON.test(s));
 }
 
 // ERP 화면과 같은 패턴. 공백 구분도 하이픈으로 통일한다.
@@ -230,6 +233,19 @@ async function scan() {
 // settle-gateway SQLite
 // ---------------------------------------------------------------
 
+// SQLite 드라이버 — 게이트웨이가 무엇을 쓰든 돌아가야 한다.
+// node 22.5+ 는 node:sqlite 가 내장이라 설치가 필요 없다. 없으면 better-sqlite3.
+// 두 드라이버 모두 prepare/all/get/run/exec/close 는 같은 모양이고,
+// 다른 건 readonly 옵션 이름과 트랜잭션 헬퍼뿐이다.
+async function sqliteDriver() {
+  try {
+    const { DatabaseSync } = await import('node:sqlite');
+    if (DatabaseSync) return (file, readonly) => new DatabaseSync(file, { readOnly: readonly });
+  } catch { /* 구버전 node 면 아래로 */ }
+  const { default: Database } = await import('better-sqlite3');
+  return (file, readonly) => new Database(file, { readonly });
+}
+
 async function openSqlite(readonly) {
   const cands = process.env.GUIDE_DB ? [process.env.GUIDE_DB] : [];
   if (cands.length === 0) {
@@ -243,11 +259,11 @@ async function openSqlite(readonly) {
       for (const f of entries) if (/\.(db|sqlite3?)$/.test(f)) cands.push(path.join(root, f));
     }
   }
-  const { default: Database } = await import('better-sqlite3');
+  const open = await sqliteDriver();
   const ok = [];
   for (const p of cands) {
     try {
-      const probe = new Database(p, { readonly: true });
+      const probe = open(p, true);
       const has = probe.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='guides'").get();
       probe.close();
       if (has) ok.push(p);
@@ -255,7 +271,7 @@ async function openSqlite(readonly) {
   }
   if (ok.length === 0) throw new Error('guides 테이블이 있는 SQLite 를 찾지 못했습니다. GUIDE_DB=/경로/x.db 로 지정하세요.');
   if (ok.length > 1) throw new Error(`SQLite 후보가 여러 개입니다. GUIDE_DB 로 지정하세요:\n  ${ok.join('\n  ')}`);
-  const db = new Database(ok[0], { readonly });
+  const db = open(ok[0], readonly);
   let cols = db.prepare('PRAGMA table_info(guides)').all().map((c) => c.name);
   const nameCol = ['name', 'guide_name', 'display_name'].find((c) => cols.includes(c));
   const phoneCol = ['phone', 'phone_number', 'tel', 'mobile', 'contact'].find((c) => cols.includes(c));
@@ -428,7 +444,9 @@ if (doGw) {
     const sets = [`${phoneCol}=?`, ...(hasRole ? ['role=?'] : []),
       ...(hasVn ? ['vn_name=COALESCE(NULLIF(?,\'\'), vn_name)'] : [])];
     const update = db.prepare(`UPDATE guides SET ${sets.join(', ')} WHERE id=?`);
-    db.transaction(() => {
+    // 드라이버마다 트랜잭션 헬퍼가 다르므로 SQL 로 직접 감싼다.
+    db.exec('BEGIN IMMEDIATE');
+    try {
       for (const r of ins) {
         insert.run(r.name, prettyPhone(r.phone),
           ...(hasRole ? [ROLE_CODE[r.role]] : []), ...(hasVn ? [r.vn || null] : []));
@@ -438,7 +456,11 @@ if (doGw) {
           ...(hasRole ? [ROLE_CODE[r.role]] : []), ...(hasVn ? [r.vn || ''] : []),
           byName.get(r.name).id);
       }
-    })();
+      db.exec('COMMIT');
+    } catch (e) {
+      db.exec('ROLLBACK');
+      throw e;
+    }
     console.log(`[알림톡 수신자] 반영 완료 — 신규 ${ins.length}, 갱신 ${upd.length}`);
   }
   db.close();
